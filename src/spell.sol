@@ -15,8 +15,9 @@ pragma solidity >=0.5.15 <0.6.0;
 
 //interafces
 import "lib/tinlake/src/root.sol";
+import "tinlake-auth/auth.sol";
 
-contract SpellAction {
+contract SpellAction is Auth {
     // KOVAN ADDRESSES
     // The contracts in this list should correspond to a tinlake kovan deployment
     // https://github.com/centrifuge/tinlake-pool-config/blob/master/kovan-staging.json
@@ -30,48 +31,28 @@ contract SpellAction {
     address constant ASSESSOR = 0x8B80927fCa02566C29728C4a620c161F63116953;
 
   
-    function execute() external {
-      // add permissions for Token Senior MemberList  
-      Root root = new TinlakeRoot(address(ROOT));
-
-        
-
-       
+    function execute() external auth {
+       Root root = TinlakeRoot(address(ROOT));
+      
+       // add permissions for SeniorToken MemberList  
+       root.relyContract(SENIOR_MEMBERLIST, 0x0A735602a357802f553113F5831FE2fbf2F0E2e0);
+    }   
     }
 }
 
-contract DssSpell {
-    DSPauseAbstract public pause =
-        DSPauseAbstract(0x8754E6ecb4fe68DaA5132c2886aB39297a5c7189);
-    address         public action;
-    bytes32         public tag;
-    uint256         public eta;
-    bytes           public sig;
-    uint256         public expiration;
+contract TinlakeSpell {
+    SpellAction     public action;
     bool            public done;
 
-    string constant public description = "Kovan Spell Deploy";
+    string constant public description = "Tinlake Kovan Spell";
 
     constructor() public {
-        sig = abi.encodeWithSignature("execute()");
-        action = address(new SpellAction());
-        bytes32 _tag;
-        address _action = action;
-        assembly { _tag := extcodehash(_action) }
-        tag = _tag;
-        expiration = now + 30 days;
-    }
-
-    function schedule() public {
-        require(now <= expiration, "This contract has expired");
-        require(eta == 0, "This spell has already been scheduled");
-        eta = now + DSPauseAbstract(pause).delay();
-        pause.plot(action, tag, sig, eta);
+        action = new SpellAction();
     }
 
     function cast() public {
         require(!done, "spell-already-cast");
         done = true;
-        pause.exec(action, tag, sig, eta);
+        action.execute();
     }
 }
