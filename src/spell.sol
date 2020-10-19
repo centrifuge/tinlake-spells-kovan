@@ -15,7 +15,7 @@ pragma solidity >=0.5.15 <0.6.0;
 
 //interafces
 import "lib/tinlake/src/root.sol";
-import "tinlake-auth/auth.sol";
+import "lib/tinlake-auth/src/auth.sol";
 
 contract SpellAction is Auth {
     // KOVAN ADDRESSES

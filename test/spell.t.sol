@@ -1,8 +1,7 @@
 pragma solidity ^0.6.7;
 
 import "ds-test/test.sol";
-
-import "./TinlakeSpells.sol";
+import "./../src/spell.sol";
 
 contract TinlakeSpellsTest is DSTest {
     TinlakeSpells spells;
