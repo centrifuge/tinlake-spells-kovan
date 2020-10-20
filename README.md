@@ -20,5 +20,5 @@ archive
 store deployed spells in archive using following format
 
 ```bash 
-"archive/<root>/spell-<contract-address>.soll"  
+"archive/<root>/spell-<contract-address>.sol"  
 ```
