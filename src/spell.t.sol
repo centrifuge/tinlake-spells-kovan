@@ -77,10 +77,4 @@ contract TinlakeSpellsTest is DSTest {
         uint perm = TinlakeAuthLike(con).wards(ward);
         assertEq(perm, 0);
     }
-
-    function toBytes(uint256 x) public returns (bytes memory b) {
-        b = new bytes(32);
-        assembly { mstore(add(b, 32), x) }
-    }
-    
 }
