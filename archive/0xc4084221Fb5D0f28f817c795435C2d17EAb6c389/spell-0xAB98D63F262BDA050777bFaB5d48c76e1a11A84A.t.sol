@@ -68,27 +68,6 @@ contract TinlakeSpellsTest is DSTest {
         spell.cast();
     }
 
-    function testFailCastTwice() public {
-
-        address seniorMemberList_ = spell.SENIOR_MEMBERLIST();
-
-        // addresses for permissions setup
-        address seniorMemberListAdmin_ = spell.SENIOR_MEMBERLIST_ADMIN();
-        
-        // make sure permissions are not set yet
-        assertHasNoPermissions(seniorMemberList_, seniorMemberListAdmin_);
-        
-        // give spell permissions on root contract
-        AuthLike(root_).rely(spell_);
-
-        spell.cast();
-
-        // make sure permissions were set
-        assertHasPermissions(seniorMemberList_, seniorMemberListAdmin_);
-
-        spell.cast();
-    }
-
     function assertHasPermissions(address con, address ward) public {
         uint perm = TinlakeAuthLike(con).wards(ward);
         assertEq(perm, 1);
