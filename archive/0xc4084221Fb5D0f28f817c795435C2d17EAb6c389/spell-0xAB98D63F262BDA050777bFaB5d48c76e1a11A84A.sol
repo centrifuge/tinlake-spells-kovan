@@ -13,10 +13,10 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity >=0.5.15 <0.6.0;
 
-interface TinlakeRootLike {
-    function relyContract(address, address) external;
-}
+import "lib/tinlake/src/root.sol";
 
+// Deployed Contract Address: 0xAB98D63F262BDA050777bFaB5d48c76e1a11A84A
+// spell adds a new admin to the senior memberlist 
 contract TinlakeSpell {
 
     bool public done;
@@ -32,9 +32,9 @@ contract TinlakeSpell {
     address constant public SENIOR_MEMBERLIST = 0x9fC4856165490b7A3F024b2ADB054B902B42ab7d;
     address constant public COORDINATOR = 0x9C5431A86DEDaDE67e59E0555c9FeA9b6632D8d2;
     address constant public ASSESSOR = 0x8B80927fCa02566C29728C4a620c161F63116953;
-    
+
     // permissions to be set
-    address constant public SENIOR_MEMBERLIST_ADMIN = 0x38e3dad93A7bf775F0e9D05eA58d0ccCC08D8996;
+    address constant public SENIOR_MEMBERLIST_ADMIN = 0xf76e7ef1DC246Ee3034C37b4B10b744643Fd8375;
 
     function cast() public {
         require(!done, "spell-already-cast");
@@ -43,7 +43,7 @@ contract TinlakeSpell {
     }
 
     function execute() internal {
-       TinlakeRootLike root = TinlakeRootLike(address(ROOT));
+       TinlakeRoot root = TinlakeRoot(address(ROOT));
       
        // add permissions for SeniorToken MemberList  
        root.relyContract(SENIOR_MEMBERLIST, SENIOR_MEMBERLIST_ADMIN);
