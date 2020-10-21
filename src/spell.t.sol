@@ -4,7 +4,7 @@ import "ds-test/test.sol";
 import "./../src/spell.sol";
 
 
-interface TinlakeAuthLike {
+interface AuthLike {
     function wards(address) external returns(uint);
     function rely(address) external;
 }
@@ -90,12 +90,12 @@ contract TinlakeSpellsTest is DSTest {
     }
 
     function assertHasPermissions(address con, address ward) public {
-        uint perm = TinlakeAuthLike(con).wards(ward);
+        uint perm = AuthLike(con).wards(ward);
         assertEq(perm, 1);
     }
 
     function assertHasNoPermissions(address con, address ward) public {
-        uint perm = TinlakeAuthLike(con).wards(ward);
+        uint perm = AuthLike(con).wards(ward);
         assertEq(perm, 0);
     }
 }

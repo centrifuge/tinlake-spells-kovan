@@ -13,7 +13,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity >=0.5.15 <0.6.0;
 
-import "lib/tinlake/src/root.sol";
+interface TinlakeRootLike {
+    function relyContract(address, address) external;
+}
 
 contract TinlakeSpell {
 
@@ -41,7 +43,7 @@ contract TinlakeSpell {
     }
 
     function execute() internal {
-       TinlakeRoot root = TinlakeRoot(address(ROOT));
+       TinlakeRootLike root = TinlakeRootLike(address(ROOT));
       
        // add permissions for SeniorToken MemberList  
        root.relyContract(SENIOR_MEMBERLIST, SENIOR_MEMBERLIST_ADMIN);
