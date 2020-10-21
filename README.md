@@ -26,6 +26,8 @@ set env
     ETHERSCAN_API_KEY=<ETHERSCAN_API_KEY>
 ```
 
+run bash commands
+
 ```bash 
  dapp create "src/spell.sol:TinlakeSpell"  
  dapp verify-contract --async "src/spell.sol:TinlakeSpell" <SPELL_ADDRESS>
