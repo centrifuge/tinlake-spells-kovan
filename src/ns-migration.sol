@@ -230,8 +230,8 @@ contract TinlakeSpell {
         DependLike(CLERK).depend("reserve", RESERVE_NEW); 
         DependLike(CLERK).depend("tranche", SENIOR_TRANCHE);
         DependLike(CLERK).depend("collateral", SENIOR_TOKEN);
-        DependLike(SPOTTER).depend("collateral", SPOTTER);
-        DependLike(VAT).depend("collateral",VAT);
+        DependLike(CLERK).depend("collateral", SPOTTER);
+        DependLike(CLERK).depend("collateral",VAT);
         // permissions
         AuthLike(CLERK).rely(COORDINATOR_NEW);
         AuthLike(CLERK).rely(RESERVE_NEW);
