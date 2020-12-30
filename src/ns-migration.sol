@@ -14,7 +14,7 @@
 pragma solidity >=0.5.15 <0.6.0;
 
 
-// TODO: split inyterfaces between tests and spell. Exclude all t
+// TODO: split interfaces between tests and spell. Exclude all the function that afre only used in tests
 interface TinlakeRootLike {
     function relyContract(address, address) external;
 }
