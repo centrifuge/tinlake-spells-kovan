@@ -36,88 +36,55 @@ interface AuthLike {
     function deny(address) external;
 }
 
+interface MigrationLike {
+    function migrate(address) external;
+}
+
 interface ERC20Like {
     function balanceOf(address) external view returns (uint256);
     function transferFrom(address, address, uint) external returns (bool);
     function approve(address, uint) external;
 }
 
-interface AssessorLike {
-    function maxReserve() external returns(uint);
-    function seniorInterestRate() external returns(uint);
-    function maxSeniorRatio() external returns(uint);
-    function minSeniorRatio() external returns(uint);
-}
-
-interface NavLike {
-    function discountRate() external returns(uint);
-    function approximatedNAV() external returns(uint);
-    function currentNav() external returns(uint);
-    function pile() external returns(address);
-    function nftID(address, uint) external returns(bytes32);
-    function futureValue(bytes32) external returns(uint);
-    function nftValues(bytes32) external returns(uint);
-    function risk(bytes32) external returns(uint);
-    function maturityDate(bytes32) external returns(uint);
-    function ceiling(uint) external returns(uint);
-    function currentCeiling(uint) external returns(uint);
-    function threshold(uint) external returns(uint);
-    function borrowed(uint) external returns(uint);
-}
-
 interface ReserveLike {
     function payout(uint currencyAmount) external;
 }
 
-interface CoordinatorLike {
-    function challengeTime() external returns(uint);
-    function weightSeniorRedeem() external returns(uint);
-    function weightJuniorRedeem() external returns(uint);
-    function weightJuniorSupply() external returns(uint);
-    function weightSeniorSupply() external returns(uint);
-}
-
 // spell for: ns2 migration to rev pool with maker support
-// - swap contracts: nav, assessor, reserve, coordinator
-// - add new contracts: clerk & mgr
-// - remove old contracts for the pool
-// - wire new contracts
-// - set permissions on new contracts
-// - migrate the contract state from old to new contracts
+// - migrate state & swap contracts: assessor, reserve, coordinator
+// - add & wire mkr adapter contracts: clerk & mgr, spotter, vat
 contract TinlakeSpell {
 
     bool public done;
     string constant public description = "Tinlake NS2 migration kovan Spell";
 
     address constant public ROOT = 0xB86a5F04F5aE402d8547842A29071309C23b47e1;
+    address constant public SHELF = 0xe03A4812E1Ae31567932BDBf3618Ba5F64918bCB;
+    address constant public COLLECTOR = 0x751FF4Dd537aE8f1bA226Ae5d667a6406a53754C;
     address constant public SENIOR_TOKEN = 0xa1ff44b597549aE3f79Ab02109DD84B465CD7cCC;
     address constant public SENIOR_TRANCHE = 0xb3A6758FB6F79905692B3D805786B362cACB9f75;
     address constant public SENIOR_MEMBERLIST = 0x71F515E53a9B0831c0Df03bcD33b6e6701F9e278;
     address constant public JUNIOR_TRANCHE = 0xb148DA9cB8F7Ee64290105888D21aa3325681a6f;
-    address constant public PILE = 0xb03A40dcc94BB1B9DADC8ab25b0eF11D78f1C44C;
-    address constant public SHELF = 0xe03A4812E1Ae31567932BDBf3618Ba5F64918bCB;
-    address constant public COLLECTOR = 0x751FF4Dd537aE8f1bA226Ae5d667a6406a53754C;
-    address constant public ORACLE = 0x0A735602a357802f553113F5831FE2fbf2F0E2e0;
     address constant public ASSESSOR_WRAPPER = 0x7048AFBa9aBA4d3CF206e341bD22c2CA47061Fe8;
     address constant public TINLAKE_CURRENCY = 0x99E21e1e7D99d06F780666A3BE6Ba178De04B0a9;
-     address constant public SPOTTER = 0x0000000000000000000000000000000000000000;
-    address constant public VAT = 0x0000000000000000000000000000000000000000;
+    address constant public NAV = 0x8f90432c37d58aB79802B31e15F59556236123dA;
 
-    address constant public NAV_OLD = 0x8f90432c37d58aB79802B31e15F59556236123dA;
+    // contracts to be swapped
     address constant public ASSESSOR_OLD  = 0x00423Eb98c9CC2F43080A3A3Df3bf2a58Fcf29EB;
     address constant public COORDINATOR_OLD = 0xb0AefE053F73bEd8b922da60451f2eaEC71F4b2f;
     address constant public RESERVE_OLD = 0xbCd87D68A7829A9c6B4C763D2e9F9f345c61E0f6;
-   
-    address constant public NAV_NEW = 0x0000000000000000000000000000000000000000;
     address constant public COORDINATOR_NEW = 0x0000000000000000000000000000000000000000;
     address constant public ASSESSOR_NEW  = 0x0000000000000000000000000000000000000000;
     address constant public RESERVE_NEW = 0x0000000000000000000000000000000000000000;
+
+    // adapter contracts
     address constant public CLERK  = 0x0000000000000000000000000000000000000000;
     address constant public MGR = 0x0000000000000000000000000000000000000000;
+    address constant public SPOTTER = 0x0000000000000000000000000000000000000000;
+    address constant public VAT = 0x0000000000000000000000000000000000000000;
 
     uint constant public CLERK_BUFFER = 0;
 
-    
     // permissions to be set
     function cast() public {
         require(!done, "spell-already-cast");
@@ -126,55 +93,28 @@ contract TinlakeSpell {
     }
 
     function execute() internal {
-       TinlakeRootLike root = TinlakeRootLike(ROOT);
-       address self = address(this);
-       // set spell as ward on the core contract to be able to wire the new contracts correctly
-       root.relyContract(SHELF, self);
-       root.relyContract(PILE, self);
-       root.relyContract(COLLECTOR, self);
-       root.relyContract(NAV_NEW, self);
-       root.relyContract(RESERVE_OLD, self);
-       root.relyContract(ASSESSOR_NEW, self);
-       root.relyContract(COORDINATOR_NEW, self);
-       root.relyContract(RESERVE_NEW, self);
-       root.relyContract(CLERK, self);
-       root.relyContract(RESERVE_NEW, self);
-       root.relyContract(CLERK, self);
-       
+        TinlakeRootLike root = TinlakeRootLike(ROOT);
+        address self = address(this);
+        // set spell as ward on the core contract to be able to wire the new contracts correctly
+        root.relyContract(SHELF, self);
+        root.relyContract(COLLECTOR, self);
+        root.relyContract(ASSESSOR_NEW, self);
+        root.relyContract(COORDINATOR_NEW, self);
+        root.relyContract(RESERVE_NEW, self);
+        root.relyContract(CLERK, self);
         // contract migration --> assumption: root contract is already ward on the new contracts
-        migrateNav();
         migrateAssessor();
         migrateCoordinator();
         migrateReserve();
-        integrateClerk();
+        integrateAdapter();
     }
 
-    function migrateNav() internal {
-        NavLike navOld = NAFLike(NAV_OLD);
-        // migrate dependencies 
-        DependLike(SHELF).depend("ceiling", NAV_NEW); // set new nav as ceiling contract on shelf
-        DependLike(COLLECTOR).depend("threshold", NAV_NEW); // set new nav as threshold contract on collector
-        DependLike(SHELF).depend("subscriber", NAV_NEW); 
-        DependLike(NAV_NEW).depend("pile", PILE); // add pile as dependecy to new nav
-        DependLike(NAV_NEW).depend("shelf", SHELF); // add shelf as dependecy to new nav
-        // migrate wards
-        AuthLike(NAV_NEW).rely(ORACLE); // add oracle as ward to new nav
-        AuthLike(NAV_NEW).rely(SHELF); // add shelf as ward on new nav
-        AuthLike(PILE).deny(NAV_OLD); // remove old nav as ward on pile
-        AuthLike(PILE).rely(NAV_NEW); // add new nav as ward on pile
-        // migrate state
-        FileLike(ASSESSOR_NEW).file("discountRate", navOld.discountRate());
-        // set writeoff & riskgroups -> done in init on nav deployment -> check in rpc test of this spell
-        // price nfts -> done in init on nav deployment -> check in rpc test of this spell
-        // buckets, fv & borrowed amounts migrated correctly -> done in init on nav deployment -> check in rpc test of this spell
-        // nav value old = nav value new -> check in rpc test of this spell 
-    }
 
     function migrateAssessor() internal {
-        AssessorLike assessorOld = AssessorLike(ASSESSOR_OLD);
+        MigrationLike(ASSESSOR_NEW).migrate(ASSESSOR_OLD);
         // migrate dependencies 
         DependLike(ASSESSOR_WRAPPER).depend("assessor", ASSESSOR_NEW);
-        DependLike(ASSESSOR_NEW).depend("navFeed", NAV_NEW);
+        DependLike(ASSESSOR_NEW).depend("navFeed", NAV);
         DependLike(ASSESSOR_NEW).depend("juniorTranche", JUNIOR_TRANCHE);
         DependLike(ASSESSOR_NEW).depend("seniorTranche", SENIOR_TRANCHE);
         DependLike(ASSESSOR_NEW).depend("reserve", RESERVE_NEW);
@@ -183,18 +123,10 @@ contract TinlakeSpell {
         AuthLike(ASSESSOR_NEW).rely(ASSESSOR_WRAPPER); 
         AuthLike(ASSESSOR_NEW).rely(COORDINATOR_NEW); 
         AuthLike(ASSESSOR_NEW).rely(CLERK);
-        
-        // migrate state
-        FileLike(ASSESSOR_NEW).file("seniorInterestRate",  assessorOld.seniorInterestRate());
-        FileLike(ASSESSOR_NEW).file("maxReserve",  assessorOld.maxReserve());
-        FileLike(ASSESSOR_NEW).file("maxSeniorRatio",  assessorOld.maxSeniorRatio());
-        FileLike(ASSESSOR_NEW).file("minSeniorRatio",  assessorOld.minSeniorRatio());
-        // FileLike(ASSESSOR_NEW).file("creditBufferTime",  assessorOld.creditBufferTime()); --> not required for this migration as the old assessor does not have this value set 
-        // following values have to be migrated as part of the consturctor of the new assessor -> check in rpc test of this spell: seniorBalance_, seniorDebt_,lastUpdateSeniorInterest 
     }
 
     function migrateCoordinator() internal {
-        CoordinatorLike coordintaorOld = CoordinatorLike(COORDINATOR_OLD);
+        MigrationLike(COORDINATOR_NEW).migrate(COORDINATOR_OLD);
          // migrate dependencies 
         DependLike(COORDINATOR_NEW).depend("assessor", ASSESSOR_NEW);
         DependLike(COORDINATOR_NEW).depend("juniorTranche", JUNIOR_TRANCHE);
@@ -205,21 +137,16 @@ contract TinlakeSpell {
         AuthLike(SENIOR_TRANCHE).rely(COORDINATOR_NEW);
         AuthLike(JUNIOR_TRANCHE).deny(COORDINATOR_OLD); 
         AuthLike(SENIOR_TRANCHE).deny(COORDINATOR_OLD); 
-        // migrate state
-        FileLike(COORDINATOR_NEW).file("challengeTime", coordinatorOld.challengeTime());
-        FileLike(COORDINATOR_NEW).file("weightSeniorRedeem", coordinatorOld.weightSeniorRedeem());
-        FileLike(COORDINATOR_NEW).file("weightJuniorRedeem", coordinatorOld.weightJuniorRedeem());
-        FileLike(COORDINATOR_NEW).file("weightJuniorSupply", coordinatorOld.weightJuniorSupply());
-        FileLike(COORDINATOR_NEW).file("weightSeniorSupply", coordinatorOld.weightSeniorSupply());
-        // migrate all variables for epoch state as part of the consturctor of the new coordinator -> check in rpc test of this spell
     }
 
    function migrateReserve() internal {
-        ReserveLike reserveOld = CoordinatorLike(RESERVE_OLD);
-        ERC20Like dai = ERC20Like(TINLAKE_CURRENCY);
+        MigrationLike(RESERVE_NEW).migrate(RESERVE_OLD);
         // migrate dependencies 
         DependLike(RESERVE_NEW).depend("assessor", ASSESSOR_NEW);
         DependLike(RESERVE_NEW).depend("currency", TINLAKE_CURRENCY);
+        DependLike(RESERVE_NEW).depend("shelf", SHELF);
+        DependLike(RESERVE_NEW).depend("lending", CLERK);
+        DependLike(RESERVE_NEW).depend("pot", RESERVE_NEW);
         DependLike(RESERVE_NEW).depend("lending", CLERK);
         DependLike(SHELF).depend("distributor", RESERVE_NEW);
         DependLike(COLLECTOR).depend("distributor", RESERVE_NEW);
@@ -230,13 +157,14 @@ contract TinlakeSpell {
         // migrate state
         // following values have to be migrated as part of the consturctor of the new reserve -> check in rpc test of this spell: currencyAvailable, balance_
         // migrate reserve balance
+        ERC20Like dai = ERC20Like(TINLAKE_CURRENCY);
         uint balanceReserveDAI = dai.balanceOf(RESERVE_OLD);
-        reserveOld.payout(balanceReserveDAI);
+        ReserveLike(RESERVE_OLD).payout(balanceReserveDAI);
         dai.approve(RESERVE_NEW, balanceReserveDAI);
         dai.transferFrom(self, RESERVE_NEW, balanceReserveDAI);
     }
 
-    function integrateClerk() internal {
+    function integrateAdapter() internal {
         // dependencies
         DependLike(CLERK).depend("assessor", ASSESSOR_NEW);
         DependLike(CLERK).depend("mgr", MGR);
@@ -244,8 +172,8 @@ contract TinlakeSpell {
         DependLike(CLERK).depend("reserve", RESERVE_NEW); 
         DependLike(CLERK).depend("tranche", SENIOR_TRANCHE);
         DependLike(CLERK).depend("collateral", SENIOR_TOKEN);
-        DependLike(CLERK).depend("collateral", SPOTTER);
-        DependLike(CLERK).depend("collateral",VAT);
+        DependLike(CLERK).depend("spotter", SPOTTER);
+        DependLike(CLERK).depend("vat",VAT);
         // permissions
         AuthLike(CLERK).rely(COORDINATOR_NEW);
         AuthLike(CLERK).rely(RESERVE_NEW);

@@ -3,23 +3,53 @@ pragma solidity >=0.5.15 <0.6.0;
 import "ds-test/test.sol";
 import "./../src/ns-migration.sol";
 
-
-interface AuthLike {
+interface AsessorLike {
     function wards(address) external returns(uint);
-    function rely(address) external;
+    function seniorTranche() external returns(address);
+    function juniorTranche() external returns(address);
+    function navFeed() external returns(address);
+    function reserve() external returns(address); 
+    function lending() external returns(address);
+    function seniorRatio() external returns(uint);
+    function seniorDebt_() external returns(uint);
+    function seniorBalance_() external returns(uint);
+    function seniorInterestRate() external returns(uint);
+    function lastUpdateSeniorInterest() returns(uint);
+    function maxSeniorRatio() external returns(uint);
+    function minSeniorRatio() external returns(uint);
+    function maxReserve() external returns(uint);
+}
+
+interface AsessorWrapperLike {
+    function assessor() external returns(address);
+}
+
+interface ReserveLike {
+    function wards(address) external returns(uint);
+    function assessor() external returns(address);
+    function currency() external returns(address);
+    function shelf() external returns(address);
+    function lending() external returns(address);
+    function pot() external returns(address);
+    function lending() external returns(address);
+    function currencyAvailable() external returns(address);
+    function balance_() external returns(address);
+}
+
+interface CoordinatorLike  {
+    function wards(address) external returns(uint);
+}
+
+interface ClerkLike {
+    function wards(address) external returns(uint);
 }
 
 interface ShelfLike {
-    function ceiling(address) external returns(address);
-    function subscriber(address) external returns(address);
-}
-
-interface PileLike {
-   function rates(uint rate) public view returns (uint, uint, uint ,uint48, uint);
+    function distributor()  external returns(address);
 }
 
 interface CollectorLike {
-    function threshold(address) external returns(address);
+    function distributor()  external returns(address);
 }
 
 contract Hevm {
@@ -34,15 +64,26 @@ contract TinlakeSpellsTest is DSTest {
 
     ShelfLike shelf;
     CollectorLike collector;
-    PileLike pile;
-    NavLike navNew;
-    NavLike navOld;
-
+    AssessorLike assessor;
+    AssessorWrapperLike assessorWrapper;
+    ReserveLike reserve;
+    CoordinatorLike coordinator;
+    ClerkLike clerk;
+    ERC20Like currency;
    
     address root_;
     address spell_;
-    address navNew_;
-    address navOld_;
+    address reserve_;
+    address assessor_;
+    address assessorWrapper_;
+    address clerk_;
+    address coordinator_;
+    address juniorTranche_;
+    address seniorTranche_;
+    address currency_;
+    address pot_;
+
+    uint poolReserve;
 
     function setUp() public {
         spell = new TinlakeSpell();
@@ -50,23 +91,35 @@ contract TinlakeSpellsTest is DSTest {
         root_ = address(spell.ROOT());  
         hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
-        navNew_ = spell.NAV_NEW();
-        navOld_ = spell.NAV_OLD();
-        
         collector = CollectorLike(spell.COLLECTOR);
         shelf = ShelfLike(spell.SHELF);
-        pile = PileLike(spell.PILE);
-        navNew = NavLike(navNew_);
-        navOld = NavLike(navOld_);
-
-
+        assessor = AssessorLike(spell.ASSESSOR_NEW);
+        assessor_ = address(assessor);
+        assessorWrapper = AssessorWrapperLike(spell.ASSESSOR_WRAPPER);
+        assessorWrapper_ = address(assessorWrapper);
+        reserve = ReserveLike(spell.RESERVE_NEW);
+        reserve_ = address(reserve);
+        coordinator = CoordinatorLike(spell.COORDINATOR_NEW);
+        coordinator_ = address(coordinator);
+        clerk = ClerkLike(spell.CLERK);
+        clerk_ = address(clerk);
+        currency = ERC20Like(spell.TINLAKE_CURRENCY);
+        currency_ = address(currency);
+        juniorTranche_ = spell.JUNIOR_TRANCHE();
+        seniorTranche_ = spell.SENIOR_TRANCHE();
+        nav_ = spell.NAV();
+        
+        poolReserve = currency.balanceOf(spell.RESERVE_OLD);
         // cheat: give testContract permissions on root contract by overriding storage 
         // storage slot for permissions => keccak256(key, mapslot) (mapslot = 0)
         hevm.store(root_, keccak256(abi.encode(address(this), uint(0))), bytes32(uint(1)));
     }
 
     function testCast() public {
-        assertMigrationNAV();
+        assertMigrationAssessor();
+        assertMigrationReserveAssessor();
+        assertMigrationCoordinator();
+        assertIntegrationAdapter();
     }
     function testFailCastNoPermissions() public {
         // !!! don't give spell permissions on root contract
@@ -88,83 +141,110 @@ contract TinlakeSpellsTest is DSTest {
         assertEq(perm, 0);
     }
 
-    function assertMigrationNAV() public {
-        // nfts
-        address nft1Registry = 0xaC0c1EF395290288028A0a9FDFc8FDebEbE54a24;
-        uint nft1ID = 6773114111684061460499912671089081531599;
+    function assertMigrationAssessor() public {  
+        // check dependencies
+        assertEq(assessor.clerk(), clerk_);
+        assertEq(assessor.seniorTranche(), seniorTranche_);
+        assertEq(assessor.juniorTranche(), juniorTranche_);
+        assertEq(assessor.reserve(), reserve_);
+        assertEq(assessor.navFeed(), nav_);
+        assertEq(assessorWrapper.assessor(), assessor_);
 
-        // assert dependencies
-        assertEq(navNew.pile(), address(pile));
-        asserEq(navNew.shelf(), address(shelf));
-        assertEq(shelf.ceiling, navNew_);
-        assertEq(shelf.subscriber, navNew_);
-        assertEq(collector.threshold, navNew_);
-
-        // assert wards
-        assertHasPermissions(navNew_, address(shelf));
-        assertHasPermissions(navNew_, spell.ORACLE);
-        assertHasPermissions(address(pile), navNew_);
-        assertHasNoPermissions(address(pile), navOld_);
-
-        // assert discountRate
-        assertEq(navNew.discountRate(), navOld.discountRate());
-
-        // assert writeoffs
-        for (uint i = 1000; i <= 1003; i++) {
-            (uint rateGroupNew, uint percentageNew) = navNew.writeOffs(i);
-            (uint rateGroupOld, uint percentageOld) = navOld.writeOffs(i);
-            assertEq(rateGroupNew, rateGroupOld);
-            assertEq(percentageNew, percentageOld);
-        }
-
-        // assert riskgroups
-        for (uint i = 0; i <= 40; i++) {
-            assertEq(navNew.thresholdRatio(i), navOld.thresholdRatio(i));
-            assertEq(navNew.ceilingRatio(i), navOld.ceilingRatio(i));
-            assertEq(navNew.recoveryRatePD(i), navOld.recoveryRatePD(i));
-            (, , uint interestRateNew, ,) = PileLike(navNew.pile()).rates(i);
-            (, , uint interestRateOld, ,) = PileLike(navOld.pile()).rates(i);
-            assertEq(interestRateNew, interestRateOld);
-        }
-
-        // assert nft migration
-        assertNFTMigration(nft1Registry, nft1ID);
-
-        // assert loan migration
-        for (uint i = 0; i <= 1; i++) {
-            assertLoanMigration(i);
-        }
-
-        // assert nav calculation
-         assertEq(navNew.approximatedNAV(), navOld.approximatedNAV());
-         assertEq(navNew.currentNAV(), navOld.currentNAV());
-    }
-
-    function assertNFTMigration(address registry, address id) public { 
-        bytes32 nftID_ = navNew.nftID(registry, tokenId);
-        assertEq(navNew.futureValue(nftID_), navOld.futureValue(nftID_));
-        assertEq(navNew.nftValues(nftID_), navOld.nftValues(nftID_));
-        assertEq(navNew.risk(nftID_), navOld.risk(nftID_));
-        assertEq(navNew.maturityDate(nftID_), navOld.maturityDate(nftID_));
-    }
-
-    function assertLoanMigration(uint loanId) public { 
-        assertEq(navNew.ceiling(loanId), navOld.ceiling(loanId));
-        assertEq(navNew.currentCeiling(loanId), navOld.currentCeiling(loanId));
-        assertEq(navNew.threshold(loanId), navOld.threshold(loanId));
-        assertEq(navNew.borrowed(loanId), navOld.borrowed(loanId));
+        // check permissions
+        assertHasPermissions(assessor_, clerk_);
+        assertHasPermissions(assessor_, coordinator_);
+        assertHasPermissions(assessor_, assessorWrapper);
     
-    }
-
-    function assertMigrationAssessor() public {
-
-    }
-
-    function assertMigrationCoordinator() public {
-
+        // check state
+        AssessorLike assessorOld = AssessorLike(spell.ASSESSOR_OLD);
+        assertEq(assessor.seniorRatio(), assessorOld.seniorRatio());
+        assertEq(assessor.seniorDebt_(), assessorOld.seniorDebt_());
+        assertEq(assessor.seniorBalance_(), assessorOld.seniorBalance_());
+        assertEq(assessor.seniorInterestRate(), Fixed27(assessorOld.seniorInterestRate()));
+        assertEq(assessor.lastUpdateSeniorInterest(), assessorOld.lastUpdateSeniorInterest());
+        assertEq(assessor.maxSeniorRatio(), assessorOld.lastUpdateSeniorInterest());
+        assertEq(assessor.minSeniorRatio(), Fixed27(assessorOld.minSeniorRatio()));
+        assertEq(assessor.maxReserve(), assessorOld.maxReserve());   
     }
 
     function assertMigrationReserve() public {
+         // check dependencies 
+        assertEq(reserve.assessor(), assessor_);
+        assertEq(reserve.currency(), currency_);
+        assertEq(reserve.shelf(), shelf_);
+        assertEq(reserve.lending(), clerk_);
+        assertEq(reserve.pot(), pot_);
+        assertEq(shelf.distributor(), reserve_);
+        assertEq(collector.distributor(), reserve_);
+
+        // check permissions
+        assertHasPermissions(reserve_, clerk_);
+        assertHasPermissions(reserve_, juniorTranche_);
+        assertHasPermissions(reserve_, seniorTranche_);
+
+        // check state
+        ReserveLike reserveOld = ReserveLike(spell.RESERVE_OLD);
+        assertEq(reserve.currencyAvailable(), reserveOld.currencyAvailable());   
+        assertEq(reserve.balance_(), reserveOld.balance_());
+        assertEq(currency.balanceOf(reserve), poolReserve);
+    }
+
+    function assertMigrationCoordinator() public {
+        // // check dependencies
+        // DependLike(COORDINATOR_NEW).depend("assessor", ASSESSOR_NEW);
+        // DependLike(COORDINATOR_NEW).depend("juniorTranche", JUNIOR_TRANCHE);
+        // DependLike(COORDINATOR_NEW).depend("seniorTranche", SENIOR_TRANCHE);
+        // DependLike(COORDINATOR_NEW).depend("reserve", RESERVE_NEW);
+        // // migrate permissions
+        // AuthLike(JUNIOR_TRANCHE).rely(COORDINATOR_NEW); 
+        // AuthLike(SENIOR_TRANCHE).rely(COORDINATOR_NEW);
+        // AuthLike(JUNIOR_TRANCHE).deny(COORDINATOR_OLD); 
+        // AuthLike(SENIOR_TRANCHE).deny(COORDINATOR_OLD); 
+
+        // Coordinator clone = Coordinator(clone_);
+        // lastEpochClosed = clone.lastEpochClosed());
+        // minimumEpochTime = clone.minimumEpochTime();
+        // lastEpochExecuted = clone.lastEpochExecuted();
+        // currentEpoch = clone.currentEpoch();
+
+        // (uint  seniorRedeemSubmission, uint juniorRedeemSubmission, uint juniorSupplySubmission, uint seniorSupplySubmission) = clone.bestSubmission;
+        // bestSubmission.seniorRedeem = seniorRedeemSubmission;
+        // bestSubmission.juniorRedeem = juniorRedeemSubmission;
+        // bestSubmission.seniorSupply = seniorSupplySubmission;
+        // bestSubmission.juniorSupply = juniorSupplySubmission;
+
+        // (uint  seniorRedeemOrder, uint juniorRedeemOrder, uint juniorSupplyOrder, uint seniorSupplyOrder) = clone.order;
+        // order.seniorRedeem = seniorRedeemOrder;
+        // order.juniorRedeem = juniorRedeemOrder;
+        // order.seniorSupply = seniorSupplyOrder;
+        // order.juniorSupply = juniorSupplyOrder;
+
+        // bestSubScore = clone.bestSubScore();
+        // gotFullValidSolution = clone.gotFullValidSolution();
+
+        // epochSeniorTokenPrice = Fixed27(clone.epochSeniorTokenPrice());
+        // epochJuniorTokenPrice = Fixed27(clone.epochJuniorTokenPrice());
+        // epochNAV = clone.epochNAV();
+        // epochSeniorAsset = clone.epochSeniorAsset();
+        // epochReserve = clone.epochReserve();
+        // submissionPeriod = clone.submissionPeriod();
+
+        // weightSeniorRedeem = clone.weightSeniorRedeem();
+        // weightJuniorRedeem = clone.weightJuniorRedeem();
+        // weightJuniorSupply = clone.weightJuniorSupply();
+        // weightSeniorSupply = clone.weightSeniorSupply();
+
+        // minChallengePeriodEnd = clone.minChallengePeriodEnd();
+        // challengeTime = clone.challengeTime();
+        // bestRatioImprovement = clone.bestRatioImprovement();
+        // bestReserveImprovement = clone.bestReserveImprovement();
+
+        // poolClosing = clone.poolClosing();     
+    }
+
+    function assertIntegrationAdapter() public {
 
     }
+
+
 }
