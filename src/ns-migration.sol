@@ -84,6 +84,7 @@ contract TinlakeSpell {
     address constant public VAT = 0x0000000000000000000000000000000000000000;
 
     uint constant public CLERK_BUFFER = 0;
+    uint constant public ASSESSOR_MIN_SENIOR_RATIO = 0;
 
     // permissions to be set
     function cast() public {
@@ -102,11 +103,15 @@ contract TinlakeSpell {
         root.relyContract(COORDINATOR_NEW, self);
         root.relyContract(RESERVE_NEW, self);
         root.relyContract(CLERK, self);
+        
         // contract migration --> assumption: root contract is already ward on the new contracts
         migrateAssessor();
         migrateCoordinator();
         migrateReserve();
         integrateAdapter();
+
+        // for mkr integration: set minSeniorRatio in Assessor to 0      
+        FileLike(ASSESSOR_NEW).file("minSeniorRatio", ASSESSOR_MIN_SENIOR_RATIO);
     }
 
 
@@ -147,7 +152,7 @@ contract TinlakeSpell {
         DependLike(RESERVE_NEW).depend("shelf", SHELF);
         DependLike(RESERVE_NEW).depend("lending", CLERK);
         DependLike(RESERVE_NEW).depend("pot", RESERVE_NEW);
-        DependLike(RESERVE_NEW).depend("lending", CLERK);
+
         DependLike(SHELF).depend("distributor", RESERVE_NEW);
         DependLike(COLLECTOR).depend("distributor", RESERVE_NEW);
         // migrate permissions
@@ -160,7 +165,6 @@ contract TinlakeSpell {
         ERC20Like dai = ERC20Like(TINLAKE_CURRENCY);
         uint balanceReserveDAI = dai.balanceOf(RESERVE_OLD);
         ReserveLike(RESERVE_OLD).payout(balanceReserveDAI);
-        dai.approve(RESERVE_NEW, balanceReserveDAI);
         dai.transferFrom(self, RESERVE_NEW, balanceReserveDAI);
     }
 
@@ -182,9 +186,8 @@ contract TinlakeSpell {
         MemberlistLike(SENIOR_MEMBERLIST).updateMember(CLERK, uint(-1));
         MemberlistLike(SENIOR_MEMBERLIST).updateMember(MGR, uint(-1));
         // state
-        FileLike(Clerk).file("buffer", CLERK_BUFFER);
+        FileLike(CLERK).file("buffer", CLERK_BUFFER);
     }
 
     
 }
-

@@ -38,10 +38,46 @@ interface ReserveLike {
 
 interface CoordinatorLike  {
     function wards(address) external returns(uint);
+    function assessor() external returns(address);
+    function juniorTranche() external returns(address);
+    function seniorTranche() external returns(address);
+    function reserve() external returns(address);
+    function lastEpochClosed() external returns(uint);
+    function minimumEpochTime() external returns(uint);
+    function lastEpochExecuted() external returns(uint);
+    function currentEpoch() external returns(uint);
+    function bestSubmission() external returns(uint, uint, uint, uint);
+    function order() external returns(uint, uint, uint, uint);
+    function bestSubScore() external returns(uint);
+    function gotFullValidSolution() external returns(bool);
+    function epochSeniorTokenPrice() external returns(uint);
+    function epochJuniorTokenPrice() external returns(uint);
+    function epochNAV() external returns(uint);
+    function epochSeniorAsset() external returns(uint);
+    function epochReserve() external returns(uint);
+    function submissionPeriod() external returns(bool);
+    function weightSeniorRedeem() external returns(uint);
+    function weightJuniorRedeem() external returns(uint);
+    function weightJuniorSupply() external returns(uint);
+    function weightSeniorSupply() external returns(uint);
+    function minChallengePeriodEnd() external returns(uint);
+    function challengeTime() external returns(uint);
+    function bestRatioImprovement() external returns(uint);
+    function bestReserveImprovement() external returns(uint);
+    function poolClosing() external returns(bool);
 }
 
 interface ClerkLike {
     function wards(address) external returns(uint);
+    function assessor() public returns(address);
+    function mgr() public returns(address);
+    function coordintaor() public returns(address);
+    function reserve() public returns(address); 
+    function tranche() public returns(address);
+    function collateral() public returns(address);
+    function spotter() public returns(address);
+    function vat() public returns(address);
+    function buffer() public returns(uint);
 }
 
 interface ShelfLike {
@@ -50,6 +86,10 @@ interface ShelfLike {
 
 interface CollectorLike {
     function distributor()  external returns(address);
+}
+
+interface RestrictedTokenLike {
+    function hasMember(address member) external returns(bool);
 }
 
 contract Hevm {
@@ -68,6 +108,7 @@ contract TinlakeSpellsTest is DSTest {
     AssessorWrapperLike assessorWrapper;
     ReserveLike reserve;
     CoordinatorLike coordinator;
+    RestrictedTokenLike seniorToken;
     ClerkLike clerk;
     ERC20Like currency;
    
@@ -82,6 +123,10 @@ contract TinlakeSpellsTest is DSTest {
     address seniorTranche_;
     address currency_;
     address pot_;
+    address mgr_;
+    address seniorToken_;
+    address spotter_;
+    address vat_;
 
     uint poolReserve;
 
@@ -99,16 +144,22 @@ contract TinlakeSpellsTest is DSTest {
         assessorWrapper_ = address(assessorWrapper);
         reserve = ReserveLike(spell.RESERVE_NEW);
         reserve_ = address(reserve);
+        pot_ = address(reserve);
         coordinator = CoordinatorLike(spell.COORDINATOR_NEW);
         coordinator_ = address(coordinator);
         clerk = ClerkLike(spell.CLERK);
         clerk_ = address(clerk);
         currency = ERC20Like(spell.TINLAKE_CURRENCY);
         currency_ = address(currency);
+        seniorToken = RestrictedTokenLike(spell.SENIOR_TOKEN());
+        seniorToken_ = spell.SENIOR_TOKEN();
         juniorTranche_ = spell.JUNIOR_TRANCHE();
         seniorTranche_ = spell.SENIOR_TRANCHE();
         nav_ = spell.NAV();
-        
+        mgr_ = spell.MGR();
+        spotter_ = spell.SPOTTER();
+        vat_ = spell.VAT();
+
         poolReserve = currency.balanceOf(spell.RESERVE_OLD);
         // cheat: give testContract permissions on root contract by overriding storage 
         // storage slot for permissions => keccak256(key, mapslot) (mapslot = 0)
@@ -160,10 +211,10 @@ contract TinlakeSpellsTest is DSTest {
         assertEq(assessor.seniorRatio(), assessorOld.seniorRatio());
         assertEq(assessor.seniorDebt_(), assessorOld.seniorDebt_());
         assertEq(assessor.seniorBalance_(), assessorOld.seniorBalance_());
-        assertEq(assessor.seniorInterestRate(), Fixed27(assessorOld.seniorInterestRate()));
+        assertEq(assessor.seniorInterestRate(), assessorOld.seniorInterestRate());
         assertEq(assessor.lastUpdateSeniorInterest(), assessorOld.lastUpdateSeniorInterest());
         assertEq(assessor.maxSeniorRatio(), assessorOld.lastUpdateSeniorInterest());
-        assertEq(assessor.minSeniorRatio(), Fixed27(assessorOld.minSeniorRatio()));
+        assertEq(assessor.minSeniorRatio(), spell.ASSESSOR_MIN_SENIOR_RATIO); // has to be 0 for mkr integration
         assertEq(assessor.maxReserve(), assessorOld.maxReserve());   
     }
 
@@ -190,61 +241,66 @@ contract TinlakeSpellsTest is DSTest {
     }
 
     function assertMigrationCoordinator() public {
-        // // check dependencies
-        // DependLike(COORDINATOR_NEW).depend("assessor", ASSESSOR_NEW);
-        // DependLike(COORDINATOR_NEW).depend("juniorTranche", JUNIOR_TRANCHE);
-        // DependLike(COORDINATOR_NEW).depend("seniorTranche", SENIOR_TRANCHE);
-        // DependLike(COORDINATOR_NEW).depend("reserve", RESERVE_NEW);
-        // // migrate permissions
-        // AuthLike(JUNIOR_TRANCHE).rely(COORDINATOR_NEW); 
-        // AuthLike(SENIOR_TRANCHE).rely(COORDINATOR_NEW);
-        // AuthLike(JUNIOR_TRANCHE).deny(COORDINATOR_OLD); 
-        // AuthLike(SENIOR_TRANCHE).deny(COORDINATOR_OLD); 
+        // check dependencies
+        assertEq(coordinator.assessor(), assessor_);
+        assertEq(coordinator.juniorTranche(), juniorTranche_);
+        assertEq(coordinator.seniorTranche(), seniorTranche_);
+        assertEq(coordinator.reserve(), reserve_);
 
-        // Coordinator clone = Coordinator(clone_);
-        // lastEpochClosed = clone.lastEpochClosed());
-        // minimumEpochTime = clone.minimumEpochTime();
-        // lastEpochExecuted = clone.lastEpochExecuted();
-        // currentEpoch = clone.currentEpoch();
+        CoordinatorLike coordinatorOld = CoordinatorLike(spell.COORDINATOR_OLD);
+        address coordinatorOld_ = address(coordinatorOld);   
+        // check permissions
+        assertHasPermissions(juniorTranche_, coordinator_);
+        assertHasPermissions(seniorTranche_, coordinator_);
+        assertHasNoPermissions(juniorTranche_, coordinatorOld_);
+        assertHasNoPermissions(seniorTranche_, coordinatorOld_);
 
-        // (uint  seniorRedeemSubmission, uint juniorRedeemSubmission, uint juniorSupplySubmission, uint seniorSupplySubmission) = clone.bestSubmission;
-        // bestSubmission.seniorRedeem = seniorRedeemSubmission;
-        // bestSubmission.juniorRedeem = juniorRedeemSubmission;
-        // bestSubmission.seniorSupply = seniorSupplySubmission;
-        // bestSubmission.juniorSupply = juniorSupplySubmission;
-
-        // (uint  seniorRedeemOrder, uint juniorRedeemOrder, uint juniorSupplyOrder, uint seniorSupplyOrder) = clone.order;
-        // order.seniorRedeem = seniorRedeemOrder;
-        // order.juniorRedeem = juniorRedeemOrder;
-        // order.seniorSupply = seniorSupplyOrder;
-        // order.juniorSupply = juniorSupplyOrder;
-
-        // bestSubScore = clone.bestSubScore();
-        // gotFullValidSolution = clone.gotFullValidSolution();
-
-        // epochSeniorTokenPrice = Fixed27(clone.epochSeniorTokenPrice());
-        // epochJuniorTokenPrice = Fixed27(clone.epochJuniorTokenPrice());
-        // epochNAV = clone.epochNAV();
-        // epochSeniorAsset = clone.epochSeniorAsset();
-        // epochReserve = clone.epochReserve();
-        // submissionPeriod = clone.submissionPeriod();
-
-        // weightSeniorRedeem = clone.weightSeniorRedeem();
-        // weightJuniorRedeem = clone.weightJuniorRedeem();
-        // weightJuniorSupply = clone.weightJuniorSupply();
-        // weightSeniorSupply = clone.weightSeniorSupply();
-
-        // minChallengePeriodEnd = clone.minChallengePeriodEnd();
-        // challengeTime = clone.challengeTime();
-        // bestRatioImprovement = clone.bestRatioImprovement();
-        // bestReserveImprovement = clone.bestReserveImprovement();
-
-        // poolClosing = clone.poolClosing();     
+        // check state
+        assertEq(coordinator.lastEpochClosed(), coordinatorOld.lastEpochClosed());
+        assertEq(coordinator.minimumEpochTime(), coordinatorOld.minimumEpochTime());
+        assertEq(coordinator.lastEpochExecuted(), coordinatorOld.lastEpochExecuted());
+        assertEq(coordinator.currentEpoch(), coordinatorOld.currentEpoch());
+        assertEq(coordinator.bestSubmission(), coordinatorOld.bestSubmission());
+        assertEq(coordinator.order(), coordinatorOld.order());
+        assertEq(coordinator.bestSubScore(), coordinatorOld.bestSubScore());
+        assertEq(coordinator.gotFullValidSolution(), coordinatorOld.gotFullValidSolution());
+        assertEq(coordinator.epochSeniorTokenPrice(), coordinatorOld.epochSeniorTokenPrice());
+        assertEq(coordinator.epochJuniorTokenPrice(), coordinatorOld.epochJuniorTokenPrice());
+        assertEq(coordinator.epochNAV(), coordinatorOld.epochNAV());
+        assertEq(coordinator.epochSeniorAsset(), coordinatorOld.epochSeniorAsset());
+        assertEq(coordinator.epochReserve(), coordinatorOld.epochReserve());
+        assertEq(coordinator.submissionPeriod(), coordinatorOld.submissionPeriod());
+        assertEq(coordinator.weightSeniorRedeem(), coordinatorOld.weightSeniorRedeem());
+        assertEq(coordinator.weightJuniorRedeem(), coordinatorOld.weightJuniorRedeem());
+        assertEq(coordinator.weightJuniorSupply(), coordinatorOld.weightJuniorSupply());
+        assertEq(coordinator.weightSeniorSupply(), coordinatorOld.weightSeniorSupply());
+        assertEq(coordinator.minChallengePeriodEnd (), coordinatorOld.minChallengePeriodEnd ());
+        assertEq(coordinator.challengeTime(), coordinatorOld.challengeTime());
+        assertEq(coordinator.bestRatioImprovement(), coordinatorOld.bestRatioImprovement());
+        assertEq(coordinator.bestReserveImprovement(), coordinatorOld.bestReserveImprovement());
+        assertEq(coordinator.poolClosing(), coordinatorOld.poolClosing()); 
     }
 
     function assertIntegrationAdapter() public {
+         // check dependencies
+        assertEq(clerk.assessor(), assessor_);
+        assertEq(clerk.mgr(), mgr_);
+        assertEq(clerk.coordintaor(), coordinator_);
+        assertEq(clerk.reserve(), reserve_); 
+        assertEq(clerk.tranche(), seniorTranche_);
+        assertEq(clerk.collateral(), seniorToken_);
+        assertEq(clerk.spotter(), spotter_);
+        assertEq(clerk.vat(), vat_);
 
+        // check permissions
+        assertHasPermissions(clerk_, coordinator_);
+        assertHasPermissions(clerk_, reserve_);
+        assertHasPermissions(reserve_, clerk_);
+        assertHasPermissions(seniorTranche_, clerk_);
+        
+        // state
+        assertEq(seniorToken.hasMember(clerk_), true);
+        assertEq(seniorToken.hasMember(mgr_), true);
+        assertEq(clerk.buffer(), spell.CLERK_BUFFER);
     }
-
-
 }

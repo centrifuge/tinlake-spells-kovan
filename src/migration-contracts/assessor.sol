@@ -20,7 +20,7 @@ contract MigratedMKRAssessor is MKRAssessor {
     
     bool public done;
     address public clone;
-    
+
     function migrate(address clone_) public auth {
         require(!done, "migration already finished");
         done = true;
