@@ -19,10 +19,12 @@ import "./../../reserve.sol";
 contract MigratedReserve is Reserve {
     
     bool public done;
+    address public clone;
 
     function migrate(address clone_) public auth {
         require(!done, "migration already finished");
         done = true;
+        clone = clone_;
 
         Reserve clone = Reserve(clone_);
         currencyAvailable = clone.currencyAvailable();

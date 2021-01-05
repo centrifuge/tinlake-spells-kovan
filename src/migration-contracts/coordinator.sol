@@ -19,34 +19,39 @@ import "./../../coordinator.sol";
 contract MigratedCoordinator is Coordinator {
     
     bool public done;
-
+    address public clone;
+    
     function migrate(address clone_) public auth {
         require(!done, "migration already finished");
         done = true;
-
+        clone = clone_;
+        
         Coordinator clone = Coordinator(clone_);
         lastEpochClosed = clone.lastEpochClosed();
         minimumEpochTime = clone.minimumEpochTime();
         lastEpochExecuted = clone.lastEpochExecuted();
         currentEpoch = clone.currentEpoch();
 
-        (uint  seniorRedeemSubmission, uint juniorRedeemSubmission, uint juniorSupplySubmission, uint seniorSupplySubmission) = clone.bestSubmission;
-        bestSubmission.seniorRedeem = seniorRedeemSubmission;
-        bestSubmission.juniorRedeem = juniorRedeemSubmission;
-        bestSubmission.seniorSupply = seniorSupplySubmission;
-        bestSubmission.juniorSupply = juniorSupplySubmission;
+        // (uint  seniorRedeemSubmission, uint juniorRedeemSubmission, uint juniorSupplySubmission, uint seniorSupplySubmission) = clone.bestSubmission;
+        // bestSubmission.seniorRedeem = seniorRedeemSubmission;
+        // bestSubmission.juniorRedeem = juniorRedeemSubmission;
+        // bestSubmission.seniorSupply = seniorSupplySubmission;
+        // bestSubmission.juniorSupply = juniorSupplySubmission;
 
-        (uint  seniorRedeemOrder, uint juniorRedeemOrder, uint juniorSupplyOrder, uint seniorSupplyOrder) = clone.order;
-        order.seniorRedeem = seniorRedeemOrder;
-        order.juniorRedeem = juniorRedeemOrder;
-        order.seniorSupply = seniorSupplyOrder;
-        order.juniorSupply = juniorSupplyOrder;
+        // (uint  seniorRedeemOrder, uint juniorRedeemOrder, uint juniorSupplyOrder, uint seniorSupplyOrder) = clone.order;
+        // order.seniorRedeem = seniorRedeemOrder;
+        // order.juniorRedeem = juniorRedeemOrder;
+        // order.seniorSupply = seniorSupplyOrder;
+        // order.juniorSupply = juniorSupplyOrder;
+
+        bestSubmission = clone.bestSubmission;
+        order = clone.order;
 
         bestSubScore = clone.bestSubScore();
         gotFullValidSolution = clone.gotFullValidSolution();
 
-        epochSeniorTokenPrice = Fixed27(clone.epochSeniorTokenPrice());
-        epochJuniorTokenPrice = Fixed27(clone.epochJuniorTokenPrice());
+        epochSeniorTokenPrice = clone.epochSeniorTokenPrice();
+        epochJuniorTokenPrice = clone.epochJuniorTokenPrice();
         epochNAV = clone.epochNAV();
         epochSeniorAsset = clone.epochSeniorAsset();
         epochReserve = clone.epochReserve();

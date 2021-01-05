@@ -19,20 +19,22 @@ import "./../../adapters/mkr/assessor.sol";
 contract MigratedMKRAssessor is MKRAssessor {
     
     bool public done;
-
+    address public clone;
+    
     function migrate(address clone_) public auth {
         require(!done, "migration already finished");
         done = true;
+        clone = clone_;
 
         MKRAssessor clone = Assessor(clone_);
         // creditBufferTime = clone.creditBufferTime();
         seniorRatio = clone.seniorRatio();
         seniorDebt_ = clone.seniorDebt_();
         seniorBalance_ = clone.seniorBalance_();
-        seniorInterestRate = Fixed27(clone.seniorInterestRate());
+        seniorInterestRate = clone.seniorInterestRate();
         lastUpdateSeniorInterest = clone.lastUpdateSeniorInterest();
-        maxSeniorRatio = clone.lastUpdateSeniorInterest();
-        minSeniorRatio = Fixed27(clone.minSeniorRatio());
+        maxSeniorRatio = clone.maxSeniorRatio();
+        minSeniorRatio = clone.minSeniorRatio();
         maxReserve = clone.maxReserve();            
     }
 }
