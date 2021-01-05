@@ -31,7 +31,7 @@ contract MigratedMKRAssessor is MKRAssessor {
         seniorBalance_ = clone.seniorBalance_();
         seniorInterestRate = Fixed27(clone.seniorInterestRate());
         lastUpdateSeniorInterest = clone.lastUpdateSeniorInterest();
-        maxSeniorRatio = clone.lastUpdateSeniorInterest();
+        maxSeniorRatio = clone.maxSeniorRatio();
         minSeniorRatio = Fixed27(clone.minSeniorRatio());
         maxReserve = clone.maxReserve();            
     }
