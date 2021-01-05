@@ -182,9 +182,8 @@ contract TinlakeSpell {
         MemberlistLike(SENIOR_MEMBERLIST).updateMember(CLERK, uint(-1));
         MemberlistLike(SENIOR_MEMBERLIST).updateMember(MGR, uint(-1));
         // state
-        FileLike(Clerk).file("buffer", CLERK_BUFFER);
+        FileLike(CLERK).file("buffer", CLERK_BUFFER);
     }
 
     
 }
-
