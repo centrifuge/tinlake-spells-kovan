@@ -13,29 +13,29 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pragma solidity >=0.5.15 <0.6.0;
+pragma experimental ABIEncoderV2;
 
-import "./../../adapters/mkr/assessor.sol";
+import "./../../lib/tinlake/src/lender/adapters/mkr/assessor.sol";
 
 contract MigratedMKRAssessor is MKRAssessor {
     
     bool public done;
-    address public clone;
+    address public migratedFrom;
 
     function migrate(address clone_) public auth {
         require(!done, "migration already finished");
         done = true;
-        clone = clone_;
+        migratedFrom = clone_;
 
-        MKRAssessor clone = Assessor(clone_);
+        Assessor clone = Assessor(clone_);
         // creditBufferTime = clone.creditBufferTime();
-        seniorRatio = clone.seniorRatio();
+        seniorRatio = Fixed27(clone.seniorRatio());
         seniorDebt_ = clone.seniorDebt_();
         seniorBalance_ = clone.seniorBalance_();
-        seniorInterestRate = clone.seniorInterestRate();
+        seniorInterestRate = Fixed27(clone.seniorInterestRate());
         lastUpdateSeniorInterest = clone.lastUpdateSeniorInterest();
-        maxSeniorRatio = clone.maxSeniorRatio();
-        minSeniorRatio = clone.minSeniorRatio();
+        maxSeniorRatio = Fixed27(clone.maxSeniorRatio());
+        minSeniorRatio = Fixed27(clone.minSeniorRatio());
         maxReserve = clone.maxReserve();            
     }
 }
-   

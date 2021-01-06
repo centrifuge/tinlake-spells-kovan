@@ -1,0 +1,34 @@
+assessor
+dapp verify-contract --async "src/migration-contracts/assessor.sol:MigratedMKRAssessor" 0x49527a20904aF41d1cbFc0ba77576B9FBd8ec9E5
+dapp create "src/migration-contracts/assessor.sol:MigratedMKRAssessor"
+-> 0x49527a20904aF41d1cbFc0ba77576B9FBd8ec9E5
+
+coordinator
+dapp create "src/migration-contracts/coordinator.sol:MigratedCoordinator" 3600
+dapp verify-contract --async "src/migration-contracts/coordinator.sol:MigratedCoordinator" 0xB51D3cbaa5CCeEf896B96091E69be48bCbDE8367 3600
+->0xB51D3cbaa5CCeEf896B96091E69be48bCbDE8367
+
+reserve
+dapp create "src/migration-contracts/reserve.sol:MigratedReserve" 0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa
+dapp verify-contract --async "src/migration-contracts/reserve.sol:MigratedReserve" 0xc264eCc07728d43cdA564154c2638D3da110D4DD 0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa
+->  0xc264eCc07728d43cdA564154c2638D3da110D4DD
+
+clerk 
+dapp create "src/lender/adapters/mkr/clerk.sol:Clerk" 0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa 0x352Fee834a14800739DC72B219572d18618D9846
+dapp verify-contract --async "src/lender/adapters/mkr/clerk.sol:Clerk" 0xe22B7e582527abecBa0403A916da6b8C7F928B65 0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa 0xa1ff44b597549aE3f79Ab02109DD84B465CD7cCC
+-> 0xe22B7e582527abecBa0403A916da6b8C7F928B65
+
+mgr
+
+
+git submodule add https://github.com/centrifuge/tinlake-maker-lib.git
+
+0xbA987bDB501d131f766fEe8180Da5d81b34b69d9
+swap currency: 
+0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa
+
+constructor(address vat_,      address dai_,
+                address daiJoin_,  address vow_,
+                address drop_,     address pool_,
+                address owner_,    address tranche,
+                bytes32 ilk_) 

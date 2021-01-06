@@ -13,45 +13,48 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pragma solidity >=0.5.15 <0.6.0;
+pragma experimental ABIEncoderV2;
 
-import "./../../coordinator.sol";
+import "./../../lib/tinlake/src/lender/coordinator.sol";
 
-contract MigratedCoordinator is Coordinator {
+contract MigratedCoordinator is EpochCoordinator {
     
     bool public done;
-    address public clone;
+    address public migratedFrom;
     
+    constructor(uint challengeTime) EpochCoordinator(challengeTime) public {}
+                
     function migrate(address clone_) public auth {
         require(!done, "migration already finished");
         done = true;
-        clone = clone_;
-        
-        Coordinator clone = Coordinator(clone_);
+        migratedFrom = clone_;
+
+        EpochCoordinator clone = EpochCoordinator(clone_);
         lastEpochClosed = clone.lastEpochClosed();
         minimumEpochTime = clone.minimumEpochTime();
         lastEpochExecuted = clone.lastEpochExecuted();
         currentEpoch = clone.currentEpoch();
 
-        // (uint  seniorRedeemSubmission, uint juniorRedeemSubmission, uint juniorSupplySubmission, uint seniorSupplySubmission) = clone.bestSubmission;
-        // bestSubmission.seniorRedeem = seniorRedeemSubmission;
-        // bestSubmission.juniorRedeem = juniorRedeemSubmission;
-        // bestSubmission.seniorSupply = seniorSupplySubmission;
-        // bestSubmission.juniorSupply = juniorSupplySubmission;
+        (uint seniorRedeemSubmission, uint juniorRedeemSubmission, uint juniorSupplySubmission, uint seniorSupplySubmission) = clone.bestSubmission();
+        bestSubmission.seniorRedeem = seniorRedeemSubmission;
+        bestSubmission.juniorRedeem = juniorRedeemSubmission;
+        bestSubmission.seniorSupply = seniorSupplySubmission;
+        bestSubmission.juniorSupply = juniorSupplySubmission;
 
-        // (uint  seniorRedeemOrder, uint juniorRedeemOrder, uint juniorSupplyOrder, uint seniorSupplyOrder) = clone.order;
-        // order.seniorRedeem = seniorRedeemOrder;
-        // order.juniorRedeem = juniorRedeemOrder;
-        // order.seniorSupply = seniorSupplyOrder;
-        // order.juniorSupply = juniorSupplyOrder;
+        (uint  seniorRedeemOrder, uint juniorRedeemOrder, uint juniorSupplyOrder, uint seniorSupplyOrder) = clone.order();
+        order.seniorRedeem = seniorRedeemOrder;
+        order.juniorRedeem = juniorRedeemOrder;
+        order.seniorSupply = seniorSupplyOrder;
+        order.juniorSupply = juniorSupplyOrder;
 
-        bestSubmission = clone.bestSubmission;
-        order = clone.order;
+        // bestSubmission = OrderSummary(clone.bestSubmission());
+        // order = OrderSummary(clone.order());
 
         bestSubScore = clone.bestSubScore();
         gotFullValidSolution = clone.gotFullValidSolution();
 
-        epochSeniorTokenPrice = clone.epochSeniorTokenPrice();
-        epochJuniorTokenPrice = clone.epochJuniorTokenPrice();
+        epochSeniorTokenPrice = Fixed27(clone.epochSeniorTokenPrice());
+        epochJuniorTokenPrice = Fixed27(clone.epochJuniorTokenPrice());
         epochNAV = clone.epochNAV();
         epochSeniorAsset = clone.epochSeniorAsset();
         epochReserve = clone.epochReserve();

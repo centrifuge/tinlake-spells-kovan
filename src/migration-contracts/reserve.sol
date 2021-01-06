@@ -13,18 +13,22 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pragma solidity >=0.5.15 <0.6.0;
+pragma experimental ABIEncoderV2;
 
-import "./../../reserve.sol";
+import "./../../lib/tinlake/src/lender/reserve.sol";
+
 
 contract MigratedReserve is Reserve {
     
     bool public done;
-    address public clone;
+    address public migratedFrom;
+
+    constructor(address currency) Reserve(currency) public {}
 
     function migrate(address clone_) public auth {
         require(!done, "migration already finished");
         done = true;
-        clone = clone_;
+        migratedFrom = clone_;
 
         Reserve clone = Reserve(clone_);
         currencyAvailable = clone.currencyAvailable();

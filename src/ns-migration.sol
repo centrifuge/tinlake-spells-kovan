@@ -12,23 +12,28 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 pragma solidity >=0.5.15 <0.6.0;
+pragma experimental ABIEncoderV2;
 
 
 // TODO: split interfaces between tests and spell. Exclude all the function that afre only used in tests
-interface TinlakeRootLike {
+interface SpellTinlakeRootLike {
     function relyContract(address, address) external;
 }
 
-interface MemberlistLike {
+interface SpellMemberlistLike {
     function updateMember(address, uint) external;
 }
 
+interface SpellReserveLike {
+    function payout(uint currencyAmount) external;
+}
+
 interface DependLike {
-    function depend(bytes, address) external;
+    function depend(bytes32, address) external;
 }
 
 interface FileLike {
-    function file(bytes, address) external;
+    function file(bytes32, uint) external;
 }
 
 interface AuthLike {
@@ -40,14 +45,10 @@ interface MigrationLike {
     function migrate(address) external;
 }
 
-interface ERC20Like {
+interface SpellERC20Like {
     function balanceOf(address) external view returns (uint256);
     function transferFrom(address, address, uint) external returns (bool);
     function approve(address, uint) external;
-}
-
-interface ReserveLike {
-    function payout(uint currencyAmount) external;
 }
 
 // spell for: ns2 migration to rev pool with maker support
@@ -58,33 +59,37 @@ contract TinlakeSpell {
     bool public done;
     string constant public description = "Tinlake NS2 migration kovan Spell";
 
-    address constant public ROOT = 0xB86a5F04F5aE402d8547842A29071309C23b47e1;
-    address constant public SHELF = 0xe03A4812E1Ae31567932BDBf3618Ba5F64918bCB;
-    address constant public COLLECTOR = 0x751FF4Dd537aE8f1bA226Ae5d667a6406a53754C;
-    address constant public SENIOR_TOKEN = 0xa1ff44b597549aE3f79Ab02109DD84B465CD7cCC;
-    address constant public SENIOR_TRANCHE = 0xb3A6758FB6F79905692B3D805786B362cACB9f75;
-    address constant public SENIOR_MEMBERLIST = 0x71F515E53a9B0831c0Df03bcD33b6e6701F9e278;
-    address constant public JUNIOR_TRANCHE = 0xb148DA9cB8F7Ee64290105888D21aa3325681a6f;
-    address constant public ASSESSOR_WRAPPER = 0x7048AFBa9aBA4d3CF206e341bD22c2CA47061Fe8;
-    address constant public TINLAKE_CURRENCY = 0x99E21e1e7D99d06F780666A3BE6Ba178De04B0a9;
+{
+
+    address constant public ROOT = 0x25dF507570c8285E9c8E7FFabC87db7836850dCd;
+    address constant public SHELF = 0xF269590165D1c266B7840a0Bc1B2A267C738F2Db;
+    address constant public COLLECTOR = 0x086eA92e6B8DF55Fc7949C7CF9AE7B57f29C96Bb;
+    address constant public SENIOR_TOKEN = 0x352Fee834a14800739DC72B219572d18618D9846;
+    address constant public SENIOR_TRANCHE = 0xDF0c780Ae58cD067ce10E0D7cdB49e92EEe716d9;
+    address constant public SENIOR_MEMBERLIST = 0xD927F069faf59eD83A1072624Eeb794235bBA652;
+    address constant public JUNIOR_TRANCHE = 0x4F56924037A6Daa5C0D0F766691a5a00d37e0Be6;
+    address constant public ASSESSOR_WRAPPER = 0x105e88eFF33a7d57aa682b6E74E7DA03e2f7582B;
     address constant public NAV = 0x8f90432c37d58aB79802B31e15F59556236123dA;
+    
+    address constant public TINLAKE_CURRENCY = 0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa;
 
     // contracts to be swapped
-    address constant public ASSESSOR_OLD  = 0x00423Eb98c9CC2F43080A3A3Df3bf2a58Fcf29EB;
-    address constant public COORDINATOR_OLD = 0xb0AefE053F73bEd8b922da60451f2eaEC71F4b2f;
-    address constant public RESERVE_OLD = 0xbCd87D68A7829A9c6B4C763D2e9F9f345c61E0f6;
-    address constant public COORDINATOR_NEW = 0x0000000000000000000000000000000000000000;
-    address constant public ASSESSOR_NEW  = 0x0000000000000000000000000000000000000000;
-    address constant public RESERVE_NEW = 0x0000000000000000000000000000000000000000;
+    address constant public ASSESSOR_OLD = 0x29BB673054b6Fd268d73af5D676f150C91bd63af;
+    address constant public COORDINATOR_OLD = 0xD2F4ba3117c6463cB67001538041fBA898bc7a2e;
+    address constant public RESERVE_OLD = 0x1207BA4152C54eA742cf0FD153d999422AA60ea5;
+    address constant public COORDINATOR_NEW = 0xB51D3cbaa5CCeEf896B96091E69be48bCbDE8367;
+    address constant public ASSESSOR_NEW  = 0x49527a20904aF41d1cbFc0ba77576B9FBd8ec9E5;
+    address constant public RESERVE_NEW = 0xc264eCc07728d43cdA564154c2638D3da110D4DD;
 
     // adapter contracts
-    address constant public CLERK  = 0x0000000000000000000000000000000000000000;
+    address constant public CLERK  = 0xE3F80411CD0Dd02Def6AF3041DA4c6f9b87BA1D8;
     address constant public MGR = 0x0000000000000000000000000000000000000000;
-    address constant public SPOTTER = 0x0000000000000000000000000000000000000000;
-    address constant public VAT = 0x0000000000000000000000000000000000000000;
+    address constant public SPOTTER = 0x3a042de6413eDB15F2784f2f97cC68C7E9750b2D;
+    address constant public VAT = 0xbA987bDB501d131f766fEe8180Da5d81b34b69d9;
 
     uint constant public CLERK_BUFFER = 0;
     uint constant public ASSESSOR_MIN_SENIOR_RATIO = 0;
+    address self;
 
     // permissions to be set
     function cast() public {
@@ -94,8 +99,8 @@ contract TinlakeSpell {
     }
 
     function execute() internal {
-        TinlakeRootLike root = TinlakeRootLike(ROOT);
-        address self = address(this);
+        SpellTinlakeRootLike root = SpellTinlakeRootLike(ROOT);
+        self = address(this);
         // set spell as ward on the core contract to be able to wire the new contracts correctly
         root.relyContract(SHELF, self);
         root.relyContract(COLLECTOR, self);
@@ -109,6 +114,9 @@ contract TinlakeSpell {
         migrateCoordinator();
         migrateReserve();
         integrateAdapter();
+
+        //only on kovan
+        switchCurrency();
 
         // for mkr integration: set minSeniorRatio in Assessor to 0      
         FileLike(ASSESSOR_NEW).file("minSeniorRatio", ASSESSOR_MIN_SENIOR_RATIO);
@@ -145,6 +153,7 @@ contract TinlakeSpell {
     }
 
    function migrateReserve() internal {
+
         MigrationLike(RESERVE_NEW).migrate(RESERVE_OLD);
         // migrate dependencies 
         DependLike(RESERVE_NEW).depend("assessor", ASSESSOR_NEW);
@@ -159,13 +168,11 @@ contract TinlakeSpell {
         AuthLike(RESERVE_NEW).rely(JUNIOR_TRANCHE);
         AuthLike(RESERVE_NEW).rely(SENIOR_TRANCHE);
         AuthLike(RESERVE_NEW).rely(CLERK);
-        // migrate state
-        // following values have to be migrated as part of the consturctor of the new reserve -> check in rpc test of this spell: currencyAvailable, balance_
         // migrate reserve balance
-        ERC20Like dai = ERC20Like(TINLAKE_CURRENCY);
-        uint balanceReserveDAI = dai.balanceOf(RESERVE_OLD);
-        ReserveLike(RESERVE_OLD).payout(balanceReserveDAI);
-        dai.transferFrom(self, RESERVE_NEW, balanceReserveDAI);
+        SpellERC20Like currency = SpellERC20Like(TINLAKE_CURRENCY);
+        uint balanceReserve = currency.balanceOf(RESERVE_OLD);
+        SpellReserveLike(RESERVE_OLD).payout(balanceReserve);
+        currency.transferFrom(self, RESERVE_NEW, balanceReserve);
     }
 
     function integrateAdapter() internal {
@@ -178,15 +185,23 @@ contract TinlakeSpell {
         DependLike(CLERK).depend("collateral", SENIOR_TOKEN);
         DependLike(CLERK).depend("spotter", SPOTTER);
         DependLike(CLERK).depend("vat",VAT);
+        // currency 
+
         // permissions
         AuthLike(CLERK).rely(COORDINATOR_NEW);
         AuthLike(CLERK).rely(RESERVE_NEW);
-        AuthLike(SENIOR_TRANCHE).rely(clerk);
+        AuthLike(SENIOR_TRANCHE).rely(CLERK);
         // currency
-        MemberlistLike(SENIOR_MEMBERLIST).updateMember(CLERK, uint(-1));
-        MemberlistLike(SENIOR_MEMBERLIST).updateMember(MGR, uint(-1));
+        SpellMemberlistLike(SENIOR_MEMBERLIST).updateMember(CLERK, uint(-1));
+        SpellMemberlistLike(SENIOR_MEMBERLIST).updateMember(MGR, uint(-1));
         // state
         FileLike(CLERK).file("buffer", CLERK_BUFFER);
+    }
+
+    function switchCurrency() internal {
+        // shelf 
+        // tranches
+
     }
 
     
