@@ -124,8 +124,9 @@ contract SpellAction {
 }
 
 contract DssSpell {
+    // MCD_PAUSE: "0x8754E6ecb4fe68DaA5132c2886aB39297a5c7189" kovan 1.2.2
     DSPauseAbstract public pause =
-        DSPauseAbstract(0xbE286431454714F511008713973d3B053A2d38f3);
+        DSPauseAbstract(0x8754E6ecb4fe68DaA5132c2886aB39297a5c7189);
     address         public action;
     bytes32         public tag;
     uint256         public eta;
