@@ -2,6 +2,7 @@ pragma solidity >=0.5.15 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import "ds-test/test.sol";
+import "tinlake-math/math.sol";
 import "./../src/ns-migration.sol";
 
 interface IAuth {
@@ -13,8 +14,8 @@ interface IReserve {
     function shelf() external returns(address);
     function pot() external returns(address);
     function lending() external returns(address);
-    function currencyAvailable() external returns(address);
-    function balance_() external returns(address);
+    function currencyAvailable() external returns(uint);
+    function balance_() external returns(uint);
 }
 
 interface IAssessor {
@@ -91,12 +92,17 @@ interface IREstrictedToken {
     function hasMember(address member) external returns(bool);
 }
 
+interface IMgr {
+    function owner() external returns(address);
+}
+
+
 contract Hevm {
     function warp(uint256) public;
     function store(address, bytes32, bytes32) public;
 }
 
-contract TinlakeSpellsTest is DSTest {
+contract TinlakeSpellsTest is DSTest, Math {
 
     Hevm public hevm;
     TinlakeSpell spell;
@@ -249,7 +255,7 @@ contract TinlakeSpellsTest is DSTest {
 
         // check state
         assertEq(reserve.currencyAvailable(), reserveOld.currencyAvailable());   
-        assertEq(reserve.balance_(), reserveOld.balance_());
+        assertEq(reserve.balance_(), safeAdd(reserveOld.balance_(), poolReserveDAI));
         assertEq(currency.balanceOf(reserve_), poolReserveDAI);
     }
 
@@ -331,6 +337,7 @@ contract TinlakeSpellsTest is DSTest {
         // state
         assert(seniorToken.hasMember(clerk_));
         assert(seniorToken.hasMember(mgr_));
+        assertEq(IMgr(mgr_).owner(), clerk_); // assert clerk owner of mgr
         //assertEq(clerk.matBuffer(), spell.CLERK_BUFFER()); // has to be public
     }
 }

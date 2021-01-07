@@ -86,7 +86,7 @@ contract TinlakeSpell {
     address constant public VAT = 0xbA987bDB501d131f766fEe8180Da5d81b34b69d9;
 
 
-    uint constant public CLERK_BUFFER = 0;
+    uint constant public CLERK_BUFFER = 0.01 * 10**27;
     uint constant public ASSESSOR_MIN_SENIOR_RATIO = 0;
     address self;
 
