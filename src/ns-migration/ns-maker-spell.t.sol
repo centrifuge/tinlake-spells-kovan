@@ -2,7 +2,7 @@ pragma solidity >=0.5.12;
 
 import "ds-test/test.sol";
 import "../mgr.sol";
-import {DssSpell} from "../spell.sol";
+import {DssSpell} from "../ns-maker-spell.sol";
 import "lib/dss-interfaces/src/Interfaces.sol";
 import {DSValue} from "ds-value/value.sol";
 import {EpochCoordinator} from "tinlake/lender/coordinator.sol";

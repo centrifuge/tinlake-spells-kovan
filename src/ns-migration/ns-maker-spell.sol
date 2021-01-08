@@ -108,11 +108,11 @@ contract SpellAction {
         VatAbstract(MCD_VAT).file(ilk, "dust", 0);
         // Set the Lot size
         CatAbstract(MCD_CAT).file(ilk, "dunk", 50 * MILLION * RAD);
-        // Set the NS2DRP-A liquidation penalty (e.g. 13% => X = 113)
+        // Set the NS2DRP-A no liquidation penalty
         CatAbstract(MCD_CAT).file(ilk, "chop", WAD);
         // Set the NS2DRP-A stability fee (e.g. 1% = 1000000000315522921573372069)
         JugAbstract(MCD_JUG).file(ilk, "duty", NS2DRP_THREEPOINTSIX_PERCENT_RATE);
-        // Set the NS2DRP-A min collateralization ratio (e.g. 150% => X = 150)
+        // Set the NS2DRP-A min collateralization ratio (e.g. 105% => X = 105)
         SpotAbstract(MCD_SPOT).file(ilk, "mat", 105 * RAY / 100);
 
         // Update NS2DRP-A spot value in Vat
