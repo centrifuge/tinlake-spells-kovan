@@ -78,8 +78,6 @@ contract SpellAction {
         CHANGELOG.setAddress("MCD_NS2DRP_MGR_A", MCD_NS2DRP_MGR_A);
         CHANGELOG.setAddress("PIP_NS2DRP", PIP_NS2DRP);
 
-        //        CHANGELOG.setVersion("1.1.5");
-
         bytes32 ilk = "NS2DRP-A";
 
         // Sanity checks
