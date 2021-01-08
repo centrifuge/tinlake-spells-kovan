@@ -66,7 +66,7 @@ contract TinlakeSpell {
     address constant public SENIOR_MEMBERLIST = 0xD927F069faf59eD83A1072624Eeb794235bBA652;
     address constant public JUNIOR_TRANCHE = 0x4F56924037A6Daa5C0D0F766691a5a00d37e0Be6;
     address constant public ASSESSOR_WRAPPER = 0x105e88eFF33a7d57aa682b6E74E7DA03e2f7582B;
-    address constant public NAV = 0x8f90432c37d58aB79802B31e15F59556236123dA;
+    address constant public NAV = 0x6056BBd3B79B4C1875CbA6E720Bbf7845B2e1180;
     address constant public ASSESSOR_OLD = 0x29BB673054b6Fd268d73af5D676f150C91bd63af;
     address constant public COORDINATOR_OLD = 0xD2F4ba3117c6463cB67001538041fBA898bc7a2e;
     address constant public RESERVE_OLD = 0x1207BA4152C54eA742cf0FD153d999422AA60ea5;
