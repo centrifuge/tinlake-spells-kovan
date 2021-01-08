@@ -46,6 +46,7 @@ contract TinlakeManagerTest is DSTest {
     SpotAbstract spotter;
     DaiAbstract dai;
     JugAbstract jug;
+    //  https://changelog.makerdao.com/releases/kovan/1.2.2/contracts.json
     ChainlogAbstract constant CHANGELOG = ChainlogAbstract(0xdA0Ab1e0017DEbCd72Be8599041a2aa3bA7e740F);
     DSChiefAbstract chief;
     DSTokenAbstract gov;
@@ -58,11 +59,14 @@ contract TinlakeManagerTest is DSTest {
     DSValue dropPip;
 
     // Tinlake
-    address constant reserve = 0x30FDE788c346aBDdb564110293B20A13cF1464B6;
-    GemLike constant drop = GemLike(0xE4C72b4dE5b0F9ACcEA880Ad0b1F944F85A9dAA0);
-    Root constant root = Root(0x53b2d22d07E069a3b132BfeaaD275b10273d381E);
-    MemberList constant memberlist = MemberList(0x5B5CFD6E45F1407ABCb4BFD9947aBea1EA6649dA);
-    EpochCoordinator constant coordinator = EpochCoordinator(0xFE860d06fF2a3A485922A6a029DFc1CD8A335288);
+    GemLike constant drop = GemLike(0x352Fee834a14800739DC72B219572d18618D9846);
+    Root constant root = Root(0x25dF507570c8285E9c8E7FFabC87db7836850dCd);
+    MemberList constant memberlist = MemberList(0xD927F069faf59eD83A1072624Eeb794235bBA652);
+    EpochCoordinator constant coordinator = EpochCoordinator(0xD2F4ba3117c6463cB67001538041fBA898bc7a2e);
+    address constant seniorOperator_ = 0x6B902D49580320779262505e346E3f9B986e99e8;
+    address constant seniorTranche_ = 0xDF0c780Ae58cD067ce10E0D7cdB49e92EEe716d9;
+
+ 
 
     function setUp() public {
         vat = VatAbstract(CHANGELOG.getAddress("MCD_VAT"));
@@ -85,10 +89,10 @@ contract TinlakeManagerTest is DSTest {
                                      CHANGELOG.getAddress("MCD_DAI"),
                                      CHANGELOG.getAddress("MCD_JOIN_DAI"),
                                      address(vow),
-                                     0xE4C72b4dE5b0F9ACcEA880Ad0b1F944F85A9dAA0, // DROP token
-                                     0x230f2E19D6c2Dc0c441c2150D4dD9d67B563A60C, // senior operator
+                                     address(drop),
+                                     seniorOperator_,
                                      address(this),
-                                     0xfB30B47c47E2fAB74ca5b0c1561C2909b280c4E5, // senior tranche
+                                     seniorTranche_,
                                      ilk);
         // cast spell
         spell = new DssSpell();
