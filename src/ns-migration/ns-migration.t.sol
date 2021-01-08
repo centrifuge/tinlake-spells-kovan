@@ -3,7 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import "ds-test/test.sol";
 import "tinlake-math/math.sol";
-import "./../src/ns-migration.sol";
+import "./ns-migration.sol";
 
 interface IAuth {
     function wards(address) external returns(uint);
