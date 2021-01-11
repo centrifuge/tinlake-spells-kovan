@@ -39,3 +39,4 @@ contract MigratedMKRAssessor is MKRAssessor {
         maxReserve = clone.maxReserve();            
     }
 }
+dapp verify-contract --async "src/ns-migration/migration-contracts/assessor.sol:MigratedMKRAssessor" 0x49527a20904aF41d1cbFc0ba77576B9FBd8ec9E5
