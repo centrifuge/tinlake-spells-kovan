@@ -135,6 +135,7 @@ contract TinlakeSpell {
         // migrate permissions
         AuthLike(ASSESSOR_NEW).rely(ASSESSOR_WRAPPER); 
         AuthLike(ASSESSOR_NEW).rely(COORDINATOR_NEW); 
+        AuthLike(ASSESSOR_NEW).rely(RESERVE_NEW);
     }
 
     function migrateCoordinator() internal {
