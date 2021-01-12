@@ -24,6 +24,7 @@ interface IClerk {
     function tranche() external returns(address);
     function collateral() external returns(address);
     function spotter() external returns(address);
+    function jug() external returns(address);
     function vat() external returns(address);
     function matBuffer() external returns(uint);
 }
@@ -63,6 +64,7 @@ contract TinlakeSpellsTest is DSTest, Math {
     address seniorToken_;
     address spotter_;
     address vat_;
+    address jug_;
 
     function setUp() public {
         spell = new TinlakeSpell();
@@ -81,6 +83,7 @@ contract TinlakeSpellsTest is DSTest, Math {
         mgr_ = spell.MGR();
         spotter_ = spell.SPOTTER();
         vat_ = spell.VAT();
+        jug_ = spell.JUG();
         assessor_ = address(assessor);
         reserve_ = address(reserve);
         coordinator_ = spell.COORDINATOR();
@@ -90,6 +93,8 @@ contract TinlakeSpellsTest is DSTest, Math {
         // storage slot for permissions => keccak256(key, mapslot) (mapslot = 0)
         hevm.store(root_, keccak256(abi.encode(address(this), uint(0))), bytes32(uint(1)));
     }
+
+
 
     function testCast() public {
         // give spell permissions on root contract
@@ -124,14 +129,15 @@ contract TinlakeSpellsTest is DSTest, Math {
     function assertMigrationClerk() public {
          // check dependencies 
          // vars have to be made public first
-        // assertEq(clerk.assessor(), assessor_);
-        // assertEq(clerk.mgr(), mgr_);
-        // assertEq(clerk.coordinator(), coordinator_);
-        // assertEq(clerk.reserve(), reserve_); 
-        // assertEq(clerk.tranche(), seniorTranche_);
-        // assertEq(clerk.collateral(), seniorToken_);
-        // assertEq(clerk.spotter(), spotter_);
-        // assertEq(clerk.vat(), vat_);
+        assertEq(clerk.assessor(), assessor_);
+        assertEq(clerk.mgr(), mgr_);
+        assertEq(clerk.coordinator(), coordinator_);
+        assertEq(clerk.reserve(), reserve_); 
+        assertEq(clerk.tranche(), seniorTranche_);
+        assertEq(clerk.collateral(), seniorToken_);
+        assertEq(clerk.spotter(), spotter_);
+        assertEq(clerk.vat(), vat_);
+        assertEq(clerk.jug(), jug_);
         assertEq(reserve.lending(), clerk_);
         assertEq(assessor.clerk(), clerk_);
 
@@ -149,10 +155,9 @@ contract TinlakeSpellsTest is DSTest, Math {
         assertHasNoPermissions(seniorTranche_, clerkOld_);
         assertHasNoPermissions(assessor_, clerkOld_);
 
-        
         // state
         assert(seniorToken.hasMember(clerk_));
         assertEq(IMgr(mgr_).owner(), clerk_); // assert clerk owner of mgr
-        //assertEq(clerk.matBuffer(), spell.CLERK_BUFFER()); // has to be public
+        // assertEq(clerk.matBuffer(), spell.CLERK_BUFFER()); // has to be public
     }
 }

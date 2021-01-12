@@ -59,12 +59,14 @@ contract TinlakeSpell {
 
     // adapter contracts -> to be integrated
     address constant public CLERK_OLD  = 0xE3F80411CD0Dd02Def6AF3041DA4c6f9b87BA1D8;
-    address constant public CLERK_NEW  = 0xe9363F8752b7D743426EB6D93F726B528B0a4225;
+    address constant public CLERK_NEW  = 0x892251594cD8Fb367218a95b136a624d95F8A92F;
 
     address constant public MGR = 0x65242F75e6cCBF973b15d483dD5F555d13955A1e;
     // mkr kovan contracts from release 1.2.2 https://changelog.makerdao.com/releases/kovan/1.2.2/contracts.json
     address constant public SPOTTER = 0x3a042de6413eDB15F2784f2f97cC68C7E9750b2D;
     address constant public VAT = 0xbA987bDB501d131f766fEe8180Da5d81b34b69d9;
+    address constant public JUG = 0xcbB7718c9F39d05aEEDE1c472ca8Bf804b2f1EaD;
+
 
 
     uint constant public CLERK_BUFFER = 0.01 * 10**27;
@@ -104,7 +106,8 @@ contract TinlakeSpell {
         DependLike(CLERK_NEW).depend("tranche", SENIOR_TRANCHE);
         DependLike(CLERK_NEW).depend("collateral", SENIOR_TOKEN);
         DependLike(CLERK_NEW).depend("spotter", SPOTTER);
-        DependLike(CLERK_NEW).depend("vat",VAT);
+        DependLike(CLERK_NEW).depend("vat", VAT);
+        DependLike(CLERK_NEW).depend("jug", JUG);
 
         DependLike(ASSESSOR).depend("clerk", CLERK_NEW); 
         DependLike(RESERVE).depend("lending", CLERK_NEW);
