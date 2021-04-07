@@ -34,6 +34,15 @@ interface IAssessor {
     function maxReserve() external returns(uint);
 }
 
+interface IOperator {
+    function tranche() external returns(address);
+}
+
+interface ITranche {
+    function reserve() external returns(address);
+    function epochTicker() external returns(address);
+}
+
 interface IAssessorWrapperLike {
     function assessor() external returns(address);
 }
@@ -77,6 +86,7 @@ interface IClerk {
     function collateral() external returns(address);
     function spotter() external returns(address);
     function vat() external returns(address);
+    function jug() external returns(address);
     function matBuffer() external returns(uint);
 }
 
@@ -94,6 +104,10 @@ interface IREstrictedToken {
 
 interface IMgr {
     function owner() external returns(address);
+    function pool() external returns(address);
+    function tranche() external returns(address);
+    function urn() external returns(address);
+    function liq() external returns(address);
 }
 
 
@@ -113,8 +127,11 @@ contract TinlakeSpellsTest is DSTest, Math {
     IAssessorWrapperLike assessorWrapper;
     IReserve reserve;
     ICoordinator coordinator;
+    ITranche seniorTranche;
+    IOperator operator;
     IREstrictedToken seniorToken;
     IClerk clerk;
+    IMgr mgr;
     SpellERC20Like currency;
     SpellERC20Like testCurrency; // kovan only
    
@@ -126,8 +143,10 @@ contract TinlakeSpellsTest is DSTest, Math {
     address assessorWrapper_;
     address clerk_;
     address coordinator_;
+    address operastor_;
     address juniorTranche_;
     address seniorTranche_;
+    address operator_;
     address currency_;
     address nav_;
     address pot_;
@@ -135,6 +154,9 @@ contract TinlakeSpellsTest is DSTest, Math {
     address seniorToken_;
     address spotter_;
     address vat_;
+    address jug_;
+    address urn_;
+    address liq_;
 
     uint poolReserveDAI;
 
@@ -151,23 +173,31 @@ contract TinlakeSpellsTest is DSTest, Math {
         assessorWrapper = IAssessorWrapperLike(spell.ASSESSOR_WRAPPER());
         reserve = IReserve(spell.RESERVE_NEW());
         coordinator = ICoordinator(spell.COORDINATOR_NEW());
+        seniorTranche = ITranche(spell.SENIOR_TRANCHE_NEW());
+        operator = IOperator(spell.SENIOR_OPERATOR());
         clerk = IClerk(spell.CLERK());
+        mgr = IMgr(spell.MGR());
         currency = SpellERC20Like(spell.TINLAKE_CURRENCY());
         seniorToken = IREstrictedToken(spell.SENIOR_TOKEN());
         seniorToken_ = spell.SENIOR_TOKEN();
         juniorTranche_ = spell.JUNIOR_TRANCHE();
-        seniorTranche_ = spell.SENIOR_TRANCHE();
+      
 
         nav_ = spell.NAV();
-        mgr_ = spell.MGR();
         spotter_ = spell.SPOTTER();
         vat_ = spell.VAT();
+        jug_ = spell.JUG();
+        urn_ = spell.URN();
+        liq_ = spell.LIQ();
+        mgr_ = address(mgr);
         shelf_ = address(shelf);
         assessor_ = address(assessor);
+        operator_ = address(operator);
         assessorWrapper_ = address(assessorWrapper);
         reserve_ = address(reserve);
         pot_ = address(reserve);
         coordinator_ = address(coordinator);
+        seniorTranche_ = address(seniorTranche);
         clerk_ = address(clerk);
         currency_ = address(currency);
 
@@ -180,11 +210,12 @@ contract TinlakeSpellsTest is DSTest, Math {
     function testCast() public {
         // give spell permissions on root contract
         AuthLike(root_).rely(spell_);
-
         spell.cast();
+                emit log_named_uint("moin", 1);
         assertMigrationAssessor();
         assertMigrationCoordinator();
         assertMigrationReserve();
+        assertMigrationTranche();
         assertIntegrationAdapter();
     }
 
@@ -208,6 +239,12 @@ contract TinlakeSpellsTest is DSTest, Math {
     function assertHasNoPermissions(address con, address ward) public {
         uint perm = IAuth(con).wards(ward);
         assertEq(perm, 0);
+    }
+
+    function assertMigrationTranche() public {
+        assertEq(seniorTranche.reserve(), reserve_);
+        assertEq(seniorTranche.epochTicker(),coordinator_);
+        assertEq(operator.tranche(), seniorTranche_);
     }
 
     function assertMigrationAssessor() public {  
@@ -316,16 +353,17 @@ contract TinlakeSpellsTest is DSTest, Math {
     }
 
     function assertIntegrationAdapter() public {
-         // check dependencies 
-         // vars have to be made public first
-        // assertEq(clerk.assessor(), assessor_);
-        // assertEq(clerk.mgr(), mgr_);
-        // assertEq(clerk.coordinator(), coordinator_);
-        // assertEq(clerk.reserve(), reserve_); 
-        // assertEq(clerk.tranche(), seniorTranche_);
-        // assertEq(clerk.collateral(), seniorToken_);
-        // assertEq(clerk.spotter(), spotter_);
-        // assertEq(clerk.vat(), vat_);
+        // check dependencies 
+        // vars have to be made public first
+        assertEq(clerk.assessor(), assessor_);
+        assertEq(clerk.mgr(), mgr_);
+        assertEq(clerk.coordinator(), coordinator_);
+        assertEq(clerk.reserve(), reserve_); 
+        assertEq(clerk.tranche(), seniorTranche_);
+        assertEq(clerk.collateral(), seniorToken_);
+        assertEq(clerk.spotter(), spotter_);
+        assertEq(clerk.vat(), vat_);
+        assertEq(clerk.jug(), jug_);
 
         // check permissions
         assertHasPermissions(clerk_, coordinator_);
@@ -337,7 +375,11 @@ contract TinlakeSpellsTest is DSTest, Math {
         // state
         assert(seniorToken.hasMember(clerk_));
         assert(seniorToken.hasMember(mgr_));
-        assertEq(IMgr(mgr_).owner(), clerk_); // assert clerk owner of mgr
-        //assertEq(clerk.matBuffer(), spell.CLERK_BUFFER()); // has to be public
+
+        assertEq(mgr.owner(), clerk_); // assert clerk owner of mgr
+        assertEq(mgr.pool(), operator_);
+        assertEq(mgr.tranche(), seniorTranche_);
+        assertEq(mgr.urn(), urn_);
+        assertEq(mgr.liq(), liq_);
     }
 }
