@@ -244,6 +244,8 @@ contract TinlakeSpellsTest is DSTest, Math {
         assertEq(seniorTranche.reserve(), reserve_);
         assertEq(seniorTranche.epochTicker(),coordinator_);
         assertEq(operator.tranche(), seniorTranche_);
+        assertHasPermissions(seniorToken_, seniorTranche_);
+
     }
 
     function assertMigrationAssessor() public {  
