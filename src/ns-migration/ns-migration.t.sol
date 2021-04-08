@@ -265,6 +265,7 @@ contract TinlakeSpellsTest is DSTest, Math {
         assertHasPermissions(assessor_, clerk_);
         assertHasPermissions(assessor_, coordinator_);
         assertHasPermissions(assessor_, assessorWrapper_);
+        assertHasPermissions(assessor_, reserve_);
 
         // check state
         assertEq(assessor.seniorRatio(), assessorOld.seniorRatio());
@@ -274,7 +275,7 @@ contract TinlakeSpellsTest is DSTest, Math {
         assertEq(assessor.lastUpdateSeniorInterest(), assessorOld.lastUpdateSeniorInterest());
         assertEq(assessor.maxSeniorRatio(), assessorOld.maxSeniorRatio());
         assertEq(assessor.minSeniorRatio(), spell.ASSESSOR_MIN_SENIOR_RATIO()); // has to be 0 for mkr integration
-        assertEq(assessor.maxReserve(), assessorOld.maxReserve());   
+        assertEq(assessor.maxReserve(), assessorOld.maxReserve());  
     }
 
     function assertMigrationReserve() public {
