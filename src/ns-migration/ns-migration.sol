@@ -87,7 +87,7 @@ contract TinlakeSpell {
     address constant public SENIOR_TRANCHE_NEW = 0x41196eA43Fc11858fdf5850C69484b21dd6A1772;
 
     // adapter contracts -> to be integrated
-    address constant public CLERK = 0xeb236f629725b17C98b6CB93558637085bBD93FE;
+    address constant public CLERK = 0x2DFab9622aE0C06a783915b3C692848b0bCF3089;
     address constant public MGR =  0x8905C7066807793bf9c7cd1d236DEF0eE2692B9a;
     // mkr kovan contracts from release 1.2.10 https://changelog.makerdao.com/releases/kovan/1.2.10/contracts.json
     address constant public SPOTTER = 0x3a042de6413eDB15F2784f2f97cC68C7E9750b2D;
@@ -178,6 +178,7 @@ contract TinlakeSpell {
         // migrate permissions
         AuthLike(RESERVE_NEW).rely(JUNIOR_TRANCHE);
         AuthLike(RESERVE_NEW).rely(SENIOR_TRANCHE_NEW);
+        AuthLike(RESERVE_NEW).rely(ASSESSOR_NEW);
         
         // migrate reserve balance
         SpellERC20Like currency = SpellERC20Like(TINLAKE_CURRENCY);
@@ -217,6 +218,9 @@ contract TinlakeSpell {
         // currency
         SpellMemberlistLike(SENIOR_MEMBERLIST).updateMember(CLERK, uint(-1));
         SpellMemberlistLike(SENIOR_MEMBERLIST).updateMember(MGR, uint(-1));
+
+        // DependLike(ASSESSOR_NEW).depend("clerk", CLERK); 
+        // DependLike(RESERVE_NEW).depend("lending", CLERK);
 
         // setup mgr
         AuthLike(MGR).rely(CLERK);
