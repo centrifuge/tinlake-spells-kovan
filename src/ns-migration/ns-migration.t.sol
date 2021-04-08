@@ -380,5 +380,6 @@ contract TinlakeSpellsTest is DSTest, Math {
         assertEq(mgr.tranche(), seniorTranche_);
         assertEq(mgr.urn(), urn_);
         assertEq(mgr.liq(), liq_);
+        assertHasPermissions(mgr_, clerk_);
     }
 }
