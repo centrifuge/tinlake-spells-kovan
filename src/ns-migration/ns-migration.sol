@@ -194,7 +194,8 @@ contract TinlakeSpell {
         DependLike(SENIOR_TRANCHE_NEW).depend("reserve", RESERVE_NEW);
         DependLike(SENIOR_TRANCHE_NEW).depend("epochTicker", COORDINATOR_NEW);
         DependLike(SENIOR_OPERATOR).depend("tranche", SENIOR_TRANCHE_NEW);
-        AuthLike(SENIOR_TOKEN).rely( SENIOR_TRANCHE_NEW);
+        AuthLike(SENIOR_TOKEN).deny(SENIOR_TRANCHE_OLD);
+        AuthLike(SENIOR_TOKEN).rely(SENIOR_TRANCHE_NEW);
     }
 
     function integrateAdapter() internal {

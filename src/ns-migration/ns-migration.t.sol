@@ -145,6 +145,7 @@ contract TinlakeSpellsTest is DSTest, Math {
     address coordinator_;
     address juniorTranche_;
     address seniorTranche_;
+    address seniorTrancheOld_;
     address operator_;
     address currency_;
     address nav_;
@@ -180,6 +181,7 @@ contract TinlakeSpellsTest is DSTest, Math {
         seniorToken = IREstrictedToken(spell.SENIOR_TOKEN());
         seniorToken_ = spell.SENIOR_TOKEN();
         juniorTranche_ = spell.JUNIOR_TRANCHE();
+        seniorTrancheOld_ = spell.SENIOR_TRANCHE_OLD();
       
 
         nav_ = spell.NAV();
@@ -245,7 +247,7 @@ contract TinlakeSpellsTest is DSTest, Math {
         assertEq(seniorTranche.epochTicker(),coordinator_);
         assertEq(operator.tranche(), seniorTranche_);
         assertHasPermissions(seniorToken_, seniorTranche_);
-
+        assertHasNoPermissions(seniorToken_, seniorTrancheOld_);
     }
 
     function assertMigrationAssessor() public {  
