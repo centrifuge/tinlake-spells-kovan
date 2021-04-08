@@ -14,8 +14,6 @@
 pragma solidity >=0.5.15 <0.6.0;
 pragma experimental ABIEncoderV2;
 
-import "ds-test/test.sol";
-
 // TODO: split interfaces between tests and spell. Exclude all the function that afre only used in tests
 interface SpellTinlakeRootLike {
     function relyContract(address, address) external;
@@ -61,7 +59,7 @@ interface SpellERC20Like {
 // spell for: ns2 migration to rev pool with maker support
 // - migrate state & swap contracts: assessor, reserve, coordinator
 // - add & wire mkr adapter contracts: clerk & mgr, spotter, vat
-contract TinlakeSpell is DSTest {
+contract TinlakeSpell {
 
     bool public done;
     string constant public description = "Tinlake NS2 migration kovan Spell";
@@ -99,8 +97,6 @@ contract TinlakeSpell is DSTest {
     address constant public URN = 0xdFb4E887D89Ac14b0337C9dC05d8f5e492B9847C;
     address constant public LIQ = 0x2881c5dF65A8D81e38f7636122aFb456514804CC;
 
-
-    uint constant public CLERK_BUFFER = 0.01 * 10**27;
     uint constant public ASSESSOR_MIN_SENIOR_RATIO = 0;
     address self;
 

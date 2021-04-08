@@ -143,7 +143,6 @@ contract TinlakeSpellsTest is DSTest, Math {
     address assessorWrapper_;
     address clerk_;
     address coordinator_;
-    address operastor_;
     address juniorTranche_;
     address seniorTranche_;
     address operator_;
@@ -211,7 +210,7 @@ contract TinlakeSpellsTest is DSTest, Math {
         // give spell permissions on root contract
         AuthLike(root_).rely(spell_);
         spell.cast();
-                emit log_named_uint("moin", 1);
+            
         assertMigrationAssessor();
         assertMigrationCoordinator();
         assertMigrationReserve();
