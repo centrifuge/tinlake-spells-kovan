@@ -219,6 +219,7 @@ contract TinlakeSpell {
         SpellMemberlistLike(SENIOR_MEMBERLIST).updateMember(MGR, uint(-1));
 
         // setup mgr
+        AuthLike(MGR).rely(CLERK);
         FileLike(MGR).file("urn", URN);
         FileLike(MGR).file("liq", LIQ);
         FileLike(MGR).file("owner", CLERK);
