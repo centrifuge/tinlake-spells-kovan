@@ -83,9 +83,9 @@ contract TinlakeSpell is DSTest {
     address constant public TINLAKE_CURRENCY = 0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa; // DAI
 
     // new contracts -> to be migrated
-    address constant public COORDINATOR_NEW = 0xB51D3cbaa5CCeEf896B96091E69be48bCbDE8367;
-    address constant public ASSESSOR_NEW  = 0x49527a20904aF41d1cbFc0ba77576B9FBd8ec9E5;
-    address constant public RESERVE_NEW = 0xc264eCc07728d43cdA564154c2638D3da110D4DD;
+    address constant public COORDINATOR_NEW = 0x2862f673Bd4eFCa828fb30090287B52eB1573aC3;
+    address constant public ASSESSOR_NEW  = 0x2B1b54ab4E6F1d0f3349750a5e7b837F9Cb80cEB;
+    address constant public RESERVE_NEW = 0xaAf1e5d73Ae4d9Ac2B36fA1ae9898CFeECef1F79;
     address constant public SENIOR_TRANCHE_NEW = 0x41196eA43Fc11858fdf5850C69484b21dd6A1772;
 
     // adapter contracts -> to be integrated
