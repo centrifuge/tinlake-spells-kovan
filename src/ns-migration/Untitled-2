@@ -1,0 +1,14 @@
+dapp create "src/lender/tranche.sol:Tranche" 0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa 0x352Fee834a14800739DC72B219572d18618D9846
+// 0xE1df53E09E73316c8F224e0Db1942529c0d68245
+
+seth send 0xE1df53E09E73316c8F224e0Db1942529c0d68245 'rely(address)' 0x25dF507570c8285E9c8E7FFabC87db7836850dCd 
+
+
+
+dapp create "src/ns-migration/ns-migration.sol:TinlakeSpell" 
+dapp verify-contract --async "src/ns-migration/ns-migration.sol:TinlakeSpell" 0x6f819fcb3baeb0fDB08AA3E900365b2640746c2d
+
+rely spell on root: 
+seth send 0x25dF507570c8285E9c8E7FFabC87db7836850dCd 'rely(address)' 0x6f819fcb3baeb0fDB08AA3E900365b2640746c2d
+
+execute: seth send 0x2B1b54ab4E6F1d0f3349750a5e7b837F9Cb80cEB 'cast()'

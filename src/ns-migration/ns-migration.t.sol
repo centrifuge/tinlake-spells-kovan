@@ -128,6 +128,7 @@ contract TinlakeSpellsTest is DSTest, Math {
     IReserve reserve;
     ICoordinator coordinator;
     ITranche seniorTranche;
+    ITranche juniorTranche;
     IOperator operator;
     IREstrictedToken seniorToken;
     IClerk clerk;
@@ -174,13 +175,13 @@ contract TinlakeSpellsTest is DSTest, Math {
         reserve = IReserve(spell.RESERVE_NEW());
         coordinator = ICoordinator(spell.COORDINATOR_NEW());
         seniorTranche = ITranche(spell.SENIOR_TRANCHE_NEW());
+        juniorTranche = ITranche(spell.SENIOR_TRANCHE_NEW());
         operator = IOperator(spell.SENIOR_OPERATOR());
         clerk = IClerk(spell.CLERK());
         mgr = IMgr(spell.MGR());
         currency = SpellERC20Like(spell.TINLAKE_CURRENCY());
         seniorToken = IREstrictedToken(spell.SENIOR_TOKEN());
         seniorToken_ = spell.SENIOR_TOKEN();
-        juniorTranche_ = spell.JUNIOR_TRANCHE();
         seniorTrancheOld_ = spell.SENIOR_TRANCHE_OLD();
       
 
@@ -199,6 +200,7 @@ contract TinlakeSpellsTest is DSTest, Math {
         pot_ = address(reserve);
         coordinator_ = address(coordinator);
         seniorTranche_ = address(seniorTranche);
+        juniorTranche_ = address(juniorTranche);
         clerk_ = address(clerk);
         currency_ = address(currency);
 
@@ -285,6 +287,7 @@ contract TinlakeSpellsTest is DSTest, Math {
         assertEq(reserve.currency(), currency_);
         assertEq(reserve.shelf(), shelf_);
         assertEq(reserve.lending(), clerk_);
+        assertEq(juniorTranche.reserve(), reserve_);
         // assertEq(reserve.pot(), pot_); -> has to be public
         assertEq(shelf.distributor(), reserve_);
         // assertEq(collector.distributor(), reserve_); -> has to be public
@@ -308,7 +311,7 @@ contract TinlakeSpellsTest is DSTest, Math {
         assertEq(coordinator.juniorTranche(), juniorTranche_);
         assertEq(coordinator.seniorTranche(), seniorTranche_);
         assertEq(coordinator.reserve(), reserve_);
- 
+        assertEq(juniorTranche.epochTicker(),coordinator_);
         // check permissions
         assertHasPermissions(juniorTranche_, coordinator_);
         assertHasPermissions(seniorTranche_, coordinator_);

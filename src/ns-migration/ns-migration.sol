@@ -160,6 +160,9 @@ contract TinlakeSpell {
         DependLike(COORDINATOR_NEW).depend("juniorTranche", JUNIOR_TRANCHE);
         DependLike(COORDINATOR_NEW).depend("seniorTranche", SENIOR_TRANCHE_NEW);
         DependLike(COORDINATOR_NEW).depend("reserve", RESERVE_NEW);
+        
+        DependLike(JUNIOR_TRANCHE).depend("epochTicker", COORDINATOR_NEW);
+        
         // migrate permissions
         AuthLike(JUNIOR_TRANCHE).rely(COORDINATOR_NEW); 
         AuthLike(JUNIOR_TRANCHE).deny(COORDINATOR_OLD); 
@@ -177,6 +180,7 @@ contract TinlakeSpell {
 
         DependLike(SHELF).depend("distributor", RESERVE_NEW);
         DependLike(COLLECTOR).depend("distributor", RESERVE_NEW);
+        DependLike(JUNIOR_TRANCHE).depend("reserve", RESERVE_NEW);
         // migrate permissions
         AuthLike(RESERVE_NEW).rely(JUNIOR_TRANCHE);
         AuthLike(RESERVE_NEW).rely(SENIOR_TRANCHE_NEW);
@@ -195,12 +199,13 @@ contract TinlakeSpell {
         DependLike(SENIOR_TRANCHE_NEW).depend("reserve", RESERVE_NEW);
         DependLike(SENIOR_TRANCHE_NEW).depend("epochTicker", COORDINATOR_NEW);
         DependLike(SENIOR_OPERATOR).depend("tranche", SENIOR_TRANCHE_NEW);
+
         AuthLike(SENIOR_TOKEN).deny(SENIOR_TRANCHE_OLD);
         AuthLike(SENIOR_TOKEN).rely(SENIOR_TRANCHE_NEW);
+        AuthLike(SENIOR_TRANCHE_NEW).rely(SENIOR_OPERATOR);
     }
 
     function integrateAdapter() internal {
-
         // dependencies
         DependLike(CLERK).depend("assessor", ASSESSOR_NEW);
         DependLike(CLERK).depend("mgr", MGR);
