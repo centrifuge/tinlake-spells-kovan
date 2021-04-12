@@ -162,7 +162,7 @@ contract TinlakeSpell {
         DependLike(COORDINATOR_NEW).depend("reserve", RESERVE_NEW);
         
         DependLike(JUNIOR_TRANCHE).depend("epochTicker", COORDINATOR_NEW);
-        
+
         // migrate permissions
         AuthLike(JUNIOR_TRANCHE).rely(COORDINATOR_NEW); 
         AuthLike(JUNIOR_TRANCHE).deny(COORDINATOR_OLD); 
@@ -179,6 +179,7 @@ contract TinlakeSpell {
         DependLike(RESERVE_NEW).depend("pot", RESERVE_NEW);
 
         DependLike(SHELF).depend("distributor", RESERVE_NEW);
+        DependLike(SHELF).depend("lender", RESERVE_NEW);
         DependLike(COLLECTOR).depend("distributor", RESERVE_NEW);
         DependLike(JUNIOR_TRANCHE).depend("reserve", RESERVE_NEW);
         // migrate permissions

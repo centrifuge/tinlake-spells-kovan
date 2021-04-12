@@ -92,6 +92,7 @@ interface IClerk {
 
 interface IShelf {
     function distributor() external returns(address);
+    function lender() external returns(address);
 }
 
 interface ICollector {
@@ -290,6 +291,7 @@ contract TinlakeSpellsTest is DSTest, Math {
         assertEq(juniorTranche.reserve(), reserve_);
         // assertEq(reserve.pot(), pot_); -> has to be public
         assertEq(shelf.distributor(), reserve_);
+        assertEq(shelf.lender(), reserve_);
         // assertEq(collector.distributor(), reserve_); -> has to be public
 
         // check permissions
