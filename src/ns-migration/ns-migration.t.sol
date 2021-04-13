@@ -43,8 +43,14 @@ interface ITranche {
     function epochTicker() external returns(address);
 }
 
-interface IAssessorWrapperLike {
+interface IPoolAdminLike {
     function assessor() external returns(address);
+    function lending() external returns(address);
+    function juniorMemberList() external returns(address);
+    function seniorMemberList() external returns(address);
+}
+
+
 }
 
 interface ICoordinator  {
@@ -111,7 +117,6 @@ interface IMgr {
     function liq() external returns(address);
 }
 
-
 contract Hevm {
     function warp(uint256) public;
     function store(address, bytes32, bytes32) public;
@@ -125,7 +130,7 @@ contract TinlakeSpellsTest is DSTest, Math {
     IShelf shelf;
     ICollector collector;
     IAssessor assessor;
-    IAssessorWrapperLike assessorWrapper;
+    IPoolAdminLike poolAdmin;
     IReserve reserve;
     ICoordinator coordinator;
     ITranche seniorTranche;
@@ -136,13 +141,16 @@ contract TinlakeSpellsTest is DSTest, Math {
     IMgr mgr;
     SpellERC20Like currency;
     SpellERC20Like testCurrency; // kovan only
+    
    
     address spell_;
     address root_;
     address shelf_;
     address reserve_;
     address assessor_;
-    address assessorWrapper_;
+    address poolAdmin_;
+    address seniorMemberList_;
+    address juniorMemberList_;
     address clerk_;
     address coordinator_;
     address juniorTranche_;
@@ -172,7 +180,7 @@ contract TinlakeSpellsTest is DSTest, Math {
         collector = ICollector(spell.COLLECTOR());
         shelf = IShelf(spell.SHELF());
         assessor = IAssessor(spell.ASSESSOR_NEW());
-        assessorWrapper = IAssessorWrapperLike(spell.ASSESSOR_WRAPPER());
+        poolAdmin = IPoolAdminLike(spell.POOL_ADMIN());
         reserve = IReserve(spell.RESERVE_NEW());
         coordinator = ICoordinator(spell.COORDINATOR_NEW());
         seniorTranche = ITranche(spell.SENIOR_TRANCHE_NEW());
@@ -184,6 +192,8 @@ contract TinlakeSpellsTest is DSTest, Math {
         seniorToken = IREstrictedToken(spell.SENIOR_TOKEN());
         seniorToken_ = spell.SENIOR_TOKEN();
         seniorTrancheOld_ = spell.SENIOR_TRANCHE_OLD();
+        seniorMemberList_ = spell.SENIOR_MEMBERLIST();
+        juniorMemberList_ = spell.JUNIOR_MEMBERLIST();
       
 
         nav_ = spell.NAV();
@@ -196,7 +206,7 @@ contract TinlakeSpellsTest is DSTest, Math {
         shelf_ = address(shelf);
         assessor_ = address(assessor);
         operator_ = address(operator);
-        assessorWrapper_ = address(assessorWrapper);
+        poolAdmin_ = address(poolAdmin);
         reserve_ = address(reserve);
         pot_ = address(reserve);
         coordinator_ = address(coordinator);
@@ -221,6 +231,7 @@ contract TinlakeSpellsTest is DSTest, Math {
         assertMigrationReserve();
         assertMigrationTranche();
         assertIntegrationAdapter();
+        assertPoolAdminSet();
     }
 
     function testFailCastNoPermissions() public {
@@ -262,12 +273,10 @@ contract TinlakeSpellsTest is DSTest, Math {
         assertEq(assessor.juniorTranche(), juniorTranche_);
         assertEq(assessor.reserve(), reserve_);
         assertEq(assessor.navFeed(), nav_);
-        assertEq(assessorWrapper.assessor(), assessor_);
 
         // check permissions
         assertHasPermissions(assessor_, clerk_);
         assertHasPermissions(assessor_, coordinator_);
-        assertHasPermissions(assessor_, assessorWrapper_);
         assertHasPermissions(assessor_, reserve_);
 
         // check state
@@ -391,5 +400,20 @@ contract TinlakeSpellsTest is DSTest, Math {
         assertEq(mgr.urn(), urn_);
         assertEq(mgr.liq(), liq_);
         assertHasPermissions(mgr_, clerk_);
+    }
+
+    function assertPoolAdminSet() {
+
+        // setup dependencies 
+        assertEq(poolAdmin.assessor(), assessor_);
+        assertEq(poolAdmin.lending(), clerk_);
+        assertEq(poolAdmin.seniorMemberList(), seniorMemberList_);
+        assertEq(poolAdmin.juniorMemberList(), juniorMemberList_);
+
+        assertHasPermissions(assessor_, poolAdmin_);
+        assertHasPermissions(clerk_, poolAdmin_);
+        assertHasPermissions(seniorMemberList_, poolAdmin_);
+        assertHasPermissions(juniorMemberList_, poolAdmin_);
+        // todo add admin checks once we have addresses
     }
 }

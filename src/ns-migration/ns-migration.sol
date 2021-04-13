@@ -50,6 +50,10 @@ interface TrancheLike {
     function totalRedeem() external returns(uint);
 }
 
+interface PoolAdminLike {
+    function relyAdmin(address) external;
+}
+
 interface SpellERC20Like {
     function balanceOf(address) external view returns (uint256);
     function transferFrom(address, address, uint) external returns (bool);
@@ -71,7 +75,8 @@ contract TinlakeSpell {
     address constant public SENIOR_MEMBERLIST = 0xD927F069faf59eD83A1072624Eeb794235bBA652;
     address constant public SENIOR_OPERATOR = 0x6B902D49580320779262505e346E3f9B986e99e8;
     address constant public JUNIOR_TRANCHE = 0x4F56924037A6Daa5C0D0F766691a5a00d37e0Be6;
-    address constant public ASSESSOR_WRAPPER = 0x105e88eFF33a7d57aa682b6E74E7DA03e2f7582B;
+    address constant public JUNIOR_MEMBERLIST = 0xC797940097eaDBE0cEF0657119Dc2524710a74E7;
+    address constant public POOL_ADMIN = 0x105e88eFF33a7d57aa682b6E74E7DA03e2f7582B;
     address constant public NAV = 0x6056BBd3B79B4C1875CbA6E720Bbf7845B2e1180;
     address constant public SENIOR_TRANCHE_OLD = 0xDF0c780Ae58cD067ce10E0D7cdB49e92EEe716d9;
     address constant public ASSESSOR_OLD = 0x49527a20904aF41d1cbFc0ba77576B9FBd8ec9E5;
@@ -97,7 +102,15 @@ contract TinlakeSpell {
     address constant public URN = 0xdFb4E887D89Ac14b0337C9dC05d8f5e492B9847C;
     address constant public LIQ = 0x2881c5dF65A8D81e38f7636122aFb456514804CC;
 
+
+    // Todo: add correct addresses
+    address constant public ADMIN1 = address(0);
+    address constant public ADMIN2 = address(0);
+    address constant public ADMIN3 = address(0);
+    address constant public ADMIN4 = address(0);
+
     uint constant public ASSESSOR_MIN_SENIOR_RATIO = 0;
+    uint constant public MAT_BUFFER = 0;
     address self;
 
     // permissions to be set
@@ -119,8 +132,9 @@ contract TinlakeSpell {
         root.relyContract(SENIOR_TOKEN, self);
         root.relyContract(SENIOR_TRANCHE_NEW, self);
         root.relyContract(SENIOR_MEMBERLIST, self);
+        root.relyContract(JUNIOR_MEMBERLIST, self);
         root.relyContract(CLERK, self);
-        root.relyContract(ASSESSOR_WRAPPER, self);
+        root.relyContract(POOL_ADMIN, self);
         root.relyContract(ASSESSOR_NEW, self);
         root.relyContract(COORDINATOR_NEW, self);
         root.relyContract(RESERVE_OLD, self);
@@ -133,6 +147,7 @@ contract TinlakeSpell {
         migrateReserve();
         migrateTranche();
         integrateAdapter();
+        setupPoolAdmin();
 
         // for mkr integration: set minSeniorRatio in Assessor to 0      
         FileLike(ASSESSOR_NEW).file("minSeniorRatio", ASSESSOR_MIN_SENIOR_RATIO);
@@ -141,14 +156,12 @@ contract TinlakeSpell {
     function migrateAssessor() internal {
         MigrationLike(ASSESSOR_NEW).migrate(ASSESSOR_OLD);
         // migrate dependencies 
-        DependLike(ASSESSOR_WRAPPER).depend("assessor", ASSESSOR_NEW);
         DependLike(ASSESSOR_NEW).depend("navFeed", NAV);
         DependLike(ASSESSOR_NEW).depend("juniorTranche", JUNIOR_TRANCHE);
         DependLike(ASSESSOR_NEW).depend("seniorTranche", SENIOR_TRANCHE_NEW);
         DependLike(ASSESSOR_NEW).depend("reserve", RESERVE_NEW);
         DependLike(ASSESSOR_NEW).depend("clerk", CLERK); 
         // migrate permissions
-        AuthLike(ASSESSOR_NEW).rely(ASSESSOR_WRAPPER); 
         AuthLike(ASSESSOR_NEW).rely(COORDINATOR_NEW); 
         AuthLike(ASSESSOR_NEW).rely(RESERVE_NEW);
     }
@@ -239,6 +252,28 @@ contract TinlakeSpell {
         FileLike(MGR).file("owner", CLERK);
         FileLike(MGR).file("pool", SENIOR_OPERATOR);
         FileLike(MGR).file("tranche", SENIOR_TRANCHE_NEW);
+    }
+
+    function setupPoolAdmin() {
+        PoolAdminLike poolAdmin = PoolAdminLike(POOL_ADMIN);
+
+        // setup dependencies 
+        DependLike(POOL_ADMIN).depend("assessor", ASSESSOR_NEW);
+        DependLike(POOL_ADMIN).depend("lending", CLERK);
+        DependLike(POOL_ADMIN).depend("seniorMemberlist", SENIOR_MEMBERLIST);
+        DependLike(POOL_ADMIN).depend("juniorMemberlist", JUNIOR_MEMBERLIST);
+
+        // setup permissions
+        AuthLike(ASSESSOR).rely(COORDINATOR_NEW);
+        AuthLike(CLERK).rely(COORDINATOR_NEW);
+        AuthLike(JUNIOR_MEMBERLIST).rely(COORDINATOR_NEW);
+        AuthLike(SENIOR_MEMBERLIST).rely(COORDINATOR_NEW);
+
+        //setup admins
+        poolAdmin.relyAdmin(ADMIN1);
+        poolAdmin.relyAdmin(ADMIN2);
+        poolAdmin.relyAdmin(ADMIN3);
+        poolAdmin.relyAdmin(ADMIN4);
     }
 
 }
