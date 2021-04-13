@@ -76,7 +76,7 @@ contract TinlakeSpell {
     address constant public SENIOR_OPERATOR = 0x6B902D49580320779262505e346E3f9B986e99e8;
     address constant public JUNIOR_TRANCHE = 0x4F56924037A6Daa5C0D0F766691a5a00d37e0Be6;
     address constant public JUNIOR_MEMBERLIST = 0xC797940097eaDBE0cEF0657119Dc2524710a74E7;
-    address constant public POOL_ADMIN = 0x105e88eFF33a7d57aa682b6E74E7DA03e2f7582B;
+    address constant public POOL_ADMIN = 0xE3A882A6CF4618abe085713C8213c4841D1a4812;
     address constant public NAV = 0x6056BBd3B79B4C1875CbA6E720Bbf7845B2e1180;
     address constant public SENIOR_TRANCHE_OLD = 0xDF0c780Ae58cD067ce10E0D7cdB49e92EEe716d9;
     address constant public ASSESSOR_OLD = 0x49527a20904aF41d1cbFc0ba77576B9FBd8ec9E5;
@@ -264,10 +264,10 @@ contract TinlakeSpell {
         DependLike(POOL_ADMIN).depend("juniorMemberlist", JUNIOR_MEMBERLIST);
 
         // setup permissions
-        AuthLike(ASSESSOR).rely(COORDINATOR_NEW);
-        AuthLike(CLERK).rely(COORDINATOR_NEW);
-        AuthLike(JUNIOR_MEMBERLIST).rely(COORDINATOR_NEW);
-        AuthLike(SENIOR_MEMBERLIST).rely(COORDINATOR_NEW);
+        AuthLike(ASSESSOR).rely(POOL_ADMIN);
+        AuthLike(CLERK).rely(POOL_ADMIN);
+        AuthLike(JUNIOR_MEMBERLIST).rely(POOL_ADMIN);
+        AuthLike(SENIOR_MEMBERLIST).rely(POOL_ADMIN);
 
         //setup admins
         poolAdmin.relyAdmin(ADMIN1);
