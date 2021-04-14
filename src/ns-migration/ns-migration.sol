@@ -65,35 +65,59 @@ interface SpellERC20Like {
 // - add & wire mkr adapter contracts: clerk & mgr, spotter, vat
 contract TinlakeSpell {
 
+
+    // "ROOT_CONTRACT": "0xc5BfCcBe24b037459922F70ADA6706638A550338",
+    // "TINLAKE_CURRENCY": "0x99E21e1e7D99d06F780666A3BE6Ba178De04B0a9",
+    // "TITLE": "0x3C8ECc6Ff39cA4b38e622e70a34A2C4C147939ce",
+    // "PILE": "0x44761ed4255B3392C323233ac283c9D92fC7B722",
+    // "SHELF": "0x8C8715CfCa29e7f0e767D3945233FfA36b5CE44E",
+    // "COLLECTOR": "0xAF0A1a10330aA6239d32f08d38df6b9EA4a35E93",
+    // "FEED": "0x34165A6a31Cd745Ff820007821400287A871003e",
+    // "JUNIOR_OPERATOR": "0xD8dB19456edAb5DcDFf099C682E578beb674B81b",
+    // "SENIOR_OPERATOR": "0x4e4474c61C4A380B3f041B7aDc72848dB36BB667",
+    // "JUNIOR_TRANCHE": "0x1467434d7DC058dC0a34A681Cc1A09e78c00f8b0",
+    // "SENIOR_TRANCHE": "0x0c26010e359E2645Ba00AAa859384a58D5617De9",
+    // "JUNIOR_TOKEN": "0x1526Dce6A9EE563611f03C89961C48C83B113dFc",
+    // "SENIOR_TOKEN": "0x28F56bce6Cdd708EB173Fc3763Ee62dEbd3674Fc",
+    // "JUNIOR_MEMBERLIST": "0x20104E5E0aD78245cfa258217F857dd00Ab43b65",
+    // "SENIOR_MEMBERLIST": "0xBBfBde40aF416e6A112fAAc887eA19e602cE3999",
+    // "ASSESSOR": "0x6cC7A93d2B02B3181b048CDCfe2805aCb6e90B37",
+    // "ASSESSOR_ADMIN": "0xBFe498D0a0232cE605a04be741791da2aF14E9f3",
+    // "COORDINATOR": "0x62704f83C8f307568FD70714C27a630f7aA9bf74",
+    // "RESERVE": "0xcaa4473662AA0c93c7F3C25a71aAEc0a48d62A3c",
+    // "ACTIONS": "0x60cc4a2868559e513112f0742e6f546d339ea17b",
+    // "PROXY_REGISTRY": "0xb0cd959bbbe799ba7d18c7d28008553a7b47a04c",
+    // "CLAIM_RAD": "0x297237e17F327f8e5C8dEd78b15761A7D513353b"
+
     bool public done;
     string constant public description = "Tinlake NS2 migration kovan Spell";
 
-    address constant public ROOT = 0x25dF507570c8285E9c8E7FFabC87db7836850dCd;
-    address constant public SHELF = 0xF269590165D1c266B7840a0Bc1B2A267C738F2Db;
-    address constant public COLLECTOR = 0x086eA92e6B8DF55Fc7949C7CF9AE7B57f29C96Bb;
-    address constant public SENIOR_TOKEN = 0x352Fee834a14800739DC72B219572d18618D9846;
-    address constant public SENIOR_MEMBERLIST = 0xD927F069faf59eD83A1072624Eeb794235bBA652;
-    address constant public SENIOR_OPERATOR = 0x6B902D49580320779262505e346E3f9B986e99e8;
-    address constant public JUNIOR_TRANCHE = 0x4F56924037A6Daa5C0D0F766691a5a00d37e0Be6;
-    address constant public JUNIOR_MEMBERLIST = 0xC797940097eaDBE0cEF0657119Dc2524710a74E7;
-    address constant public POOL_ADMIN = 0xE3A882A6CF4618abe085713C8213c4841D1a4812;
-    address constant public NAV = 0x6056BBd3B79B4C1875CbA6E720Bbf7845B2e1180;
-    address constant public SENIOR_TRANCHE_OLD = 0xDF0c780Ae58cD067ce10E0D7cdB49e92EEe716d9;
-    address constant public ASSESSOR_OLD = 0x49527a20904aF41d1cbFc0ba77576B9FBd8ec9E5;
-    address constant public COORDINATOR_OLD = 0xB51D3cbaa5CCeEf896B96091E69be48bCbDE8367;
-    address constant public RESERVE_OLD = 0xc264eCc07728d43cdA564154c2638D3da110D4DD;
+    address constant public ROOT = 0xc5BfCcBe24b037459922F70ADA6706638A550338;
+    address constant public SHELF = 0x8C8715CfCa29e7f0e767D3945233FfA36b5CE44E;
+    address constant public COLLECTOR = 0xAF0A1a10330aA6239d32f08d38df6b9EA4a35E93;
+    address constant public SENIOR_TOKEN = 0x28F56bce6Cdd708EB173Fc3763Ee62dEbd3674Fc;
+    address constant public SENIOR_MEMBERLIST = 0xBBfBde40aF416e6A112fAAc887eA19e602cE3999;
+    address constant public SENIOR_OPERATOR = 0x4e4474c61C4A380B3f041B7aDc72848dB36BB667;
+    address constant public JUNIOR_TRANCHE = 0x1467434d7DC058dC0a34A681Cc1A09e78c00f8b0;
+    address constant public JUNIOR_MEMBERLIST = 0x20104E5E0aD78245cfa258217F857dd00Ab43b65;
+    address constant public POOL_ADMIN = 0xD8A9fDDF542BF19D5117528055370EE1519DDBF6;
+    address constant public NAV = 0x34165A6a31Cd745Ff820007821400287A871003e;
+    address constant public SENIOR_TRANCHE_OLD = 0x0c26010e359E2645Ba00AAa859384a58D5617De9;
+    address constant public ASSESSOR_OLD = 0x6cC7A93d2B02B3181b048CDCfe2805aCb6e90B37;
+    address constant public COORDINATOR_OLD = 0x62704f83C8f307568FD70714C27a630f7aA9bf74;
+    address constant public RESERVE_OLD = 0xcaa4473662AA0c93c7F3C25a71aAEc0a48d62A3c;
     
     address constant public TINLAKE_CURRENCY = 0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa; // DAI
 
     // new contracts -> to be migrated
-    address constant public COORDINATOR_NEW = 0x2862f673Bd4eFCa828fb30090287B52eB1573aC3;
-    address constant public ASSESSOR_NEW  = 0x2B1b54ab4E6F1d0f3349750a5e7b837F9Cb80cEB;
-    address constant public RESERVE_NEW = 0xaAf1e5d73Ae4d9Ac2B36fA1ae9898CFeECef1F79;
-    address constant public SENIOR_TRANCHE_NEW = 0x41196eA43Fc11858fdf5850C69484b21dd6A1772;
+    address constant public COORDINATOR_NEW = 0xDDC63365BA58659c62c028426A5fD0eBFA3332ed;
+    address constant public ASSESSOR_NEW  = 0x1E5Dca2f19d9546dBb235122cB8f756Ca2B865B7;
+    address constant public RESERVE_NEW = 0x0537bac749D428E4c01BceA7102D83C758449AC1;
+    address constant public SENIOR_TRANCHE_NEW = 0x67F50a32226e5c9b6f7464A287c3A2644c8F04A3;
 
     // adapter contracts -> to be integrated
-    address constant public CLERK = 0x2DFab9622aE0C06a783915b3C692848b0bCF3089;
-    address constant public MGR =  0x8905C7066807793bf9c7cd1d236DEF0eE2692B9a;
+    address constant public CLERK = 0x27677E6Aff3370a91789Da7E2fC1384dBe6cc422;
+    address constant public MGR =  0x2CfADbd094a4D650049C53832B15842a3c59Db34;
     // mkr kovan contracts from release 1.2.10 https://changelog.makerdao.com/releases/kovan/1.2.10/contracts.json
     address constant public SPOTTER = 0x3a042de6413eDB15F2784f2f97cC68C7E9750b2D;
     address constant public VAT = 0xbA987bDB501d131f766fEe8180Da5d81b34b69d9;
@@ -102,15 +126,11 @@ contract TinlakeSpell {
     address constant public URN = 0xdFb4E887D89Ac14b0337C9dC05d8f5e492B9847C;
     address constant public LIQ = 0x2881c5dF65A8D81e38f7636122aFb456514804CC;
 
-
     // Todo: add correct addresses
-    address constant public ADMIN1 = address(0);
-    address constant public ADMIN2 = address(0);
-    address constant public ADMIN3 = address(0);
-    address constant public ADMIN4 = address(0);
+    address constant public ADMIN1 = address(0x0A735602a357802f553113F5831FE2fbf2F0E2e0);
 
     uint constant public ASSESSOR_MIN_SENIOR_RATIO = 0;
-    uint constant public MAT_BUFFER = 0;
+    uint constant public MAT_BUFFER = 1.06 * 10**27;
     address self;
 
     // permissions to be set
@@ -141,6 +161,10 @@ contract TinlakeSpell {
         root.relyContract(RESERVE_NEW, self);
         root.relyContract(MGR, self);
     
+        // todo: remove for mainnet
+        DependLike(SHELF).depend("token", TINLAKE_CURRENCY);
+        DependLike(JUNIOR_TRANCHE).depend("currency", TINLAKE_CURRENCY);
+
         // contract migration --> assumption: root contract is already ward on the new contracts
         migrateAssessor();
         migrateCoordinator();
@@ -231,6 +255,8 @@ contract TinlakeSpell {
         DependLike(CLERK).depend("vat", VAT);
         DependLike(CLERK).depend("jug", JUG);
 
+        FileLike(CLERK).file("buffer", MAT_BUFFER);
+
         // permissions
         AuthLike(CLERK).rely(COORDINATOR_NEW);
         AuthLike(CLERK).rely(RESERVE_NEW);
@@ -242,9 +268,6 @@ contract TinlakeSpell {
         SpellMemberlistLike(SENIOR_MEMBERLIST).updateMember(CLERK, uint(-1));
         SpellMemberlistLike(SENIOR_MEMBERLIST).updateMember(MGR, uint(-1));
 
-        // DependLike(ASSESSOR_NEW).depend("clerk", CLERK); 
-        // DependLike(RESERVE_NEW).depend("lending", CLERK);
-
         // setup mgr
         AuthLike(MGR).rely(CLERK);
         FileLike(MGR).file("urn", URN);
@@ -252,9 +275,11 @@ contract TinlakeSpell {
         FileLike(MGR).file("owner", CLERK);
         FileLike(MGR).file("pool", SENIOR_OPERATOR);
         FileLike(MGR).file("tranche", SENIOR_TRANCHE_NEW);
+        // todo remove mainnet
+        FileLike(MGR).file("gem", SENIOR_TOKEN);
     }
 
-    function setupPoolAdmin() {
+    function setupPoolAdmin() public {
         PoolAdminLike poolAdmin = PoolAdminLike(POOL_ADMIN);
 
         // setup dependencies 
@@ -264,16 +289,13 @@ contract TinlakeSpell {
         DependLike(POOL_ADMIN).depend("juniorMemberlist", JUNIOR_MEMBERLIST);
 
         // setup permissions
-        AuthLike(ASSESSOR).rely(POOL_ADMIN);
+        AuthLike(ASSESSOR_NEW).rely(POOL_ADMIN);
         AuthLike(CLERK).rely(POOL_ADMIN);
         AuthLike(JUNIOR_MEMBERLIST).rely(POOL_ADMIN);
         AuthLike(SENIOR_MEMBERLIST).rely(POOL_ADMIN);
 
         //setup admins
         poolAdmin.relyAdmin(ADMIN1);
-        poolAdmin.relyAdmin(ADMIN2);
-        poolAdmin.relyAdmin(ADMIN3);
-        poolAdmin.relyAdmin(ADMIN4);
     }
 
 }

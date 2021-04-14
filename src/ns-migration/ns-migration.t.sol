@@ -46,11 +46,8 @@ interface ITranche {
 interface IPoolAdminLike {
     function assessor() external returns(address);
     function lending() external returns(address);
-    function juniorMemberList() external returns(address);
-    function seniorMemberList() external returns(address);
-}
-
-
+    function juniorMemberlist() external returns(address);
+    function seniorMemberlist() external returns(address);
 }
 
 interface ICoordinator  {
@@ -169,6 +166,8 @@ contract TinlakeSpellsTest is DSTest, Math {
     address liq_;
 
     uint poolReserveDAI;
+    uint matBuffer;
+    address admin1;
 
     function setUp() public {
         spell = new TinlakeSpell();
@@ -184,7 +183,7 @@ contract TinlakeSpellsTest is DSTest, Math {
         reserve = IReserve(spell.RESERVE_NEW());
         coordinator = ICoordinator(spell.COORDINATOR_NEW());
         seniorTranche = ITranche(spell.SENIOR_TRANCHE_NEW());
-        juniorTranche = ITranche(spell.SENIOR_TRANCHE_NEW());
+        juniorTranche = ITranche(spell.JUNIOR_TRANCHE());
         operator = IOperator(spell.SENIOR_OPERATOR());
         clerk = IClerk(spell.CLERK());
         mgr = IMgr(spell.MGR());
@@ -214,6 +213,9 @@ contract TinlakeSpellsTest is DSTest, Math {
         juniorTranche_ = address(juniorTranche);
         clerk_ = address(clerk);
         currency_ = address(currency);
+
+        admin1 = spell.ADMIN1();
+        matBuffer = spell.MAT_BUFFER();
 
         poolReserveDAI = currency.balanceOf(spell.RESERVE_OLD());
         // cheat: give testContract permissions on root contract by overriding storage 
@@ -383,6 +385,8 @@ contract TinlakeSpellsTest is DSTest, Math {
         assertEq(clerk.vat(), vat_);
         assertEq(clerk.jug(), jug_);
 
+        // assertEq(clerk.matBuffer(), matBuffer);
+
         // check permissions
         assertHasPermissions(clerk_, coordinator_);
         assertHasPermissions(clerk_, reserve_);
@@ -402,13 +406,13 @@ contract TinlakeSpellsTest is DSTest, Math {
         assertHasPermissions(mgr_, clerk_);
     }
 
-    function assertPoolAdminSet() {
+    function assertPoolAdminSet() public {
 
         // setup dependencies 
         assertEq(poolAdmin.assessor(), assessor_);
         assertEq(poolAdmin.lending(), clerk_);
-        assertEq(poolAdmin.seniorMemberList(), seniorMemberList_);
-        assertEq(poolAdmin.juniorMemberList(), juniorMemberList_);
+        assertEq(poolAdmin.seniorMemberlist(), seniorMemberList_);
+        assertEq(poolAdmin.juniorMemberlist(), juniorMemberList_);
 
         assertHasPermissions(assessor_, poolAdmin_);
         assertHasPermissions(clerk_, poolAdmin_);
