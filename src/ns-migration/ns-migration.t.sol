@@ -164,6 +164,7 @@ contract TinlakeSpellsTest is DSTest, Math {
     address jug_;
     address urn_;
     address liq_;
+    address rwaGem_;
 
     uint poolReserveDAI;
     uint matBuffer;
@@ -201,6 +202,7 @@ contract TinlakeSpellsTest is DSTest, Math {
         jug_ = spell.JUG();
         urn_ = spell.URN();
         liq_ = spell.LIQ();
+        rwaGem_ = spell.RWA_GEM();
         mgr_ = address(mgr);
         shelf_ = address(shelf);
         assessor_ = address(assessor);
@@ -404,6 +406,9 @@ contract TinlakeSpellsTest is DSTest, Math {
         assertEq(mgr.urn(), urn_);
         assertEq(mgr.liq(), liq_);
         assertHasPermissions(mgr_, clerk_);
+
+        // check rwa token balance = 0
+        assserEq(SpellERC20Like(rwaGem_).balanceOf(mgr_), 0);
     }
 
     function assertPoolAdminSet() public {
