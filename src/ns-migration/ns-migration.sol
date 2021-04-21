@@ -54,7 +54,7 @@ interface PoolAdminLike {
     function relyAdmin(address) external;
 }
 
-interface MgrkLike {
+interface MgrLike {
     function lock(uint) external;
 }
 
