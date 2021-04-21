@@ -408,7 +408,7 @@ contract TinlakeSpellsTest is DSTest, Math {
         assertHasPermissions(mgr_, clerk_);
 
         // check rwa token balance = 0
-        asssertEq(SpellERC20Like(rwaGem_).balanceOf(mgr_), 0);
+        assertEq(SpellERC20Like(rwaGem_).balanceOf(mgr_), 0);
     }
 
     function assertPoolAdminSet() public {
