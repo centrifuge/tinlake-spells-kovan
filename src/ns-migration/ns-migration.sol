@@ -58,7 +58,7 @@ interface MgrkLike {
     function lock(uint) external;
 }
 
-interfaceSpellERC20Like {
+interface SpellERC20Like {
     function balanceOf(address) external view returns (uint256);
     function transferFrom(address, address, uint) external returns (bool);
     function approve(address, uint) external;
