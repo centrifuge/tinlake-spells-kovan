@@ -137,6 +137,7 @@ contract TinlakeSpell {
 
     // Todo: add correct addresses
     address constant public ADMIN1 = address(0x71d9f8CFdcCEF71B59DD81AB387e523E2834F2b8);
+    address constant public ADMIN2 = address(0x9eDec77dd2651Ce062ab17e941347018AD4eAEA9);
 
     uint constant public ASSESSOR_MIN_SENIOR_RATIO = 0;
     uint constant public MAT_BUFFER = 0.01 * 10**27;
@@ -249,7 +250,7 @@ contract TinlakeSpell {
     }
 
     function integrateAdapter() internal {
-        require(SpellERC20Like(RWA_GEM).balanceOf(MGR), 1 ether);
+        require(SpellERC20Like(RWA_GEM).balanceOf(MGR) == 1 ether);
         // dependencies
         DependLike(CLERK).depend("assessor", ASSESSOR_NEW);
         DependLike(CLERK).depend("mgr", MGR);
@@ -289,6 +290,7 @@ contract TinlakeSpell {
 
     function setupPoolAdmin() public {
         PoolAdminLike poolAdmin = PoolAdminLike(POOL_ADMIN);
+        AuthLike(POOL_ADMIN).rely(ADMIN1);
 
         // setup dependencies 
         DependLike(POOL_ADMIN).depend("assessor", ASSESSOR_NEW);
@@ -304,6 +306,7 @@ contract TinlakeSpell {
 
         //setup admins
         poolAdmin.relyAdmin(ADMIN1);
+        poolAdmin.relyAdmin(ADMIN2);
     }
 
 }
