@@ -44,6 +44,7 @@ interface ITranche {
 }
 
 interface IPoolAdminLike {
+    function admins(address) external returns(uint);
     function assessor() external returns(address);
     function lending() external returns(address);
     function juniorMemberlist() external returns(address);
@@ -169,6 +170,7 @@ contract TinlakeSpellsTest is DSTest, Math {
     uint poolReserveDAI;
     uint matBuffer;
     address admin1;
+    address admin2;
 
     function setUp() public {
         spell = new TinlakeSpell();
@@ -217,6 +219,7 @@ contract TinlakeSpellsTest is DSTest, Math {
         currency_ = address(currency);
 
         admin1 = spell.ADMIN1();
+        admin2 = spell.ADMIN2();
         matBuffer = spell.MAT_BUFFER();
 
         poolReserveDAI = currency.balanceOf(spell.RESERVE_OLD());
@@ -424,5 +427,9 @@ contract TinlakeSpellsTest is DSTest, Math {
         assertHasPermissions(seniorMemberList_, poolAdmin_);
         assertHasPermissions(juniorMemberList_, poolAdmin_);
         // todo add admin checks once we have addresses
+
+        assertHasPermissions(poolAdmin_, admin1);
+        assertEq(poolAdmin.admins(admin1), 1);
+        assertEq(poolAdmin.admins(admin2), 1);
     }
 }
