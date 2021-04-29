@@ -3,7 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import "ds-test/test.sol";
 import "tinlake-math/math.sol";
-import "./ns-migration.sol";
+import "./htc-coordinator-migration.sol";
 
 interface IAuth {
     function wards(address) external returns(uint);
@@ -16,11 +16,12 @@ interface IAssessor {
     function totalBalance() external returns(uint);
     function seniorDebt() external returns(uint);
     function seniorBalance() external returns(uint);
-
+    function calcSeniorTokenPrice(uint NAV, uint reserve) external returns(uint);
+    function calcJuniorTokenPrice(uint NAV, uint reserve) external returns(uint);
 }
 
 interface INav {
-    function currentNAV() external view returns(uint);
+function currentNAV() external view returns(uint);
 }
 
 interface ITranche {
@@ -163,7 +164,7 @@ contract TinlakeSpellsTest is DSTest, Math {
 
         // calculate opoch values correctly
         uint epochSeniorAsset = safeAdd(assessor.seniorDebt(), assessor.seniorBalance());
-        uint epochNAV = INAV(assessor.navFeed()).currentNav();
+        uint epochNAV = INav(assessor.navFeed()).currentNAV();
         uint epochReserve = assessor.totalBalance();
         // calculate current token prices which are used for the execute
         uint epochSeniorTokenPrice = assessor.calcSeniorTokenPrice(epochNAV, epochReserve);
