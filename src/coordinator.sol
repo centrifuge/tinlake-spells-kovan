@@ -67,7 +67,7 @@ contract MigratedCoordinator is EpochCoordinator {
         weightSeniorSupply = clone.weightSeniorSupply();
 
         minChallengePeriodEnd = clone.minChallengePeriodEnd();
-        challengeTime = 1800; // set back to half an hour
+        challengeTime = challengeTime; // set back to half an hour
         bestRatioImprovement = clone.bestRatioImprovement();
         bestReserveImprovement = clone.bestReserveImprovement();
 
