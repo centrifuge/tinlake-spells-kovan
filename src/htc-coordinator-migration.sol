@@ -111,7 +111,7 @@ contract TinlakeSpell {
     address constant public ASSESSOR = 0x6e40A9d1eE2c8eF95322b879CBae35BE6Dd2D143;
     address constant public RESERVE = 0x573a8a054e0C80F0E9B1e96E8a2198BB46c999D6;
     address constant public COORDINATOR_OLD = 0xd2Ee4e2163188Eeeb4F4773CCbb712E8605cDcbb;
-    address constant public COORDINATOR_NEW = 0xFE860d06fF2a3A485922A6a029DFc1CD8A335288;
+    address constant public COORDINATOR_NEW = 0xE2a04a4d4Df350a752ADA79616D7f588C1A195cF;
     
     address self;
 

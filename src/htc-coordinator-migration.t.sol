@@ -181,7 +181,7 @@ contract TinlakeSpellsTest is DSTest, Math {
         assertEq(coordinator.weightJuniorRedeem(), coordinatorOld.weightJuniorRedeem());
         assertEq(coordinator.weightJuniorSupply(), coordinatorOld.weightJuniorSupply());
         assertEq(coordinator.weightSeniorSupply(), coordinatorOld.weightSeniorSupply());
-        assertEq(coordinator.minChallengePeriodEnd (), coordinatorOld.minChallengePeriodEnd ());
+        assertEq(coordinator.minChallengePeriodEnd (), block.timestamp + coordinator.challengeTime());
         assertEq(coordinator.challengeTime(), 1800);
         assertEq(coordinator.bestRatioImprovement(), coordinatorOld.bestRatioImprovement());
         assertEq(coordinator.bestReserveImprovement(), coordinatorOld.bestReserveImprovement());

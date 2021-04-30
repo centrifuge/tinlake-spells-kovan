@@ -22,7 +22,7 @@ contract MigratedCoordinator is EpochCoordinator {
     bool public done;
     address public migratedFrom;
     
-    constructor(uint challengeTime_) EpochCoordinator(challengeTime_) public {}
+    constructor(uint challengeTime) EpochCoordinator(challengeTime) public {}
                 
     function migrate(address clone_) public auth {
         require(!done, "migration already finished");
@@ -66,7 +66,6 @@ contract MigratedCoordinator is EpochCoordinator {
         weightJuniorSupply = clone.weightJuniorSupply();
         weightSeniorSupply = clone.weightSeniorSupply();
 
-        challengeTime = challengeTime_;
         minChallengePeriodEnd = block.timestamp + challengeTime;
         bestRatioImprovement = clone.bestRatioImprovement();
         bestReserveImprovement = clone.bestReserveImprovement();
