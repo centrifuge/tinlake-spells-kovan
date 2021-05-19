@@ -8,15 +8,6 @@ import "./pezesha-funds-migration.sol";
 interface IAuth {
     function wards(address) external returns(uint);
 }
-interface IReserve {
-    function assessor() external returns(address);
-    function currency() external returns(address);
-    function shelf() external returns(address);
-    function pot() external returns(address);
-    function lending() external returns(address);
-    function currencyAvailable() external returns(uint);
-    function balance_() external returns(uint);
-}
 
 interface IPoolAdminLike {
     function admins(address) external returns(uint);
@@ -37,20 +28,14 @@ contract TinlakeSpellsTest is DSTest, Math {
     TinlakeSpell spell;
 
     IPoolAdminLike poolAdmin;
-    IReserve reserve;
-    SpellERC20Like currency;
     
     address spell_;
     address root_;
-    address rootOld_;
-    address reserve_;
     address assessor_;
     address poolAdmin_;
     address seniorMemberList_;
     address juniorMemberList_;
-    address currency_;
 
-    uint poolReserveERC20;
     address admin1;
     address admin2;
     address admin3;
@@ -64,17 +49,14 @@ contract TinlakeSpellsTest is DSTest, Math {
         spell_ = address(spell);
 
         root_ = address(spell.ROOT());  
-        rootOld_ = address(spell.ROOT_OLD()); 
         hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
         poolAdmin = IPoolAdminLike(spell.POOL_ADMIN());
-        reserve = IReserve(spell.RESERVE_NEW());
-        currency = SpellERC20Like(spell.TINLAKE_CURRENCY());
+       
 
         seniorMemberList_ = spell.SENIOR_MEMBERLIST();
         juniorMemberList_ = spell.JUNIOR_MEMBERLIST();
         assessor_ = spell.ASSESSOR();
-        currency_ = address(currency);
         poolAdmin_ = address(poolAdmin);
 
         admin1 = spell.ADMIN1();
@@ -85,17 +67,15 @@ contract TinlakeSpellsTest is DSTest, Math {
         admin6 = spell.ADMIN6();
         admin7 = spell.ADMIN7();
     
-        poolReserveERC20 = currency.balanceOf(spell.RESERVE_OLD());
+      
         // cheat: give testContract permissions on root contract by overriding storage 
         // storage slot for permissions => keccak256(key, mapslot) (mapslot = 0)
         hevm.store(root_, keccak256(abi.encode(address(this), uint(0))), bytes32(uint(1)));
-        hevm.store(rootOld_, keccak256(abi.encode(address(this), uint(0))), bytes32(uint(1)));
     }
 
     function testCast() public {
         // give spell permissions on root contract
         AuthLike(root_).rely(spell_);
-        AuthLike(rootOld_).rely(spell_);
         spell.cast();
     
         // assertMigrationReserve();
@@ -122,15 +102,6 @@ contract TinlakeSpellsTest is DSTest, Math {
     function assertHasNoPermissions(address con, address ward) public {
         uint perm = IAuth(con).wards(ward);
         assertEq(perm, 0);
-    }
-    
-    function assertMigrationReserve() public {
-        IReserve reserveOld =IReserve(spell.RESERVE_OLD());
-    
-        // check state
-        assertEq(reserve.currencyAvailable(), reserveOld.currencyAvailable());   
-        assertEq(reserve.balance_(), safeAdd(reserveOld.balance_(), poolReserveERC20));
-        assertEq(currency.balanceOf(reserve_), poolReserveERC20);
     }
 
     function assertPoolAdminSet() public {

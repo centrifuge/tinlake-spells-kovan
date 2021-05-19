@@ -19,10 +19,6 @@ interface SpellTinlakeRootLike {
     function relyContract(address, address) external;
 }
 
-interface SpellReserveLike {
-    function payout(uint currencyAmount) external;
-}
-
 interface DependLike {
     function depend(bytes32, address) external;
 }
@@ -37,15 +33,8 @@ interface AuthLike {
     function deny(address) external;
 }
 
-
 interface PoolAdminLike {
     function relyAdmin(address) external;
-}
-
-interface SpellERC20Like {
-    function balanceOf(address) external view returns (uint256);
-    function transferFrom(address, address, uint) external returns (bool);
-    function approve(address, uint) external;
 }
 
 // spell for: Pezesha fund migration between reserves & PoolAdmin setup
@@ -86,12 +75,6 @@ contract TinlakeSpell {
     address constant public JUNIOR_MEMBERLIST = 0x364B69aFc0101Af31089C5aE234D8444C355e8a0;
     address constant public POOL_ADMIN = 0x68c19d14937e43ACa58538628ac2F99e167F2C9C;
     address constant public ASSESSOR = 0x76343D8BDACAFbabE2a4476ec004Ac3D5501DdF8;
-    // new contracts -> to be migrated
-    address constant public RESERVE_NEW = 0x5Aa3F927619d522d21AE9522F018030038aDC0E6;
-
-
-    address constant public ROOT_OLD = 0x92332a9831AC04275bC0f22b9140b21c72984EB8;
-    address constant public RESERVE_OLD = 0x7f5dEa6c463A7250c53F1347f82B506F40E1b0cB;
     
     address constant public TINLAKE_CURRENCY = 0xad3E3Fc59dff318BecEaAb7D00EB4F68b1EcF195; // wCUSD
 
@@ -116,24 +99,12 @@ contract TinlakeSpell {
 
     function execute() internal {
         SpellTinlakeRootLike root = SpellTinlakeRootLike(ROOT);
-        SpellTinlakeRootLike rootOld = SpellTinlakeRootLike(ROOT_OLD);
 
         self = address(this);
         // set spell as ward on the core contract to be able to wire the new contracts correctly
         root.relyContract(POOL_ADMIN, self);
-        rootOld.relyContract(RESERVE_OLD, self);
-        root.relyContract(RESERVE_NEW, self);
 
-        // migrateReserve();
         setupPoolAdmin();
-    }
-
-    function migrateReserve() internal {    
-        // migrate reserve balance
-        SpellERC20Like currency = SpellERC20Like(TINLAKE_CURRENCY);
-        uint balanceReserve = currency.balanceOf(RESERVE_OLD);
-        SpellReserveLike(RESERVE_OLD).payout(balanceReserve);
-        currency.transferFrom(self, RESERVE_NEW, balanceReserve);
     }
 
     function setupPoolAdmin() public {
