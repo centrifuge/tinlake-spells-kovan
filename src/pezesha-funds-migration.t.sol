@@ -36,13 +36,13 @@ contract TinlakeSpellsTest is DSTest, Math {
     address seniorMemberList_;
     address juniorMemberList_;
 
+    address gov;
     address admin1;
     address admin2;
     address admin3;
     address admin4;
     address admin5;
     address admin6;
-    address admin7;
 
     function setUp() public {
         spell = new TinlakeSpell();
@@ -52,7 +52,6 @@ contract TinlakeSpellsTest is DSTest, Math {
         hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
         poolAdmin = IPoolAdminLike(spell.POOL_ADMIN());
-       
 
         seniorMemberList_ = spell.SENIOR_MEMBERLIST();
         juniorMemberList_ = spell.JUNIOR_MEMBERLIST();
@@ -65,8 +64,7 @@ contract TinlakeSpellsTest is DSTest, Math {
         admin4 = spell.ADMIN4();
         admin5 = spell.ADMIN5();
         admin6 = spell.ADMIN6();
-        admin7 = spell.ADMIN7();
-    
+        gov = spell.GOV();
       
         // cheat: give testContract permissions on root contract by overriding storage 
         // storage slot for permissions => keccak256(key, mapslot) (mapslot = 0)
@@ -114,12 +112,13 @@ contract TinlakeSpellsTest is DSTest, Math {
         assertHasPermissions(seniorMemberList_, poolAdmin_);
         assertHasPermissions(juniorMemberList_, poolAdmin_);
 
+        assertHasPermissions(poolAdmin_, gov);
+
         assertEq(poolAdmin.admins(admin1), 1);
         assertEq(poolAdmin.admins(admin2), 1);
         assertEq(poolAdmin.admins(admin3), 1);
         assertEq(poolAdmin.admins(admin4), 1);
         assertEq(poolAdmin.admins(admin5), 1);
         assertEq(poolAdmin.admins(admin6), 1);
-        assertEq(poolAdmin.admins(admin7), 1);
     }
 }

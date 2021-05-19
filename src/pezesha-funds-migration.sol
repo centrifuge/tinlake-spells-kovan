@@ -79,13 +79,13 @@ contract TinlakeSpell {
     address constant public TINLAKE_CURRENCY = 0xad3E3Fc59dff318BecEaAb7D00EB4F68b1EcF195; // wCUSD
 
     // pool admins add correct addresses
+    address constant public GOV = address(0xf3BceA7494D8f3ac21585CA4b0E52aa175c24C25); // Tinlake multisig
     address constant public ADMIN1 = address(0x24730a9D68008c6Bd8F43e60Ed2C00cbe57Ac829); // AO
     address constant public ADMIN2 = address(0x71d9f8CFdcCEF71B59DD81AB387e523E2834F2b8); // Dennis
-    address constant public ADMIN3 = address(0xa7Aa917b502d86CD5A23FFbD9Ee32E013015e069); // Lea
-    address constant public ADMIN4 = address(0xfEADaD6b75e6C899132587b7Cb3FEd60c8554821); // Aubry
-    address constant public ADMIN5 = address(0xC3997Ef807A24af6Ca5Cb1d22c2fD87C6c3b79E8); // Mike
-    address constant public ADMIN6 = address(0xd60f7CFC1E051d77031aC21D9DB2F66fE54AE312); // CF
-    address constant public ADMIN7 = address(0x46a71eEf8DbcFcbAC7A0e8D5d6B634A649e61fb8); // Devin
+    address constant public ADMIN3 = address(0xd60f7CFC1E051d77031aC21D9DB2F66fE54AE312); // CF
+    address constant public ADMIN4 = address(0x46a71eEf8DbcFcbAC7A0e8D5d6B634A649e61fb8); // Devin
+    address constant public ADMIN5 = address(0xa7Aa917b502d86CD5A23FFbD9Ee32E013015e069); // Lea
+    address constant public ADMIN6 = address(0x9eDec77dd2651Ce062ab17e941347018AD4eAEA9); // Jeroen
 
     address constant DEPLOYER = address(0x790c2c860DDC993f3da92B19cB440cF8338C59a6);
     address self;
@@ -115,6 +115,8 @@ contract TinlakeSpell {
         DependLike(POOL_ADMIN).depend("seniorMemberlist", SENIOR_MEMBERLIST);
         DependLike(POOL_ADMIN).depend("juniorMemberlist", JUNIOR_MEMBERLIST);
 
+        AuthLike(POOL_ADMIN).rely(GOV);
+
         //setup admins
         poolAdmin.relyAdmin(ADMIN1);
         poolAdmin.relyAdmin(ADMIN2);
@@ -122,7 +124,6 @@ contract TinlakeSpell {
         poolAdmin.relyAdmin(ADMIN4);
         poolAdmin.relyAdmin(ADMIN5);
         poolAdmin.relyAdmin(ADMIN6);
-        poolAdmin.relyAdmin(ADMIN7);
 
         AuthLike(POOL_ADMIN).deny(DEPLOYER);
     }
