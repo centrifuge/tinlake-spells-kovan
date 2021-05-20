@@ -68,7 +68,7 @@ contract TinlakeSpell {
 // }
 
     bool public done;
-    string constant public description = "Tinlake NS2 migration mainnet Spell";
+    string constant public description = "Pezesha mainnet Spell";
 
     address constant public ROOT = 0x235893Bf9695F68a922daC055598401D832b538b;
     address constant public SENIOR_MEMBERLIST = 0x3e77f47e5e1Ec71fabE473347400A06d9Af13eE3;
