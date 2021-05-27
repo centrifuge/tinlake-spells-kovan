@@ -8,30 +8,10 @@ import "./ns-migration.sol";
 interface IAuth {
     function wards(address) external returns(uint);
 }
-interface IReserve {
-    function assessor() external returns(address);
-    function currency() external returns(address);
-    function shelf() external returns(address);
-    function pot() external returns(address);
-    function lending() external returns(address);
-    function currencyAvailable() external returns(uint);
-    function balance_() external returns(uint);
-}
 
 interface IAssessor {
     function seniorTranche() external returns(address);
     function juniorTranche() external returns(address);
-    function navFeed() external returns(address);
-    function reserve() external returns(address); 
-    function clerk() external returns(address);
-    function seniorRatio() external returns(uint);
-    function seniorDebt_() external returns(uint);
-    function seniorBalance_() external returns(uint);
-    function seniorInterestRate() external returns(uint);
-    function lastUpdateSeniorInterest() external returns(uint);
-    function maxSeniorRatio() external returns(uint);
-    function minSeniorRatio() external returns(uint);
-    function maxReserve() external returns(uint);
 }
 
 interface IOperator {
@@ -43,55 +23,13 @@ interface ITranche {
     function epochTicker() external returns(address);
 }
 
-interface IPoolAdminLike {
-    function admins(address) external returns(uint);
-    function assessor() external returns(address);
-    function lending() external returns(address);
-    function juniorMemberlist() external returns(address);
-    function seniorMemberlist() external returns(address);
-}
-
 interface ICoordinator  {
-    function assessor() external returns(address);
     function juniorTranche() external returns(address);
     function seniorTranche() external returns(address);
-    function reserve() external returns(address);
-    function lastEpochClosed() external returns(uint);
-    function minimumEpochTime() external returns(uint);
-    function lastEpochExecuted() external returns(uint);
-    function currentEpoch() external returns(uint);
-    function bestSubmission() external returns(uint, uint, uint, uint);
-    function order() external returns(uint, uint, uint, uint);
-    function bestSubScore() external returns(uint);
-    function gotFullValidSolution() external returns(bool);
-    function epochSeniorTokenPrice() external returns(uint);
-    function epochJuniorTokenPrice() external returns(uint);
-    function epochNAV() external returns(uint);
-    function epochSeniorAsset() external returns(uint);
-    function epochReserve() external returns(uint);
-    function submissionPeriod() external returns(bool);
-    function weightSeniorRedeem() external returns(uint);
-    function weightJuniorRedeem() external returns(uint);
-    function weightJuniorSupply() external returns(uint);
-    function weightSeniorSupply() external returns(uint);
-    function minChallengePeriodEnd() external returns(uint);
-    function challengeTime() external returns(uint);
-    function bestRatioImprovement() external returns(uint);
-    function bestReserveImprovement() external returns(uint);
-    function poolClosing() external returns(bool);
 }
 
 interface IClerk {
-    function assessor() external returns(address);
-    function mgr() external returns(address);
-    function coordinator() external returns(address);
-    function reserve() external returns(address); 
     function tranche() external returns(address);
-    function collateral() external returns(address);
-    function spotter() external returns(address);
-    function vat() external returns(address);
-    function jug() external returns(address);
-    function matBuffer() external returns(uint);
 }
 
 interface IShelf {
