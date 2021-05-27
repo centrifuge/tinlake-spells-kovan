@@ -3,29 +3,52 @@ pragma experimental ABIEncoderV2;
 
 import "ds-test/test.sol";
 import "tinlake-math/math.sol";
-import "./htc-coordinator-migration.sol";
+import "./ns-migration.sol";
 
 interface IAuth {
     function wards(address) external returns(uint);
 }
-
-interface IAssessor {
-    function navFeed() external returns(address);
-    function reserve() external returns(address); 
-    function seniorRatio() external returns(uint);
-    function totalBalance() external returns(uint);
-    function seniorDebt() external returns(uint);
-    function seniorBalance() external returns(uint);
-    function calcSeniorTokenPrice(uint NAV, uint reserve) external returns(uint);
-    function calcJuniorTokenPrice(uint NAV, uint reserve) external returns(uint);
+interface IReserve {
+    function assessor() external returns(address);
+    function currency() external returns(address);
+    function shelf() external returns(address);
+    function pot() external returns(address);
+    function lending() external returns(address);
+    function currencyAvailable() external returns(uint);
+    function balance_() external returns(uint);
 }
 
-interface INav {
-function currentNAV() external view returns(uint);
+interface IAssessor {
+    function seniorTranche() external returns(address);
+    function juniorTranche() external returns(address);
+    function navFeed() external returns(address);
+    function reserve() external returns(address); 
+    function clerk() external returns(address);
+    function seniorRatio() external returns(uint);
+    function seniorDebt_() external returns(uint);
+    function seniorBalance_() external returns(uint);
+    function seniorInterestRate() external returns(uint);
+    function lastUpdateSeniorInterest() external returns(uint);
+    function maxSeniorRatio() external returns(uint);
+    function minSeniorRatio() external returns(uint);
+    function maxReserve() external returns(uint);
+}
+
+interface IOperator {
+    function tranche() external returns(address);
 }
 
 interface ITranche {
+    function reserve() external returns(address);
     function epochTicker() external returns(address);
+}
+
+interface IPoolAdminLike {
+    function admins(address) external returns(uint);
+    function assessor() external returns(address);
+    function lending() external returns(address);
+    function juniorMemberlist() external returns(address);
+    function seniorMemberlist() external returns(address);
 }
 
 interface ICoordinator  {
@@ -58,6 +81,40 @@ interface ICoordinator  {
     function poolClosing() external returns(bool);
 }
 
+interface IClerk {
+    function assessor() external returns(address);
+    function mgr() external returns(address);
+    function coordinator() external returns(address);
+    function reserve() external returns(address); 
+    function tranche() external returns(address);
+    function collateral() external returns(address);
+    function spotter() external returns(address);
+    function vat() external returns(address);
+    function jug() external returns(address);
+    function matBuffer() external returns(uint);
+}
+
+interface IShelf {
+    function distributor() external returns(address);
+    function lender() external returns(address);
+}
+
+interface ICollector {
+    function distributor() external returns(address);
+}
+
+interface IREstrictedToken {
+    function hasMember(address member) external returns(bool);
+}
+
+interface IMgr {
+    function owner() external returns(address);
+    function pool() external returns(address);
+    function tranche() external returns(address);
+    function urn() external returns(address);
+    function liq() external returns(address);
+}
+
 contract Hevm {
     function warp(uint256) public;
     function store(address, bytes32, bytes32) public;
@@ -68,19 +125,52 @@ contract TinlakeSpellsTest is DSTest, Math {
     Hevm public hevm;
     TinlakeSpell spell;
 
+    IShelf shelf;
+    ICollector collector;
     IAssessor assessor;
+    IPoolAdminLike poolAdmin;
+    IReserve reserve;
     ICoordinator coordinator;
     ITranche seniorTranche;
     ITranche juniorTranche;
+    IOperator operator;
+    IREstrictedToken seniorToken;
+    IClerk clerk;
+    IMgr mgr;
+    SpellERC20Like currency;
+    SpellERC20Like testCurrency; // kovan only
+    
    
     address spell_;
     address root_;
+    address shelf_;
     address reserve_;
     address assessor_;
+    address poolAdmin_;
+    address seniorMemberList_;
+    address juniorMemberList_;
+    address clerk_;
     address coordinator_;
-    address coordinatorOld_;
     address juniorTranche_;
     address seniorTranche_;
+    address seniorTrancheOld_;
+    address operator_;
+    address currency_;
+    address nav_;
+    address pot_;
+    address mgr_;
+    address seniorToken_;
+    address spotter_;
+    address vat_;
+    address jug_;
+    address urn_;
+    address liq_;
+    address rwaGem_;
+
+    uint poolReserveDAI;
+    uint matBuffer;
+    address admin1;
+    address admin2;
 
     function setUp() public {
         spell = new TinlakeSpell();
@@ -89,18 +179,50 @@ contract TinlakeSpellsTest is DSTest, Math {
         root_ = address(spell.ROOT());  
         hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
-        assessor = IAssessor(spell.ASSESSOR());
+        collector = ICollector(spell.COLLECTOR());
+        shelf = IShelf(spell.SHELF());
+        assessor = IAssessor(spell.ASSESSOR_NEW());
+        poolAdmin = IPoolAdminLike(spell.POOL_ADMIN());
+        reserve = IReserve(spell.RESERVE_NEW());
         coordinator = ICoordinator(spell.COORDINATOR_NEW());
-        seniorTranche = ITranche(spell.SENIOR_TRANCHE());
+        seniorTranche = ITranche(spell.SENIOR_TRANCHE_NEW());
         juniorTranche = ITranche(spell.JUNIOR_TRANCHE());
-       
+        operator = IOperator(spell.SENIOR_OPERATOR());
+        clerk = IClerk(spell.CLERK());
+        mgr = IMgr(spell.MGR());
+        currency = SpellERC20Like(spell.TINLAKE_CURRENCY());
+        seniorToken = IREstrictedToken(spell.SENIOR_TOKEN());
+        seniorToken_ = spell.SENIOR_TOKEN();
+        seniorTrancheOld_ = spell.SENIOR_TRANCHE_OLD();
+        seniorMemberList_ = spell.SENIOR_MEMBERLIST();
+        juniorMemberList_ = spell.JUNIOR_MEMBERLIST();
+      
+
+        nav_ = spell.NAV();
+        spotter_ = spell.SPOTTER();
+        vat_ = spell.VAT();
+        jug_ = spell.JUG();
+        urn_ = spell.URN();
+        liq_ = spell.LIQ();
+        rwaGem_ = spell.RWA_GEM();
+        mgr_ = address(mgr);
+        shelf_ = address(shelf);
         assessor_ = address(assessor);
-        reserve_ = spell.RESERVE();
+        operator_ = address(operator);
+        poolAdmin_ = address(poolAdmin);
+        reserve_ = address(reserve);
+        pot_ = address(reserve);
         coordinator_ = address(coordinator);
-        coordinatorOld_ = spell.COORDINATOR_OLD();
         seniorTranche_ = address(seniorTranche);
         juniorTranche_ = address(juniorTranche);
-       
+        clerk_ = address(clerk);
+        currency_ = address(currency);
+
+        admin1 = spell.ADMIN1();
+        admin2 = spell.ADMIN2();
+        matBuffer = spell.MAT_BUFFER();
+
+        poolReserveDAI = currency.balanceOf(spell.RESERVE_OLD());
         // cheat: give testContract permissions on root contract by overriding storage 
         // storage slot for permissions => keccak256(key, mapslot) (mapslot = 0)
         hevm.store(root_, keccak256(abi.encode(address(this), uint(0))), bytes32(uint(1)));
@@ -111,7 +233,12 @@ contract TinlakeSpellsTest is DSTest, Math {
         AuthLike(root_).rely(spell_);
         spell.cast();
             
+        assertMigrationAssessor();
         assertMigrationCoordinator();
+        assertMigrationReserve();
+        assertMigrationTranche();
+        assertIntegrationAdapter();
+        assertPoolAdminSet();
     }
 
     function testFailCastNoPermissions() public {
@@ -136,6 +263,64 @@ contract TinlakeSpellsTest is DSTest, Math {
         assertEq(perm, 0);
     }
 
+    function assertMigrationTranche() public {
+        assertEq(seniorTranche.reserve(), reserve_);
+        assertEq(seniorTranche.epochTicker(),coordinator_);
+        assertEq(operator.tranche(), seniorTranche_);
+        assertHasPermissions(seniorToken_, seniorTranche_);
+        assertHasNoPermissions(seniorToken_, seniorTrancheOld_);
+    }
+
+    function assertMigrationAssessor() public {  
+        IAssessor assessorOld = IAssessor(spell.ASSESSOR_OLD());
+
+        // check dependencies
+        assertEq(assessor.clerk(), clerk_);
+        assertEq(assessor.seniorTranche(), seniorTranche_);
+        assertEq(assessor.juniorTranche(), juniorTranche_);
+        assertEq(assessor.reserve(), reserve_);
+        assertEq(assessor.navFeed(), nav_);
+
+        // check permissions
+        assertHasPermissions(assessor_, clerk_);
+        assertHasPermissions(assessor_, coordinator_);
+        assertHasPermissions(assessor_, reserve_);
+
+        // check state
+        assertEq(assessor.seniorRatio(), assessorOld.seniorRatio());
+        assertEq(assessor.seniorDebt_(), assessorOld.seniorDebt_());
+        assertEq(assessor.seniorBalance_(), assessorOld.seniorBalance_());
+        assertEq(assessor.seniorInterestRate(), assessorOld.seniorInterestRate());
+        assertEq(assessor.lastUpdateSeniorInterest(), assessorOld.lastUpdateSeniorInterest());
+        assertEq(assessor.maxSeniorRatio(), assessorOld.maxSeniorRatio());
+        assertEq(assessor.minSeniorRatio(), spell.ASSESSOR_MIN_SENIOR_RATIO()); // has to be 0 for mkr integration
+        assertEq(assessor.maxReserve(), assessorOld.maxReserve());  
+    }
+
+    function assertMigrationReserve() public {
+        IReserve reserveOld =IReserve(spell.RESERVE_OLD());
+         // check dependencies 
+        assertEq(reserve.assessor(), assessor_);
+        assertEq(reserve.currency(), currency_);
+        assertEq(reserve.shelf(), shelf_);
+        assertEq(reserve.lending(), clerk_);
+        assertEq(juniorTranche.reserve(), reserve_);
+        // assertEq(reserve.pot(), pot_); -> has to be public
+        assertEq(shelf.distributor(), reserve_);
+        assertEq(shelf.lender(), reserve_);
+        // assertEq(collector.distributor(), reserve_); -> has to be public
+
+        // check permissions
+        assertHasPermissions(reserve_, clerk_);
+        assertHasPermissions(reserve_, juniorTranche_);
+        assertHasPermissions(reserve_, seniorTranche_);
+
+        // check state
+        assertEq(reserve.currencyAvailable(), reserveOld.currencyAvailable());   
+        assertEq(reserve.balance_(), safeAdd(reserveOld.balance_(), poolReserveDAI));
+        assertEq(currency.balanceOf(reserve_), poolReserveDAI);
+    }
+
     function assertMigrationCoordinator() public {
         ICoordinator coordinatorOld = ICoordinator(spell.COORDINATOR_OLD());
     
@@ -145,14 +330,11 @@ contract TinlakeSpellsTest is DSTest, Math {
         assertEq(coordinator.seniorTranche(), seniorTranche_);
         assertEq(coordinator.reserve(), reserve_);
         assertEq(juniorTranche.epochTicker(),coordinator_);
-
         // check permissions
         assertHasPermissions(juniorTranche_, coordinator_);
-        assertHasPermissions(assessor_, coordinator_);
         assertHasPermissions(seniorTranche_, coordinator_);
-        assertHasNoPermissions(assessor_, coordinatorOld_);
-        assertHasNoPermissions(juniorTranche_, coordinatorOld_);
-        assertHasNoPermissions(seniorTranche_, coordinatorOld_);
+        assertHasNoPermissions(juniorTranche_, address(coordinatorOld));
+        assertHasNoPermissions(seniorTranche_, address(coordinatorOld));
 
         // check state
         assertEq(coordinator.lastEpochClosed(), coordinatorOld.lastEpochClosed());
@@ -161,31 +343,21 @@ contract TinlakeSpellsTest is DSTest, Math {
         assertEq(coordinator.currentEpoch(), coordinatorOld.currentEpoch());
         assertEq(coordinator.bestSubScore(), coordinatorOld.bestSubScore());
         assert(coordinator.gotFullValidSolution() == coordinatorOld.gotFullValidSolution());
-
-        // calculate opoch values correctly
-        uint epochSeniorAsset = safeAdd(assessor.seniorDebt(), assessor.seniorBalance());
-        uint epochNAV = INav(assessor.navFeed()).currentNAV();
-        uint epochReserve = assessor.totalBalance();
-        // calculate current token prices which are used for the execute
-        uint epochSeniorTokenPrice = assessor.calcSeniorTokenPrice(epochNAV, epochReserve);
-        uint epochJuniorTokenPrice = assessor.calcJuniorTokenPrice(epochNAV, epochReserve);
-
-        assertEq(coordinator.epochSeniorTokenPrice(), epochSeniorTokenPrice);
-        assertEq(coordinator.epochJuniorTokenPrice(), epochJuniorTokenPrice);
-        assertEq(coordinator.epochNAV(), epochNAV);
-        assertEq(coordinator.epochSeniorAsset(), epochSeniorAsset);
-        assertEq(coordinator.epochReserve(), epochReserve);
-
+        assertEq(coordinator.epochSeniorTokenPrice(), coordinatorOld.epochSeniorTokenPrice());
+        assertEq(coordinator.epochJuniorTokenPrice(), coordinatorOld.epochJuniorTokenPrice());
+        assertEq(coordinator.epochNAV(), coordinatorOld.epochNAV());
+        assertEq(coordinator.epochSeniorAsset(), coordinatorOld.epochSeniorAsset());
+        assertEq(coordinator.epochReserve(), coordinatorOld.epochReserve());
         assert(coordinator.submissionPeriod() == coordinatorOld.submissionPeriod());
         assertEq(coordinator.weightSeniorRedeem(), coordinatorOld.weightSeniorRedeem());
         assertEq(coordinator.weightJuniorRedeem(), coordinatorOld.weightJuniorRedeem());
         assertEq(coordinator.weightJuniorSupply(), coordinatorOld.weightJuniorSupply());
         assertEq(coordinator.weightSeniorSupply(), coordinatorOld.weightSeniorSupply());
-        assertEq(coordinator.minChallengePeriodEnd (), block.timestamp + coordinator.challengeTime());
-        assertEq(coordinator.challengeTime(), 1800);
+        assertEq(coordinator.minChallengePeriodEnd (), coordinatorOld.minChallengePeriodEnd ());
+        assertEq(coordinator.challengeTime(), coordinatorOld.challengeTime());
         assertEq(coordinator.bestRatioImprovement(), coordinatorOld.bestRatioImprovement());
         assertEq(coordinator.bestReserveImprovement(), coordinatorOld.bestReserveImprovement());
-        assert(coordinator.poolClosing() == false);
+        assert(coordinator.poolClosing() == coordinatorOld.poolClosing());
         assertOrderMigration(); 
     }
 
@@ -203,5 +375,61 @@ contract TinlakeSpellsTest is DSTest, Math {
         assertEq(juniorRedeemOrder, juniorRedeemOrderOld);
         assertEq(juniorSupplyOrder, juniorSupplyOrderOld);
         assertEq(seniorSupplyOrder, seniorSupplyOrderOld);
+    }
+
+    function assertIntegrationAdapter() public {
+        // check dependencies 
+        // vars have to be made public first
+        assertEq(clerk.assessor(), assessor_);
+        assertEq(clerk.mgr(), mgr_);
+        assertEq(clerk.coordinator(), coordinator_);
+        assertEq(clerk.reserve(), reserve_); 
+        assertEq(clerk.tranche(), seniorTranche_);
+        assertEq(clerk.collateral(), seniorToken_);
+        assertEq(clerk.spotter(), spotter_);
+        assertEq(clerk.vat(), vat_);
+        assertEq(clerk.jug(), jug_);
+
+        // assertEq(clerk.matBuffer(), matBuffer);
+
+        // check permissions
+        assertHasPermissions(clerk_, coordinator_);
+        assertHasPermissions(clerk_, reserve_);
+        assertHasPermissions(reserve_, clerk_);
+        assertHasPermissions(seniorTranche_, clerk_);
+        assertHasPermissions(assessor_, clerk_);
+        
+        // state
+        assert(seniorToken.hasMember(clerk_));
+        assert(seniorToken.hasMember(mgr_));
+
+        assertEq(mgr.owner(), clerk_); // assert clerk owner of mgr
+        assertEq(mgr.pool(), operator_);
+        assertEq(mgr.tranche(), seniorTranche_);
+        assertEq(mgr.urn(), urn_);
+        assertEq(mgr.liq(), liq_);
+        assertHasPermissions(mgr_, clerk_);
+
+        // check rwa token balance = 0
+        assertEq(SpellERC20Like(rwaGem_).balanceOf(mgr_), 0);
+    }
+
+    function assertPoolAdminSet() public {
+
+        // setup dependencies 
+        assertEq(poolAdmin.assessor(), assessor_);
+        assertEq(poolAdmin.lending(), clerk_);
+        assertEq(poolAdmin.seniorMemberlist(), seniorMemberList_);
+        assertEq(poolAdmin.juniorMemberlist(), juniorMemberList_);
+
+        assertHasPermissions(assessor_, poolAdmin_);
+        assertHasPermissions(clerk_, poolAdmin_);
+        assertHasPermissions(seniorMemberList_, poolAdmin_);
+        assertHasPermissions(juniorMemberList_, poolAdmin_);
+        // todo add admin checks once we have addresses
+
+        assertHasPermissions(poolAdmin_, admin1);
+        assertEq(poolAdmin.admins(admin1), 1);
+        assertEq(poolAdmin.admins(admin2), 1);
     }
 }
