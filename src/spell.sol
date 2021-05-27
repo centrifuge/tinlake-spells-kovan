@@ -100,12 +100,10 @@ contract TinlakeSpell {
 
     address constant public ROOT = 0x53b2d22d07E069a3b132BfeaaD275b10273d381E;
     address constant public SENIOR_TOKEN = 0xE4C72b4dE5b0F9ACcEA880Ad0b1F944F85A9dAA0;
-    address constant public SENIOR_OPERATOR = 0x230f2E19D6c2Dc0c441c2150D4dD9d67B563A60C;
-    address constant public SENIOR_MEMBERLIST = 0x5B5CFD6E45F1407ABCb4BFD9947aBea1EA6649dA;
     address constant public JUNIOR_TOKEN = 0x961e1d4c9A7C0C3e05F17285f5FA34A66b62dBb1;
+    address constant public SENIOR_OPERATOR = 0x230f2E19D6c2Dc0c441c2150D4dD9d67B563A60C;
     address constant public JUNIOR_OPERATOR = 0x4c4Cc6a0573db5823ECAA1d1d65EB64E5E0E5F01;
-    address constant public JUNIOR_MEMBERLIST = 0x42C2483EEE8c1Fe46C398Ac296C59674F9eb88CD;
-
+   
     address constant public ASSESSOR = 0x83E2369A33104120746B589Cc90180ed776fFb91;
     address constant public COORDINATOR =  0xcC7AFB5DeED34CF67E72d4C53B142F44c9268ab9;
     address constant public RESERVE = 0xD9E4391cF31638a8Da718Ff0Bf69249Cdc48fB2B;
@@ -120,6 +118,7 @@ contract TinlakeSpell {
     // new contracts -> to be migrated
     address constant public SENIOR_TRANCHE_NEW = 0x636214f455480D19F17FE1aa45B9989C86041767;
     address constant public JUNIOR_TRANCHE_NEW = 0x636214f455480D19F17FE1aa45B9989C86041767;
+
 
     // permissions to be set
     function cast() public {
@@ -140,8 +139,6 @@ contract TinlakeSpell {
         root.relyContract(JUNIOR_OPERATOR, self);
         root.relyContract(SENIOR_TOKEN, self);
         root.relyContract(JUNIOR_TOKEN, self);
-        root.relyContract(SENIOR_MEMBERLIST, self);
-        root.relyContract(JUNIOR_MEMBERLIST, self);
 
         root.relyContract(ASSESSOR, self);
         root.relyContract(COORDINATOR, self);
@@ -157,8 +154,8 @@ contract TinlakeSpell {
     function migrateTranches() internal {
     
         // senior
-        TrancheLike tranche = TrancheLike(SENIOR_TRANCHE_NEW);
-        require((tranche.totalSupply() == 0 && tranche.totalRedeem() == 0), "tranche-has-orders");
+        TrancheLike seniorTranche = TrancheLike(SENIOR_TRANCHE_NEW);
+        require((seniorTranche.totalSupply() == 0 && seniorTranche.totalRedeem() == 0), "senior-tranche-has-orders");
 
         // dependencies
         DependLike(SENIOR_TRANCHE_NEW).depend("reserve", RESERVE);
@@ -180,15 +177,15 @@ contract TinlakeSpell {
         AuthLike(RESERVE).rely(SENIOR_TRANCHE_NEW);
 
         // junior
-        TrancheLike tranche = TrancheLike(SENIOR_TRANCHE_NEW);
-        require((tranche.totalSupply() == 0 && tranche.totalRedeem() == 0), "tranche-has-orders");
+        TrancheLike juniorTranche = TrancheLike(SENIOR_TRANCHE_NEW);
+        require((juniorTranche.totalSupply() == 0 && juniorTranche.totalRedeem() == 0), "junior-tranche-has-orders");
 
         // dependencies
         DependLike(JUNIOR_TRANCHE_NEW).depend("reserve", RESERVE);
         DependLike(JUNIOR_TRANCHE_NEW).depend("epochTicker", COORDINATOR);
         DependLike(JUNIOR_OPERATOR).depend("tranche", JUNIOR_TRANCHE_NEW);
-        DependLike(ASSESSOR).depend("seniorTranche", JUNIOR_TRANCHE_NEW);
-        DependLike(COORDINATOR).depend("seniorTranche", JUNIOR_TRANCHE_NEW);
+        DependLike(ASSESSOR).depend("juniorTranche", JUNIOR_TRANCHE_NEW);
+        DependLike(COORDINATOR).depend("juniorTranche", JUNIOR_TRANCHE_NEW);
         
         // permissions
         AuthLike(JUNIOR_TRANCHE_NEW).rely(JUNIOR_OPERATOR);
