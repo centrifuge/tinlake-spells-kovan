@@ -3,7 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import "ds-test/test.sol";
 import "tinlake-math/math.sol";
-import "./ns-migration.sol";
+import "./spell.sol";
 
 interface IAuth {
     function wards(address) external returns(uint);
@@ -51,7 +51,6 @@ contract TinlakeSpellsTest is DSTest, Math {
     TinlakeSpell spell;
 
     IAssessor assessor;
-    IReserve reserve;
     ICoordinator coordinator;
     ITranche seniorTranche;
     ITranche juniorTranche;
@@ -64,17 +63,19 @@ contract TinlakeSpellsTest is DSTest, Math {
     SpellERC20Like currency;
     SpellERC20Like testCurrency; // kovan only
     
-   
     address spell_;
     address root_;
     address reserve_;
     address assessor_;
     address clerk_;
+    address mgr_;
     address coordinator_;
     address juniorTranche_;
     address seniorTranche_;
     address seniorTrancheOld_;
-    address operator_;
+    address juniorTrancheOld_;
+    address seniorOperator_;
+    address juniorOperator_;
     address currency_;
     address seniorToken_;
     address juniorToken_;
@@ -88,7 +89,6 @@ contract TinlakeSpellsTest is DSTest, Math {
 
 
         assessor = IAssessor(spell.ASSESSOR());
-        reserve = IReserve(spell.RESERVE());
         coordinator = ICoordinator(spell.COORDINATOR());
         seniorTranche = ITranche(spell.SENIOR_TRANCHE_NEW());
         juniorTranche = ITranche(spell.JUNIOR_TRANCHE_NEW());
@@ -98,23 +98,22 @@ contract TinlakeSpellsTest is DSTest, Math {
         mgr = IMgr(spell.MGR());
         currency = SpellERC20Like(spell.TINLAKE_CURRENCY());
         seniorToken = IREstrictedToken(spell.SENIOR_TOKEN());
-        seniorToken_ = spell.SENIOR_TOKEN();
         juniorToken = IREstrictedToken(spell.JUNIOR_TOKEN());
+    
+        seniorToken_ = spell.SENIOR_TOKEN();
         juniorToken_ = spell.JUNIOR_TOKEN();
         seniorTrancheOld_ = spell.SENIOR_TRANCHE_OLD();
         juniorTrancheOld_ = spell.JUNIOR_TRANCHE_OLD();
-      
+        reserve_ = spell.RESERVE();
         mgr_ = address(mgr);
         assessor_ = address(assessor);
-        operator_ = address(operator);
-        reserve_ = address(reserve);
+        seniorOperator_ = address(seniorOperator);
+        juniorOperator_ = address(juniorOperator);
         coordinator_ = address(coordinator);
         seniorTranche_ = address(seniorTranche);
         juniorTranche_ = address(juniorTranche);
         clerk_ = address(clerk);
         currency_ = address(currency);
-
-        poolReserveDAI = currency.balanceOf(spell.RESERVE_OLD());
         // cheat: give testContract permissions on root contract by overriding storage 
         // storage slot for permissions => keccak256(key, mapslot) (mapslot = 0)
         hevm.store(root_, keccak256(abi.encode(address(this), uint(0))), bytes32(uint(1)));
@@ -156,54 +155,34 @@ contract TinlakeSpellsTest is DSTest, Math {
         assertEq(seniorTranche.reserve(), reserve_);
         assertEq(seniorTranche.epochTicker(),coordinator_);
         assertEq(seniorOperator.tranche(), seniorTranche_);
+        assertEq(assessor.seniorTranche(), seniorTranche_);
+        assertEq(coordinator.seniorTranche(), seniorTranche_);
+
+        assertHasPermissions(seniorTranche_, coordinator_);   
+        assertHasPermissions(seniorTranche_, seniorOperator_);  
+        assertHasPermissions(reserve_, seniorTranche_);
         assertHasPermissions(seniorToken_, seniorTranche_);
+
+        assertHasNoPermissions(reserve_, seniorTrancheOld_);
         assertHasNoPermissions(seniorToken_, seniorTrancheOld_);
-        assertHasPermissions(seniorTranche_, coordinator_);  
+   
+        // maker contracts
         assertEq(clerk.tranche(), seniorTranche_);
-        assertEq(clerk.tranche(), reserve_);
-        // clerk 
-        // manager
+        assertEq(mgr.tranche(), seniorTranche_);
 
         // junior
         assertEq(juniorTranche.reserve(), reserve_);
         assertEq(juniorTranche.epochTicker(), coordinator_);
         assertEq(juniorOperator.tranche(), juniorTranche_);
-        assertHasPermissions(juniorToken_, juniorTranche_);
-        assertHasNoPermissions(juniorToken_, juniorTrancheOld_);
-        assertHasPermissions(juniorTranche_, coordinator_);  
- 
-        assertEq(assessor.seniorTranche(), seniorTranche_);
         assertEq(assessor.juniorTranche(), juniorTranche_);
-       
-        assertHasPermissions(reserve_, juniorTranche_);
-        assertHasPermissions(reserve_, seniorTranche_);
-        assertHasNoPermissions(reserve_, juniorTrancheOld_);
-        assertHasNoPermissions(reserve_, seniorTrancheOld_);
-
         assertEq(coordinator.juniorTranche(), juniorTranche_);
-        assertEq(coordinator.seniorTranche(), seniorTranche_);
-
-        assertHasPermissions(juniorTranche_, coordinator_);
-        assertHasPermissions(seniorTranche_, coordinator_); 
-    }
-
-    // assertOrderMigration
-    function assertOrderMigration() public {
-        (uint seniorRedeemSubmission, uint juniorRedeemSubmission, uint juniorSupplySubmission, uint seniorSupplySubmission) = coordinator.bestSubmission();
-        (uint seniorRedeemSubmissionOld, uint juniorRedeemSubmissionOld, uint juniorSupplySubmissionOld, uint seniorSupplySubmissionOld) = ICoordinator(spell.COORDINATOR_OLD()).bestSubmission();
-        assertEq(seniorRedeemSubmission, seniorRedeemSubmissionOld);
-        assertEq(juniorRedeemSubmission, juniorRedeemSubmissionOld);
-        assertEq(juniorSupplySubmission, juniorSupplySubmissionOld);
-        assertEq(seniorSupplySubmission, seniorSupplySubmissionOld);
-
-        (uint seniorRedeemOrder, uint juniorRedeemOrder, uint juniorSupplyOrder, uint seniorSupplyOrder) = coordinator.order();
-        (uint seniorRedeemOrderOld, uint juniorRedeemOrderOld, uint juniorSupplyOrderOld, uint seniorSupplyOrderOld) = ICoordinator(spell.COORDINATOR_OLD()).order();
-        assertEq(seniorRedeemOrder, seniorRedeemOrderOld);
-        assertEq(juniorRedeemOrder, juniorRedeemOrderOld);
-        assertEq(juniorSupplyOrder, juniorSupplyOrderOld);
-        assertEq(seniorSupplyOrder, seniorSupplyOrderOld);
-
-        assertEq(clerk.tranche(), seniorTranche_);
-        assertEq(mgr.tranche(), seniorTranche_);
+       
+        assertHasPermissions(juniorToken_, juniorTranche_);
+        assertHasPermissions(juniorTranche_, juniorOperator_);  
+        assertHasPermissions(juniorTranche_, coordinator_);  
+        assertHasPermissions(reserve_, juniorTranche_);
+        
+        assertHasNoPermissions(juniorToken_, juniorTrancheOld_);
+        assertHasNoPermissions(reserve_, juniorTrancheOld_);
     }
 }
