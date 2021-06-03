@@ -40,14 +40,14 @@ interface IMgr {
     function tranche() external returns(address);
 }
 
-contract Hevm {
+contract IHevm {
     function warp(uint256) public;
     function store(address, bytes32, bytes32) public;
 }
 
-contract TinlakeSpellsTest is DSTest, Math {
+contract BaseSpellTest is DSTest, Math {
 
-    Hevm public hevm;
+    IHevm public hevm;
     TinlakeSpell spell;
 
     IAssessor assessor;
@@ -62,7 +62,7 @@ contract TinlakeSpellsTest is DSTest, Math {
     IMgr mgr;
     SpellERC20Like currency;
     SpellERC20Like testCurrency; // kovan only
-    
+
     address spell_;
     address root_;
     address reserve_;
@@ -80,12 +80,13 @@ contract TinlakeSpellsTest is DSTest, Math {
     address seniorToken_;
     address juniorToken_;
 
-    function setUp() public {
+
+    function initSpell() public {
         spell = new TinlakeSpell();
         spell_ = address(spell);
 
-        root_ = address(spell.ROOT());  
-        hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
+        root_ = address(spell.ROOT());
+        hevm = IHevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
 
         assessor = IAssessor(spell.ASSESSOR());
@@ -99,7 +100,7 @@ contract TinlakeSpellsTest is DSTest, Math {
         currency = SpellERC20Like(spell.TINLAKE_CURRENCY());
         seniorToken = IREstrictedToken(spell.SENIOR_TOKEN());
         juniorToken = IREstrictedToken(spell.JUNIOR_TOKEN());
-    
+
         seniorToken_ = spell.SENIOR_TOKEN();
         juniorToken_ = spell.JUNIOR_TOKEN();
         seniorTrancheOld_ = spell.SENIOR_TRANCHE_OLD();
@@ -114,16 +115,30 @@ contract TinlakeSpellsTest is DSTest, Math {
         juniorTranche_ = address(juniorTranche);
         clerk_ = address(clerk);
         currency_ = address(currency);
-        // cheat: give testContract permissions on root contract by overriding storage 
+        // cheat: give testContract permissions on root contract by overriding storage
         // storage slot for permissions => keccak256(key, mapslot) (mapslot = 0)
         hevm.store(root_, keccak256(abi.encode(address(this), uint(0))), bytes32(uint(1)));
+
+    }
+
+    function castSpell() public {
+        // give spell permissions on root contract
+        AuthLike(root_).rely(spell_);
+        spell.cast();
+    }
+
+
+}
+contract SpellTest is BaseSpellTest {
+    function setUp() public {
+        initSpell();
     }
 
     function testCast() public {
         // give spell permissions on root contract
         AuthLike(root_).rely(spell_);
         spell.cast();
-    
+
         assertMigrationTranches();
     }
 
@@ -158,14 +173,14 @@ contract TinlakeSpellsTest is DSTest, Math {
         assertEq(assessor.seniorTranche(), seniorTranche_);
         assertEq(coordinator.seniorTranche(), seniorTranche_);
 
-        assertHasPermissions(seniorTranche_, coordinator_);   
-        assertHasPermissions(seniorTranche_, seniorOperator_);  
+        assertHasPermissions(seniorTranche_, coordinator_);
+        assertHasPermissions(seniorTranche_, seniorOperator_);
         assertHasPermissions(reserve_, seniorTranche_);
         assertHasPermissions(seniorToken_, seniorTranche_);
 
         assertHasNoPermissions(reserve_, seniorTrancheOld_);
         assertHasNoPermissions(seniorToken_, seniorTrancheOld_);
-   
+
         // maker contracts
         assertEq(clerk.tranche(), seniorTranche_);
         assertEq(mgr.tranche(), seniorTranche_);
@@ -176,12 +191,12 @@ contract TinlakeSpellsTest is DSTest, Math {
         assertEq(juniorOperator.tranche(), juniorTranche_);
         assertEq(assessor.juniorTranche(), juniorTranche_);
         assertEq(coordinator.juniorTranche(), juniorTranche_);
-       
+
         assertHasPermissions(juniorToken_, juniorTranche_);
-        assertHasPermissions(juniorTranche_, juniorOperator_);  
-        assertHasPermissions(juniorTranche_, coordinator_);  
+        assertHasPermissions(juniorTranche_, juniorOperator_);
+        assertHasPermissions(juniorTranche_, coordinator_);
         assertHasPermissions(reserve_, juniorTranche_);
-        
+
         assertHasNoPermissions(juniorToken_, juniorTrancheOld_);
         assertHasNoPermissions(reserve_, juniorTrancheOld_);
     }
