@@ -126,14 +126,14 @@ contract TinlakeSpell {
     address constant public JUNIOR_TOKEN = 0x961e1d4c9A7C0C3e05F17285f5FA34A66b62dBb1;
     address constant public SENIOR_OPERATOR = 0x230f2E19D6c2Dc0c441c2150D4dD9d67B563A60C;
     address constant public JUNIOR_OPERATOR = 0x4c4Cc6a0573db5823ECAA1d1d65EB64E5E0E5F01;
-   
+
     address constant public ASSESSOR = 0x83E2369A33104120746B589Cc90180ed776fFb91;
     address constant public COORDINATOR = 0xcC7AFB5DeED34CF67E72d4C53B142F44c9268ab9;
     address constant public RESERVE = 0xD9E4391cF31638a8Da718Ff0Bf69249Cdc48fB2B;
-    
+
     address constant public CLERK = 0xA9eCF012dD36512e5fFCD5585D72386E46135Cdd;
     address constant public MGR =  0x2474F297214E5d96Ba4C81986A9F0e5C260f445D;
-    
+
     address constant public SENIOR_TRANCHE_OLD = 0x636214f455480D19F17FE1aa45B9989C86041767;
     address constant public JUNIOR_TRANCHE_OLD = 0x7cD2a6Be6ca8fEB02aeAF08b7F350d7248dA7707;
     address constant public TINLAKE_CURRENCY = 0x6B175474E89094C44Da98b954EedeAC495271d0F; // DAI
@@ -170,13 +170,13 @@ contract TinlakeSpell {
 
         root.relyContract(CLERK, self);
         root.relyContract(MGR, self);
-    
+
         // contract migration --> assumption: root contract is already ward on the new contracts
         migrateTranches();
     }
 
     function migrateTranches() internal {
-    
+
         // senior
         TrancheLike seniorTranche = TrancheLike(SENIOR_TRANCHE_NEW);
         require((seniorTranche.totalSupply() == 0 && seniorTranche.totalRedeem() == 0), "senior-tranche-has-orders");
@@ -210,12 +210,11 @@ contract TinlakeSpell {
         DependLike(JUNIOR_OPERATOR).depend("tranche", JUNIOR_TRANCHE_NEW);
         DependLike(ASSESSOR).depend("juniorTranche", JUNIOR_TRANCHE_NEW);
         DependLike(COORDINATOR).depend("juniorTranche", JUNIOR_TRANCHE_NEW);
-        
+
         // permissions
         AuthLike(JUNIOR_TRANCHE_NEW).rely(JUNIOR_OPERATOR);
         AuthLike(JUNIOR_TRANCHE_NEW).rely(COORDINATOR);
-        AuthLike(JUNIOR_TRANCHE_NEW).rely(CLERK);
-
+        
         AuthLike(JUNIOR_TOKEN).deny(JUNIOR_TRANCHE_OLD);
         AuthLike(JUNIOR_TOKEN).rely(JUNIOR_TRANCHE_NEW);
         AuthLike(RESERVE).deny(JUNIOR_TRANCHE_OLD);
