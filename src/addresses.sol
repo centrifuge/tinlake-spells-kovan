@@ -23,7 +23,7 @@ contract Addresses {
 	address constant public POOL_ADMIN = 0xd7fb14d5C1259a47d46D156E74a9c3B69a147b4A;
 	address constant public PROXY_REGISTRY = 0xC9045c815bF123ad12EA75b9A7c579C1e05051f9;
 	address constant public RESERVE = 0xD9E4391cF31638a8Da718Ff0Bf69249Cdc48fB2B;
-	address constant public ROOT_CONTRACT = 0x53b2d22d07E069a3b132BfeaaD275b10273d381E;
+	address constant public ROOT = 0x53b2d22d07E069a3b132BfeaaD275b10273d381E;
 	address constant public SENIOR_MEMBERLIST = 0x5B5CFD6E45F1407ABCb4BFD9947aBea1EA6649dA;
 	address constant public SENIOR_OPERATOR = 0x230f2E19D6c2Dc0c441c2150D4dD9d67B563A60C;
 	address constant public SENIOR_TOKEN = 0xE4C72b4dE5b0F9ACcEA880Ad0b1F944F85A9dAA0;

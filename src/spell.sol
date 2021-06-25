@@ -37,7 +37,7 @@ contract TinlakeSpell is Addresses {
     string constant public description = "Tinlake Reserve migration spell";
 
     // TODO: replace the following address
-    address constant public RESERVE_NEW = address(0);
+    address constant public RESERVE_NEW = 0x1f5Fa2E665609CE4953C65CE532Ac8B47EC97cD5;
 
     function cast() public {
         require(!done, "spell-already-cast");
@@ -46,12 +46,16 @@ contract TinlakeSpell is Addresses {
     }
 
     function execute() internal {
-        SpellTinlakeRootLike root = SpellTinlakeRootLike(ROOT_CONTRACT);
+        SpellTinlakeRootLike root = SpellTinlakeRootLike(ROOT);
 
         // set spell as ward on the core contract to be able to wire the new contracts correctly
         root.relyContract(SHELF, address(this));
         root.relyContract(COLLECTOR, address(this));
         root.relyContract(JUNIOR_TRANCHE, address(this));
+        root.relyContract(SENIOR_TRANCHE, address(this));
+        root.relyContract(CLERK, address(this));
+        root.relyContract(ASSESSOR, address(this));
+        root.relyContract(COORDINATOR, address(this));
         root.relyContract(RESERVE, address(this));
         root.relyContract(RESERVE_NEW, address(this));
         

@@ -88,7 +88,6 @@ contract BaseSpellTest is DSTest, Math {
         root_ = address(spell.ROOT());
         hevm = IHevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
-
         assessor = IAssessor(spell.ASSESSOR());
         coordinator = ICoordinator(spell.COORDINATOR());
         seniorTranche = ITranche(spell.SENIOR_TRANCHE_NEW());
@@ -118,7 +117,6 @@ contract BaseSpellTest is DSTest, Math {
         // cheat: give testContract permissions on root contract by overriding storage
         // storage slot for permissions => keccak256(key, mapslot) (mapslot = 0)
         hevm.store(root_, keccak256(abi.encode(address(this), uint(0))), bytes32(uint(1)));
-
     }
 
     function castSpell() public {
@@ -126,9 +124,8 @@ contract BaseSpellTest is DSTest, Math {
         AuthLike(root_).rely(spell_);
         spell.cast();
     }
-
-
 }
+
 contract SpellTest is BaseSpellTest {
     function setUp() public {
         initSpell();

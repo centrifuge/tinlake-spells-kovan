@@ -2,7 +2,6 @@ pragma solidity >=0.7.0;
 pragma experimental ABIEncoderV2;
 
 import "ds-test/test.sol";
-import "tinlake-math/math.sol";
 import "./spell.sol";
 
 interface IAuth {
@@ -44,80 +43,91 @@ interface ICollector {
     function distributor() external returns(address);
 }
 
-contract Hevm {
-    function warp(uint256) public;
-    function store(address, bytes32, bytes32) public;
+interface IHevm {
+    function warp(uint256) external;
+    function store(address, bytes32, bytes32) external;
 }
 
-contract TinlakeSpellsTest is DSTest, Math {
+contract BaseSpellTest is DSTest {
 
-    Hevm public hevm;
+    IHevm public t_hevm;
     TinlakeSpell spell;
 
-    IShelf shelf;
-    ICollector collector;
-    IAssessor assessor;
-    IReserve reserve;
-    ICoordinator coordinator;
-    ITranche seniorTranche;
-    ITranche juniorTranche;
-    IClerk clerk;
-    SpellERC20Like currency;
+    IShelf t_shelf;
+    ICollector t_collector;
+    IAssessor t_assessor;
+    IReserve t_reserve;
+    ICoordinator t_coordinator;
+    ITranche t_seniorTranche;
+    ITranche t_juniorTranche;
+    IClerk t_clerk;
+    SpellERC20Like t_currency;
    
     address spell_;
-    address root_;
-    address shelf_;
-    address reserve_;
-    address reserveOld_;
-    address assessor_;
-    address clerk_;
-    address coordinator_;
-    address juniorTranche_;
-    address seniorTranche_;
-    address currency_;
-    address pot_;
+    address t_root_;
+    address t_shelf_;
+    address t_reserve_;
+    address t_reserveOld_;
+    address t_assessor_;
+    address t_clerk_;
+    address t_coordinator_;
+    address t_juniorTranche_;
+    address t_seniorTranche_;
+    address t_currency_;
+    address t_pot_;
 
     uint poolReserveDAI;
 
-    function setUp() public {
+    function initSpell() public {
         spell = new TinlakeSpell();
         spell_ = address(spell);
 
-        root_ = address(spell.ROOT());  
-        hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
+        t_root_ = address(spell.ROOT());  
+        t_hevm = IHevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
-        collector = ICollector(spell.COLLECTOR());
-        shelf = IShelf(spell.SHELF());
-        assessor = IAssessor(spell.ASSESSOR());
-        reserve = IReserve(spell.RESERVE_NEW());
-        coordinator = ICoordinator(spell.COORDINATOR());
-        seniorTranche = ITranche(spell.SENIOR_TRANCHE());
-        juniorTranche = ITranche(spell.JUNIOR_TRANCHE());
-        clerk = IClerk(spell.CLERK());
-        currency = SpellERC20Like(spell.TINLAKE_CURRENCY());
-        reserveOld_ = spell.RESERVE();
+        t_collector = ICollector(spell.COLLECTOR());
+        t_shelf = IShelf(spell.SHELF());
+        t_assessor = IAssessor(spell.ASSESSOR());
+        t_reserve = IReserve(spell.RESERVE_NEW());
+        t_coordinator = ICoordinator(spell.COORDINATOR());
+        t_seniorTranche = ITranche(spell.SENIOR_TRANCHE());
+        t_juniorTranche = ITranche(spell.JUNIOR_TRANCHE());
+        t_clerk = IClerk(spell.CLERK());
+        t_currency = SpellERC20Like(spell.TINLAKE_CURRENCY());
+        t_reserveOld_ = spell.RESERVE();
 
-        shelf_ = address(shelf);
-        assessor_ = address(assessor);
-        operator_ = address(operator);
-        poolAdmin_ = address(poolAdmin);
-        reserve_ = address(reserve);
-        pot_ = address(reserve);
-        coordinator_ = address(coordinator);
-        seniorTranche_ = address(seniorTranche);
-        juniorTranche_ = address(juniorTranche);
-        clerk_ = address(clerk);
-        currency_ = address(currency);
+        t_shelf_ = address(t_shelf);
+        t_assessor_ = address(t_assessor);
+        t_reserve_ = address(t_reserve);
+        t_pot_ = address(t_reserve);
+        t_coordinator_ = address(t_coordinator);
+        t_seniorTranche_ = address(t_seniorTranche);
+        t_juniorTranche_ = address(t_juniorTranche);
+        t_clerk_ = address(t_clerk);
+        t_currency_ = address(t_currency);
 
-        poolReserveDAI = currency.balanceOf(spell.RESERVE_OLD());
+        poolReserveDAI = t_currency.balanceOf(t_reserveOld_);
         // cheat: give testContract permissions on root contract by overriding storage 
         // storage slot for permissions => keccak256(key, mapslot) (mapslot = 0)
-        hevm.store(root_, keccak256(abi.encode(address(this), uint(0))), bytes32(uint(1)));
+        t_hevm.store(t_root_, keccak256(abi.encode(address(this), uint(0))), bytes32(uint(1)));
+    }
+
+    function castSpell() public {
+        // give spell permissions on root contract
+        AuthLike(t_root_).rely(spell_);
+        spell.cast();
+    }
+}
+
+contract SpellTest is BaseSpellTest {
+
+    function setUp() public {
+        initSpell();
     }
 
     function testCast() public {
         // give spell permissions on root contract
-        AuthLike(root_).rely(spell_);
+        AuthLike(t_root_).rely(spell_);
         spell.cast();
             
         assertMigrationReserve();
@@ -130,7 +140,7 @@ contract TinlakeSpellsTest is DSTest, Math {
 
     function testFailCastTwice() public {
         // give spell permissions on root contract
-        AuthLike(root_).rely(spell_);
+        AuthLike(t_root_).rely(spell_);
         spell.cast();
         spell.cast();
     }
@@ -146,35 +156,35 @@ contract TinlakeSpellsTest is DSTest, Math {
     }
 
     function assertMigrationReserve() public {
-        IReserve reserveOld =IReserve(spell.RESERVE_OLD());
+        IReserve t_reserveOld = IReserve(t_reserveOld_);
          // check dependencies 
-        assertEq(reserve.assessor(), assessor_);
-        assertEq(reserve.currency(), currency_);
-        assertEq(reserve.shelf(), shelf_);
-        assertEq(reserve.lending(), clerk_);
+        assertEq(t_reserve.assessor(), t_assessor_);
+        assertEq(t_reserve.currency(), t_currency_);
+        assertEq(t_reserve.shelf(), t_shelf_);
+        assertEq(t_reserve.lending(), t_clerk_);
         // assertEq(reserve.pot(), reserve_); -> has to be public
-        assertEq(juniorTranche.reserve(), reserve_);
-        assertEq(seniorTranche.reserve(), reserve_);
-        assertEq(shelf.distributor(), reserve_);
-        assertEq(shelf.lender(), reserve_);
-        assertEq(clerk.reserve(), reserve_);
-        assertEq(assessor.reserve(), reserve_);
-        assertEq(coordinator.reserve(), reserve_);
+        assertEq(t_juniorTranche.reserve(), t_reserve_);
+        assertEq(t_seniorTranche.reserve(), t_reserve_);
+        assertEq(t_shelf.distributor(), t_reserve_);
+        assertEq(t_shelf.lender(), t_reserve_);
+        assertEq(t_clerk.reserve(), t_reserve_);
+        assertEq(t_assessor.reserve(), t_reserve_);
+        assertEq(t_coordinator.reserve(), t_reserve_);
         // assertEq(collector.distributor(), reserve_); -> has to be public
 
         // check permissions
-        assertHasPermissions(reserve_, clerk_);
-        assertHasPermissions(clerk_, reserve_);
-        assertHasPermissions(assessor_, reserve_);
-        assertHasPermissions(reserve_, juniorTranche_);
-        assertHasPermissions(reserve_, seniorTranche_);
+        assertHasPermissions(t_reserve_, t_clerk_);
+        assertHasPermissions(t_clerk_, t_reserve_);
+        assertHasPermissions(t_assessor_, t_reserve_);
+        assertHasPermissions(t_reserve_, t_juniorTranche_);
+        assertHasPermissions(t_reserve_, t_seniorTranche_);
 
-        assertHasNoPermissions(clerk_, reserveOld_);
-        assertHasNoPermissions(assessor_, reserveOld_);
+        assertHasNoPermissions(t_clerk_, t_reserveOld_);
+        assertHasNoPermissions(t_assessor_, t_reserveOld_);
 
         // check state
-        assertEq(reserve.currencyAvailable(), reserveOld.currencyAvailable());   
-        assertEq(reserve.balance_(), safeAdd(reserveOld.balance_(), poolReserveDAI));
-        assertEq(currency.balanceOf(reserve_), poolReserveDAI);
+        assertEq(t_reserve.currencyAvailable(), t_reserveOld.currencyAvailable());   
+        assertEq(t_reserve.balance_(), (t_reserveOld.balance_() + poolReserveDAI));
+        assertEq(t_currency.balanceOf(t_reserve_), poolReserveDAI);
     }
 }
