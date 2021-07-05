@@ -2,7 +2,7 @@
 pragma solidity >=0.7.0;
 pragma experimental ABIEncoderV2;
 
-import "./../../../lib/tinlake/src/lender/coordinator.sol";
+import "./../../../../tinlake-internal/src/lender/coordinator.sol";
 
 contract MigratedCoordinator is EpochCoordinator {
     
