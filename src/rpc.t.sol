@@ -12,7 +12,7 @@ contract SpellRPCTest is TinlakeRPCTests, BaseSpellTest {
         castSpell();
 
         // // rpc tests should use the new addresses from the spell
-        RESERVE = spell.RESERVE_NEW();
+        // RESERVE = spell.RESERVE_NEW();
         // emit log_named_address("reserve", RESERVE);
     
         initRPC();

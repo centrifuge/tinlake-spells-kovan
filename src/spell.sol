@@ -1,19 +1,28 @@
-// SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity >=0.7.0;
-pragma experimental ABIEncoderV2;
+/**
+ *Submitted for verification at Etherscan.io on 2021-09-24
+*/
 
-import "./addresses.sol";
+// Verified using https://dapp.tools
 
-interface SpellTinlakeRootLike {
-    function relyContract(address, address) external;
-}
-interface SpellReserveLike {
-    function payout(uint currencyAmount) external;
-}
+// hevm: flattened sources of src/spell.sol
 
-interface DependLike {
-    function depend(bytes32, address) external;
-}
+pragma solidity >=0.6.12;
+
+////// src/spell.sol
+// Copyright (C) 2020 Centrifuge
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+/* pragma solidity >=0.6.12; */
 
 interface AuthLike {
     function rely(address) external;
@@ -21,24 +30,39 @@ interface AuthLike {
     function wards(address) external returns(uint);
 }
 
-interface MigrationLike {
-    function migrate(address) external;
+interface TinlakeRootLike {
+    function relyContract(address, address) external;
+    function denyContract(address, address) external;
 }
 
-interface SpellERC20Like {
-    function balanceOf(address) external view returns (uint256);
-    function transferFrom(address, address, uint) external returns (bool);
-    function approve(address, uint) external;
+interface FileLike {
+    function file(bytes32, uint) external;
+    function file(bytes32, address) external;
 }
 
-contract TinlakeSpell is Addresses {
+interface NAVFeedLike {
+    function file(bytes32 name, uint value) external;
+    function file(bytes32 name, uint risk_, uint thresholdRatio_, uint ceilingRatio_, uint rate_, uint recoveryRatePD_) external;
+    function discountRate() external returns(uint);
+}
+
+// This spell makes changes to the tinlake mainnet HTC2 deployment:
+// adds new risk groups 
+contract TinlakeSpell {
 
     bool public done;
-    string constant public description = "Tinlake Reserve migration spell";
+    string constant public description = "Tinlake CF4 Mainnet Spell - 3";
 
-    // TODO: replace the following address
-    address constant public RESERVE_NEW = 0x1f5Fa2E665609CE4953C65CE532Ac8B47EC97cD5;
+    // MAINNET ADDRESSES
+    // The contracts in this list should correspond to a tinlake deployment
+    // https://github.com/centrifuge/tinlake-pool-config/blob/master/mainnet-production.json
 
+    address constant public ROOT = 0x4cA805cE8EcE2E63FfC1F9f8F2731D3F48DF89Df;
+    address constant public NAV_FEED = 0xdB9A84e5214e03a4e5DD14cFB3782e0bcD7567a7;
+                                                             
+    uint256 constant ONE = 10**27;
+    address self;
+    
     function cast() public {
         require(!done, "spell-already-cast");
         done = true;
@@ -46,56 +70,19 @@ contract TinlakeSpell is Addresses {
     }
 
     function execute() internal {
-        SpellTinlakeRootLike root = SpellTinlakeRootLike(ROOT);
+       TinlakeRootLike root = TinlakeRootLike(address(ROOT));
+       NAVFeedLike navFeed = NAVFeedLike(address(NAV_FEED));
+       self = address(this);
+        // NavFeed 
+        root.relyContract(NAV_FEED, self); // required to file riskGroups & change discountRate
 
-        // set spell as ward on the core contract to be able to wire the new contracts correctly
-        root.relyContract(SHELF, address(this));
-        root.relyContract(COLLECTOR, address(this));
-        root.relyContract(JUNIOR_TRANCHE, address(this));
-        root.relyContract(SENIOR_TRANCHE, address(this));
-        root.relyContract(CLERK, address(this));
-        root.relyContract(ASSESSOR, address(this));
-        root.relyContract(COORDINATOR, address(this));
-        root.relyContract(RESERVE, address(this));
-        root.relyContract(RESERVE_NEW, address(this));
-        
-        migrateReserve();
-    }
 
-    function migrateReserve() internal {
-        MigrationLike(RESERVE_NEW).migrate(RESERVE);
+        // risk group: 3 - M, APR: 13.00%
+        navFeed.file("riskGroup", 3, ONE, ONE, uint(1000000004122272957889396245), 99.9*10**25);
+        // risk group: 4 - W, APR: 11.00%
+        navFeed.file("riskGroup", 4, ONE, ONE, uint(1000000003488077118214104515), 99.9*10**25);
+        // risk group: 5 - PC, APR: 10.00%
+        navFeed.file("riskGroup", 5, ONE, ONE, uint(1000000003170979198376458650), 99.9*10**25);
 
-        // migrate dependencies 
-        DependLike(RESERVE_NEW).depend("assessor", ASSESSOR);
-        DependLike(RESERVE_NEW).depend("currency", TINLAKE_CURRENCY);
-        DependLike(RESERVE_NEW).depend("shelf", SHELF);
-        DependLike(RESERVE_NEW).depend("lending", CLERK);
-        DependLike(RESERVE_NEW).depend("pot", RESERVE_NEW);
-
-        DependLike(SHELF).depend("distributor", RESERVE_NEW);
-        DependLike(SHELF).depend("lender", RESERVE_NEW);
-        DependLike(COLLECTOR).depend("distributor", RESERVE_NEW);
-        DependLike(JUNIOR_TRANCHE).depend("reserve", RESERVE_NEW);
-        DependLike(SENIOR_TRANCHE).depend("reserve", RESERVE_NEW);
-        DependLike(CLERK).depend("reserve", RESERVE_NEW); 
-        DependLike(ASSESSOR).depend("reserve", RESERVE_NEW);
-        DependLike(COORDINATOR).depend("reserve", RESERVE_NEW);
-
-        // migrate permissions
-        AuthLike(RESERVE_NEW).rely(JUNIOR_TRANCHE);
-        AuthLike(RESERVE_NEW).rely(SENIOR_TRANCHE);
-        AuthLike(RESERVE_NEW).rely(ASSESSOR);
-        AuthLike(RESERVE_NEW).rely(CLERK);
-
-        AuthLike(CLERK).rely(RESERVE_NEW);
-        AuthLike(CLERK).deny(RESERVE);
-        AuthLike(ASSESSOR).rely(RESERVE_NEW);
-        AuthLike(ASSESSOR).deny(RESERVE);
-        
-        // migrate reserve balance
-        SpellERC20Like currency = SpellERC20Like(TINLAKE_CURRENCY);
-        uint balanceReserve = currency.balanceOf(RESERVE);
-        SpellReserveLike(RESERVE).payout(balanceReserve);
-        currency.transferFrom(address(this), RESERVE_NEW, balanceReserve);
-    }
+     }   
 }
