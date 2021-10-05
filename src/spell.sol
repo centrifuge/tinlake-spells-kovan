@@ -57,8 +57,8 @@ contract TinlakeSpell {
     // The contracts in this list should correspond to a tinlake deployment
     // https://github.com/centrifuge/tinlake-pool-config/blob/master/mainnet-production.json
 
-    address constant public ROOT = 0x4cA805cE8EcE2E63FfC1F9f8F2731D3F48DF89Df;
-    address constant public NAV_FEED = 0xdB9A84e5214e03a4e5DD14cFB3782e0bcD7567a7;
+    address constant public ROOT = 0x3d167bd08f762FD391694c67B5e6aF0868c45538;
+    address constant public NAV_FEED = 0x468eb2408c6F24662a291892550952eb0d70b707;
                                                              
     uint256 constant ONE = 10**27;
     address self;
