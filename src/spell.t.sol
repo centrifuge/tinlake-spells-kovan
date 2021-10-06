@@ -11,6 +11,8 @@ interface IAuth {
 interface INavFeed {
     function file(bytes32, uint256, uint256, uint256, uint256, uint256) external;
     function recoveryRatePD(uint) external returns (uint);
+    function ceilingRatio(uint) external returns (uint);
+    function thresholdRatio(uint) external returns (uint);
 }
 
 interface IHevm {
@@ -80,7 +82,11 @@ contract SpellTest is BaseSpellTest {
         // check state
         for (uint i; i < 3; i++) {
             uint256 recoveryRatePDs = t_navFeed.recoveryRatePD(i + 3);
+            uint256 ceilingRatio = t_navFeed.ceilingRatio(i + 3);
+            uint256 thresholdRatio = t_navFeed.thresholdRatio(i + 3);
             assertEq(recoveryRatePDs, 99.9*10**25);
+            assertEq(ceilingRatio, ONE);
+            assertEq(thresholdRatio, ONE);
         }
     }
 }
