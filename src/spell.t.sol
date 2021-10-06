@@ -15,6 +15,15 @@ interface INavFeed {
     function thresholdRatio(uint) external returns (uint);
 }
 
+struct Rate {
+    uint ratePerSecond;
+    uint fixedRate;
+}
+
+interface IPile {
+    function rates(uint) external returns (Rate memory);
+}
+
 interface IHevm {
     function warp(uint256) external;
     function store(address, bytes32, bytes32) external;
@@ -25,8 +34,8 @@ contract BaseSpellTest is DSTest {
     IHevm public t_hevm;
     TinlakeSpell spell;
 
-    INavFeed navFeed;
     INavFeed t_navFeed;
+    IPile t_pile;
    
     address spell_;
     address t_root_;
@@ -39,6 +48,8 @@ contract BaseSpellTest is DSTest {
         t_hevm = IHevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
         t_navFeed = INavFeed(spell.NAV_FEED());
+        t_pile = IPile(spell.PILE());
+
         t_hevm.store(t_root_, keccak256(abi.encode(address(this), uint(0))), bytes32(uint(1)));
     }
 
@@ -80,13 +91,17 @@ contract SpellTest is BaseSpellTest {
 
     function assertNewRiskGroups() public {
         // check state
-        for (uint i; i < 3; i++) {
-            uint256 recoveryRatePDs = t_navFeed.recoveryRatePD(i + 3);
-            uint256 ceilingRatio = t_navFeed.ceilingRatio(i + 3);
-            uint256 thresholdRatio = t_navFeed.thresholdRatio(i + 3);
+        uint256[3] memory spellRates = [uint256(1000000004122272957889396245), uint256(1000000003488077118214104515), uint256(1000000003170979198376458650)];
+        for (uint i = 3; i < 6; i++) {
+            uint256 recoveryRatePDs = t_navFeed.recoveryRatePD(i);
+            uint256 ceilingRatio = t_navFeed.ceilingRatio(i);
+            uint256 thresholdRatio = t_navFeed.thresholdRatio(i);
+            uint256 rate = t_pile.rates(i).ratePerSecond;
+            emit log_named_uint("rate", rate);
             assertEq(recoveryRatePDs, 99.9*10**25);
             assertEq(ceilingRatio, ONE);
             assertEq(thresholdRatio, ONE);
+            assertEq(rate, spellRates[i-3]);
         }
     }
 }

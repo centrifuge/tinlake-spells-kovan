@@ -59,6 +59,7 @@ contract TinlakeSpell {
 
     address constant public ROOT = 0x3d167bd08f762FD391694c67B5e6aF0868c45538;
     address constant public NAV_FEED = 0x468eb2408c6F24662a291892550952eb0d70b707;
+    address constant public PILE = 0x9E39e0130558cd9A01C1e3c7b2c3803baCb59616;
                                                              
     uint256 constant ONE = 10**27;
     address self;
@@ -78,11 +79,11 @@ contract TinlakeSpell {
 
 
         // risk group: 3 - M, APR: 13.00%
-        navFeed.file("riskGroup", 3, ONE, ONE, uint(1000000004122272957889396245), 99.9*10**25);
+        navFeed.file("riskGroup", 3, ONE, ONE, uint256(1000000004122272957889396245), 99.9*10**25);
         // risk group: 4 - W, APR: 11.00%
-        navFeed.file("riskGroup", 4, ONE, ONE, uint(1000000003488077118214104515), 99.9*10**25);
+        navFeed.file("riskGroup", 4, ONE, ONE, uint256(1000000003488077118214104515), 99.9*10**25);
         // risk group: 5 - PC, APR: 10.00%
-        navFeed.file("riskGroup", 5, ONE, ONE, uint(1000000003170979198376458650), 99.9*10**25);
+        navFeed.file("riskGroup", 5, ONE, ONE, uint256(1000000003170979198376458650), 99.9*10**25);
 
      }   
 }
