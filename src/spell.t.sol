@@ -15,13 +15,8 @@ interface INavFeed {
     function thresholdRatio(uint) external returns (uint);
 }
 
-struct Rate {
-    uint ratePerSecond;
-    uint fixedRate;
-}
-
 interface IPile {
-    function rates(uint) external returns (Rate memory);
+    function rates(uint) external returns (uint,uint,uint,uint,uint);
 }
 
 interface IHevm {
@@ -96,12 +91,11 @@ contract SpellTest is BaseSpellTest {
             uint256 recoveryRatePDs = t_navFeed.recoveryRatePD(i);
             uint256 ceilingRatio = t_navFeed.ceilingRatio(i);
             uint256 thresholdRatio = t_navFeed.thresholdRatio(i);
-            uint256 rate = t_pile.rates(i).ratePerSecond;
-            emit log_named_uint("rate", rate);
+            (,,uint ratePerSecond,,) = t_pile.rates(i);
             assertEq(recoveryRatePDs, 99.9*10**25);
             assertEq(ceilingRatio, ONE);
             assertEq(thresholdRatio, ONE);
-            assertEq(rate, spellRates[i-3]);
+            assertEq(ratePerSecond, spellRates[i-3]);
         }
     }
 }
