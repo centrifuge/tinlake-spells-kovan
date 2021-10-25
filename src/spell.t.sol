@@ -13,10 +13,14 @@ interface INavFeed {
     function recoveryRatePD(uint) external returns (uint);
     function ceilingRatio(uint) external returns (uint);
     function thresholdRatio(uint) external returns (uint);
+    function risk(bytes32 nftID) external returns (uint);
+    function nftID(uint loan) external returns (bytes32);
+    function nftValues(bytes32 nftID) external returns(uint);
 }
 
 interface IPile {
     function rates(uint) external returns (uint,uint,uint,uint,uint);
+    function loanRates(uint)external returns(uint);
 }
 
 interface IHevm {
@@ -67,9 +71,36 @@ contract SpellTest is BaseSpellTest {
         // give spell permissions on root contract
         AuthLike(t_root_).rely(spell_);
 
+        uint riskGroupOld = 0;
+        uint riskGroupNew = 3;
+
+        // nft2 value 
+        uint loanID2 = 2;
+        bytes32 nftIDLoan2 = t_navFeed.nftID(loanID2);
+        uint nftValueLoan2 = t_navFeed.nftValues(nftIDLoan2);
+        
+        // nftt3 value 
+        uint loanID3 = 3;
+        bytes32 nftIDLoan3 = t_navFeed.nftID(loanID3);
+        uint nftValueLoan3 = t_navFeed.nftValues(nftIDLoan3);
+
+        assertEq(t_navFeed.risk(nftIDLoan2), riskGroupOld);
+        assertEq(t_navFeed.risk(nftIDLoan3), riskGroupOld);
+        assertEq(t_pile.loanRates(loanID2), riskGroupOld);
+        assertEq(t_pile.loanRates(loanID3), riskGroupOld);
+
         spell.cast();
             
         assertNewRiskGroups();
+        // assert nftValues did not change
+        assertEq(nftValueLoan2, t_navFeed.nftValues(nftIDLoan2));
+        assertEq(nftValueLoan3, t_navFeed.nftValues(nftIDLoan3));
+        // assert loan 2 & 3 got moved to riskGroup 3
+        assertEq(t_navFeed.risk(nftIDLoan2), riskGroupNew);
+        assertEq(t_navFeed.risk(nftIDLoan3), riskGroupNew);
+        // assert loan 2 & 3 have the correct interestRate
+        assertEq(t_pile.loanRates(loanID2), riskGroupNew);
+        assertEq(t_pile.loanRates(loanID3), riskGroupNew);
     }
 
     function testFailCastNoPermissions() public {

@@ -44,6 +44,13 @@ interface NAVFeedLike {
     function file(bytes32 name, uint value) external;
     function file(bytes32 name, uint risk_, uint thresholdRatio_, uint ceilingRatio_, uint rate_, uint recoveryRatePD_) external;
     function discountRate() external returns(uint);
+    function update(bytes32 nftID, uint value, uint risk) external;
+    function nftID(uint loan) external returns (bytes32);
+    function nftValues(bytes32 nftID) external returns(uint);
+}
+
+interface PileLike {
+    function changeRate(uint loan, uint newRate) external;
 }
 
 // This spell makes changes to the tinlake mainnet HTC2 deployment:
@@ -51,7 +58,7 @@ interface NAVFeedLike {
 contract TinlakeSpell {
 
     bool public done;
-    string constant public description = "Tinlake CF4 Mainnet Spell - 3";
+    string constant public description = "Tinlake GigPool spell";
 
     // MAINNET ADDRESSES
     // The contracts in this list should correspond to a tinlake deployment
@@ -73,17 +80,34 @@ contract TinlakeSpell {
     function execute() internal {
        TinlakeRootLike root = TinlakeRootLike(address(ROOT));
        NAVFeedLike navFeed = NAVFeedLike(address(NAV_FEED));
+       PileLike pile = PileLike(PILE);
        self = address(this);
-        // NavFeed 
-        root.relyContract(NAV_FEED, self); // required to file riskGroups & change discountRate
-
-
+       // permissions 
+       root.relyContract(NAV_FEED, self); // required to file riskGroups & change discountRate
+       root.relyContract(PILE, self); // required to change the interestRates for loans according to new riskGroups
+        
+        // update Scorecard
         // risk group: 3 - M, APR: 13.00%
         navFeed.file("riskGroup", 3, ONE, ONE, uint256(1000000004122272957889396245), 99.9*10**25);
         // risk group: 4 - W, APR: 11.00%
         navFeed.file("riskGroup", 4, ONE, ONE, uint256(1000000003488077118214104515), 99.9*10**25);
         // risk group: 5 - PC, APR: 10.00%
         navFeed.file("riskGroup", 5, ONE, ONE, uint256(1000000003170979198376458650), 99.9*10**25);
+        
+        // move all assets from riskGroup 0 to riskGroup 3 --> move loan 2 & 3
+        uint newRiskGroup = 3;
 
-     }   
+        uint loanID2 = 2;
+        bytes32 nftIDLoan2 = navFeed.nftID(loanID2);
+        uint nftValueLoan2 = navFeed.nftValues(nftIDLoan2);
+        navFeed.update(nftIDLoan2, nftValueLoan2, newRiskGroup);
+        pile.changeRate(loanID2, newRiskGroup);
+        
+        uint loanID3 = 3;
+        bytes32 nftIDLoan3 = navFeed.nftID(loanID3);
+        uint nftValueLoan3 = navFeed.nftValues(nftIDLoan3);
+        navFeed.update(nftIDLoan3, nftValueLoan3, newRiskGroup);
+        pile.changeRate(loanID3, newRiskGroup);
+     }  
+
 }
