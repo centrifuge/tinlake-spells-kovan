@@ -71,9 +71,6 @@ contract SpellTest is BaseSpellTest {
         // give spell permissions on root contract
         AuthLike(t_root_).rely(spell_);
 
-        uint riskGroupOld = 0;
-        uint riskGroupNew = 3;
-
         // nft2 value 
         uint loanID2 = 2;
         bytes32 nftIDLoan2 = t_navFeed.nftID(loanID2);
@@ -84,10 +81,16 @@ contract SpellTest is BaseSpellTest {
         bytes32 nftIDLoan3 = t_navFeed.nftID(loanID3);
         uint nftValueLoan3 = t_navFeed.nftValues(nftIDLoan3);
 
-        assertEq(t_navFeed.risk(nftIDLoan2), riskGroupOld);
-        assertEq(t_navFeed.risk(nftIDLoan3), riskGroupOld);
-        assertEq(t_pile.loanRates(loanID2), riskGroupOld);
-        assertEq(t_pile.loanRates(loanID3), riskGroupOld);
+        uint loanID4 = 4;
+        bytes32 nftIDLoan4 = t_navFeed.nftID(loanID4);
+        uint nftValueLoan4 = t_navFeed.nftValues(nftIDLoan4);
+
+        assertEq(t_navFeed.risk(nftIDLoan2), 0);
+        assertEq(t_navFeed.risk(nftIDLoan3), 0);
+        assertEq(t_navFeed.risk(nftIDLoan4), 1);
+        assertEq(t_pile.loanRates(loanID2), 0);
+        assertEq(t_pile.loanRates(loanID3), 0);
+        assertEq(t_pile.loanRates(loanID4), 1);
 
         spell.cast();
             
@@ -95,12 +98,15 @@ contract SpellTest is BaseSpellTest {
         // assert nftValues did not change
         assertEq(nftValueLoan2, t_navFeed.nftValues(nftIDLoan2));
         assertEq(nftValueLoan3, t_navFeed.nftValues(nftIDLoan3));
-        // assert loan 2 & 3 got moved to riskGroup 3
-        assertEq(t_navFeed.risk(nftIDLoan2), riskGroupNew);
-        assertEq(t_navFeed.risk(nftIDLoan3), riskGroupNew);
-        // assert loan 2 & 3 have the correct interestRate
-        assertEq(t_pile.loanRates(loanID2), riskGroupNew);
-        assertEq(t_pile.loanRates(loanID3), riskGroupNew);
+        assertEq(nftValueLoan4, t_navFeed.nftValues(nftIDLoan4));
+        // assert loan 2 & 3 got moved to riskGroup 3 & loan 4 got moved to riskgroup 4
+        assertEq(t_navFeed.risk(nftIDLoan2), 3);
+        assertEq(t_navFeed.risk(nftIDLoan3), 3);
+        assertEq(t_navFeed.risk(nftIDLoan4), 4);
+        // assert loan 2 & 3 & 4 have the correct interestRate
+        assertEq(t_pile.loanRates(loanID2), 3);
+        assertEq(t_pile.loanRates(loanID3), 3);
+        assertEq(t_pile.loanRates(loanID4), 4);
     }
 
     function testFailCastNoPermissions() public {

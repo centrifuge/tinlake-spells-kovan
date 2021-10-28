@@ -94,20 +94,26 @@ contract TinlakeSpell {
         // risk group: 5 - PC, APR: 10.00%
         navFeed.file("riskGroup", 5, ONE, ONE, uint256(1000000003170979198376458650), 99.9*10**25);
         
-        // move all assets from riskGroup 0 to riskGroup 3 --> move loan 2 & 3
-        uint newRiskGroup = 3;
-
+        // move all assets from riskGroup 0 to riskGroup 3 & riskGroup 1 to riskGroup 4
+        // => move loan 2 & 3 to group 3 & loan 4 to group 4
+        uint newRiskGroup3 = 3;
+        uint newRiskGroup4 = 4;
         uint loanID2 = 2;
         bytes32 nftIDLoan2 = navFeed.nftID(loanID2);
         uint nftValueLoan2 = navFeed.nftValues(nftIDLoan2);
-        navFeed.update(nftIDLoan2, nftValueLoan2, newRiskGroup);
-        pile.changeRate(loanID2, newRiskGroup);
+        navFeed.update(nftIDLoan2, nftValueLoan2, newRiskGroup3);
+        pile.changeRate(loanID2, newRiskGroup3);
         
         uint loanID3 = 3;
         bytes32 nftIDLoan3 = navFeed.nftID(loanID3);
         uint nftValueLoan3 = navFeed.nftValues(nftIDLoan3);
-        navFeed.update(nftIDLoan3, nftValueLoan3, newRiskGroup);
-        pile.changeRate(loanID3, newRiskGroup);
-     }  
+        navFeed.update(nftIDLoan3, nftValueLoan3, newRiskGroup3);
+        pile.changeRate(loanID3, newRiskGroup3);
 
+        uint loanID4 = 4;
+        bytes32 nftIDLoan4 = navFeed.nftID(loanID4);
+        uint nftValueLoan4 = navFeed.nftValues(nftIDLoan4);
+        navFeed.update(nftIDLoan4, nftValueLoan4, newRiskGroup4);
+        pile.changeRate(loanID4, newRiskGroup4);
+     }  
 }
