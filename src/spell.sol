@@ -40,17 +40,16 @@ interface FileLike {
     function file(bytes32, address) external;
 }
 
-interface NAVFeedLike {
-    function file(bytes32 name, uint value) external;
-    function file(bytes32 name, uint risk_, uint thresholdRatio_, uint ceilingRatio_, uint rate_, uint recoveryRatePD_) external;
-    function discountRate() external returns(uint);
-    function update(bytes32 nftID, uint value, uint risk) external;
-    function nftID(uint loan) external returns (bytes32);
-    function nftValues(bytes32 nftID) external returns(uint);
+interface DependLike {
+    function depend(bytes32, address) external;
 }
 
-interface PileLike {
-    function changeRate(uint loan, uint newRate) external;
+interface MigrationLike {
+        function migrate(address) external;
+}
+
+interface SpellMemberlistLike {
+    function updateMember(address, uint) external;
 }
 
 // This spell makes changes to the tinlake mainnet HTC2 deployment:
@@ -64,10 +63,21 @@ contract TinlakeSpell {
     // The contracts in this list should correspond to a tinlake deployment
     // https://github.com/centrifuge/tinlake-pool-config/blob/master/mainnet-production.json
 
-    address constant public ROOT = 0x3d167bd08f762FD391694c67B5e6aF0868c45538;
-    address constant public NAV_FEED = 0x468eb2408c6F24662a291892550952eb0d70b707;
-    address constant public PILE = 0x9E39e0130558cd9A01C1e3c7b2c3803baCb59616;
-                                                             
+    address constant public ROOT = 0x53b2d22d07E069a3b132BfeaaD275b10273d381E;
+    address constant public CLERK_OLD = 0xA9eCF012dD36512e5fFCD5585D72386E46135Cdd;
+    address constant public CLERK = 0x116ADd73f27B3aD01E8Fec43c280d98Ef60DdD5b;
+    address constant public COORDINATOR = 0x22a1caca2EE82e9cE7Ef900FD961891b66deB7cA;
+    address constant public RESERVE = 0x1f5Fa2E665609CE4953C65CE532Ac8B47EC97cD5;
+    address constant public SENIOR_TRANCHE = 0x3f06DB6334435fF4150e14aD69F6280BF8E8dA64;
+    address constant public SENIOR_MEMBERLIST = 0x5B5CFD6E45F1407ABCb4BFD9947aBea1EA6649dA;
+    address constant public SENIOR_TOKEN = 0xE4C72b4dE5b0F9ACcEA880Ad0b1F944F85A9dAA0;
+    address constant public ASSESSOR = 0x83E2369A33104120746B589Cc90180ed776fFb91;
+    address constant public MGR = 0x2474F297214E5d96Ba4C81986A9F0e5C260f445D;
+    address constant public VAT = 0x35D1b3F3D7966A1DFe207aa4514C12a259A0492B;
+    address constant public JUG = 0x19c0976f590D67707E62397C87829d896Dc0f1F1;
+    address constant public SPOTTER = 0x65C79fcB50Ca1594B025960e539eD7A9a6D434A3;
+    address constant public POOL_ADMIN = 0xd7fb14d5C1259a47d46D156E74a9c3B69a147b4A;
+
     uint256 constant ONE = 10**27;
     address self;
     
@@ -79,41 +89,60 @@ contract TinlakeSpell {
 
     function execute() internal {
        TinlakeRootLike root = TinlakeRootLike(address(ROOT));
-       NAVFeedLike navFeed = NAVFeedLike(address(NAV_FEED));
-       PileLike pile = PileLike(PILE);
        self = address(this);
        // permissions 
-       root.relyContract(NAV_FEED, self); // required to file riskGroups & change discountRate
-       root.relyContract(PILE, self); // required to change the interestRates for loans according to new riskGroups
-        
-        // update Scorecard
-        // risk group: 3 - M, APR: 13.00%
-        navFeed.file("riskGroup", 3, ONE, ONE, uint256(1000000004122272957889396245), 99.9*10**25);
-        // risk group: 4 - W, APR: 11.00%
-        navFeed.file("riskGroup", 4, ONE, ONE, uint256(1000000003488077118214104515), 99.9*10**25);
-        // risk group: 5 - PC, APR: 10.00%
-        navFeed.file("riskGroup", 5, ONE, ONE, uint256(1000000003170979198376458650), 99.9*10**25);
-        
-        // move all assets from riskGroup 0 to riskGroup 3 & riskGroup 1 to riskGroup 4
-        // => move loan 2 & 3 to group 3 & loan 4 to group 4
-        uint newRiskGroup3 = 3;
-        uint newRiskGroup4 = 4;
-        uint loanID2 = 2;
-        bytes32 nftIDLoan2 = navFeed.nftID(loanID2);
-        uint nftValueLoan2 = navFeed.nftValues(nftIDLoan2);
-        navFeed.update(nftIDLoan2, nftValueLoan2, newRiskGroup3);
-        pile.changeRate(loanID2, newRiskGroup3);
-        
-        uint loanID3 = 3;
-        bytes32 nftIDLoan3 = navFeed.nftID(loanID3);
-        uint nftValueLoan3 = navFeed.nftValues(nftIDLoan3);
-        navFeed.update(nftIDLoan3, nftValueLoan3, newRiskGroup3);
-        pile.changeRate(loanID3, newRiskGroup3);
-
-        uint loanID4 = 4;
-        bytes32 nftIDLoan4 = navFeed.nftID(loanID4);
-        uint nftValueLoan4 = navFeed.nftValues(nftIDLoan4);
-        navFeed.update(nftIDLoan4, nftValueLoan4, newRiskGroup4);
-        pile.changeRate(loanID4, newRiskGroup4);
+       root.relyContract(CLERK, self); // required to file riskGroups & change discountRate
+       root.relyContract(CLERK_OLD, self); // required to change the interestRates for loans according to new riskGroups
+       root.relyContract(SENIOR_TRANCHE, self);
+       root.relyContract(SENIOR_TOKEN, self);
+       root.relyContract(SENIOR_TRANCHE, self);
+       root.relyContract(SENIOR_MEMBERLIST, self);
+       root.relyContract(POOL_ADMIN, self);
+       root.relyContract(ASSESSOR, self);
+       root.relyContract(COORDINATOR, self);
+       root.relyContract(RESERVE, self);
+       root.relyContract(MGR, self);
+       
+       migrateClerk();
      }  
+
+     function migrateClerk() internal {
+        // migrate state
+        MigrationLike(CLERK).migrate(CLERK_OLD);
+    
+        // dependencies
+        DependLike(CLERK).depend("assessor", ASSESSOR);
+        DependLike(CLERK).depend("mgr", MGR);
+        DependLike(CLERK).depend("coordinator", COORDINATOR);
+        DependLike(CLERK).depend("reserve", RESERVE); 
+        DependLike(CLERK).depend("tranche", SENIOR_TRANCHE);
+        DependLike(CLERK).depend("collateral", SENIOR_TOKEN);
+        DependLike(CLERK).depend("spotter", SPOTTER);
+        DependLike(CLERK).depend("vat", VAT);
+        DependLike(CLERK).depend("jug", JUG);
+
+        // permissions
+        AuthLike(CLERK).rely(COORDINATOR);
+        AuthLike(CLERK).rely(RESERVE);
+        AuthLike(CLERK).rely(POOL_ADMIN);
+        AuthLike(SENIOR_TRANCHE).rely(CLERK);
+        AuthLike(RESERVE).rely(CLERK);
+        AuthLike(ASSESSOR).rely(CLERK);
+        AuthLike(MGR).rely(CLERK);
+
+        FileLike(MGR).file("owner", CLERK);
+
+        DependLike(ASSESSOR).depend("clerk", CLERK); 
+        DependLike(RESERVE).depend("lending", CLERK);
+        DependLike(POOL_ADMIN).depend("lending", CLERK);
+       
+        // restricted token setup
+        SpellMemberlistLike(SENIOR_MEMBERLIST).updateMember(CLERK, uint(-1));
+
+        // remove old clerk
+        AuthLike(SENIOR_TRANCHE).deny(CLERK_OLD);
+        AuthLike(RESERVE).deny(CLERK_OLD);
+        AuthLike(ASSESSOR).deny(CLERK_OLD);
+        AuthLike(MGR).deny(CLERK_OLD);
+    }
 }
