@@ -61,6 +61,9 @@ contract TinlakeSpell is Addresses {
     // TODO: set new addresses here
     address constant public COORDINATOR_NEW = address(0);
     address constant public POOL_ADMIN_NEW = address(0);
+    address constant public ROOT_CONTRACT = address(0);
+    address constant public ADMIN1 = address(0);
+    address constant public ADMIN2 = address(0);
 
     // permissions to be set
     function cast() public {
@@ -80,7 +83,6 @@ contract TinlakeSpell is Addresses {
         root.relyContract(COORDINATOR_NEW, address(this));
         root.relyContract(POOL_ADMIN_NEW, address(this));
         root.relyContract(CLERK, address(this));
-        root.relyContract(ASSESSOR_NEW, address(this));
     
         // contract migration --> assumption: root contract is already ward on the new contracts
         migrateCoordinator();
