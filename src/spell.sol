@@ -1,11 +1,3 @@
-/**
- *Submitted for verification at Etherscan.io on 2021-11-17
-*/
-
-// Verified using https://dapp.tools
-
-// hevm: flattened sources of src/spell.sol
-
 pragma solidity >=0.6.12;
 
 import "./addresses_ff1.sol";
