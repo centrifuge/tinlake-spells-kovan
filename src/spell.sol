@@ -61,6 +61,10 @@ interface PoolAdminLike {
     function setAdminLevel(address usr, uint level) external;
 }
 
+interface PoolRegistryLike {
+    function file(address, bool, string memory, string memory) external;
+}
+
 // spell to swap clerk, coordinator & poolAdmin
 contract TinlakeSpell is Addresses {
 
@@ -84,8 +88,9 @@ contract TinlakeSpell is Addresses {
     address public LEVEL1_ADMIN5 = 0xddEa1De10E93c15037E83b8Ab937A46cc76f7009;
     address public AO_POOL_ADMIN = 0xB170597E474CC124aE8Fe2b335d0d80E08bC3e37;
 
-    // todo set correct hash
-    string constant public IPFS_HASH = "QmaWk34vLJ6ohAqvTKjJHN93t1SJ8vVPkNMgSvCzNeCSzz";
+    address public POOL_REGISTRY = 0xddf1C516Cf87126c6c610B52FD8d609E67Fb6033;
+
+    string constant public IPFS_HASH = "Qmbb8UAtouEHUkZXwUWH1GLJnDPBqxccF43rjrWpjiTkRo";
 
     uint256 constant ONE = 10**27;
     address self;
@@ -218,7 +223,7 @@ contract TinlakeSpell is Addresses {
         AuthLike(MGR).deny(CLERK_OLD);
     }
 
-    // function updateRegistry() internal {
-    //     PoolRegistryLike(POOL_REGISTRY).file(ROOT, true, "fortuna-fi-1", IPFS_HASH);
-    // }
+    function updateRegistry() internal {
+        PoolRegistryLike(POOL_REGISTRY).file(ROOT, true, "fortuna-fi-1", IPFS_HASH);
+    }
 }
