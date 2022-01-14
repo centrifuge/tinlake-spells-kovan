@@ -15,13 +15,12 @@
 pragma solidity >=0.6.12;
 pragma experimental ABIEncoderV2;
 
-import "./../../../../tinlake/src/lender/adapters/mkr/clerk.sol";
+import "./../tinlake/src/lender/adapters/mkr/clerk.sol";
 
 contract MigratedClerk is Clerk {
     
     bool public done;
     address public migratedFrom;
-    
     
     constructor(address dai_, address collateral_) Clerk(dai_, collateral_) public {}
 
@@ -35,6 +34,9 @@ contract MigratedClerk is Clerk {
         matBuffer = clone.matBuffer();
         collateralTolerance = clone.collateralTolerance();
         wipeThreshold = clone.wipeThreshold();
+
+        // collateral tolerance
+        autoHealMax= 2000 ether;
     }
 }
    

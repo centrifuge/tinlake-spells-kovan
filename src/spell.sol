@@ -1,5 +1,5 @@
 /**
- *Submitted for verification at Etherscan.io on 2021-09-24
+ *Submitted for verification at Etherscan.io on 2021-11-17
 */
 
 // Verified using https://dapp.tools
@@ -7,6 +7,19 @@
 // hevm: flattened sources of src/spell.sol
 
 pragma solidity >=0.6.12;
+
+import "./addresses_ff1.sol";
+
+////// src/spell.sol
+/**
+ *Submitted for verification at Etherscan.io on 2021-09-24
+*/
+
+// Verified using https://dapp.tools
+
+// hevm: flattened sources of src/spell.sol
+
+/* pragma solidity >=0.6.12; */
 
 ////// src/spell.sol
 // Copyright (C) 2020 Centrifuge
@@ -52,9 +65,12 @@ interface SpellMemberlistLike {
     function updateMember(address, uint) external;
 }
 
-// This spell makes changes to the tinlake mainnet HTC2 deployment:
-// adds new risk groups 
-contract TinlakeSpell {
+interface PoolAdminLike {
+    function setAdminLevel(address usr, uint level) external;
+}
+
+// spell to swap clerk, coordinator & poolAdmin
+contract TinlakeSpell is Addresses {
 
     bool public done;
     string constant public description = "Tinlake GigPool spell";
@@ -63,20 +79,21 @@ contract TinlakeSpell {
     // The contracts in this list should correspond to a tinlake deployment
     // https://github.com/centrifuge/tinlake-pool-config/blob/master/mainnet-production.json
 
-    address constant public ROOT = 0x53b2d22d07E069a3b132BfeaaD275b10273d381E;
-    address constant public CLERK_OLD = 0xA9eCF012dD36512e5fFCD5585D72386E46135Cdd;
-    address constant public CLERK = 0x116ADd73f27B3aD01E8Fec43c280d98Ef60DdD5b;
-    address constant public COORDINATOR = 0x22a1caca2EE82e9cE7Ef900FD961891b66deB7cA;
-    address constant public RESERVE = 0x1f5Fa2E665609CE4953C65CE532Ac8B47EC97cD5;
-    address constant public SENIOR_TRANCHE = 0x3f06DB6334435fF4150e14aD69F6280BF8E8dA64;
-    address constant public SENIOR_MEMBERLIST = 0x5B5CFD6E45F1407ABCb4BFD9947aBea1EA6649dA;
-    address constant public SENIOR_TOKEN = 0xE4C72b4dE5b0F9ACcEA880Ad0b1F944F85A9dAA0;
-    address constant public ASSESSOR = 0x83E2369A33104120746B589Cc90180ed776fFb91;
-    address constant public MGR = 0x2474F297214E5d96Ba4C81986A9F0e5C260f445D;
-    address constant public VAT = 0x35D1b3F3D7966A1DFe207aa4514C12a259A0492B;
-    address constant public JUG = 0x19c0976f590D67707E62397C87829d896Dc0f1F1;
-    address constant public SPOTTER = 0x65C79fcB50Ca1594B025960e539eD7A9a6D434A3;
-    address constant public POOL_ADMIN = 0xd7fb14d5C1259a47d46D156E74a9c3B69a147b4A;
+    address public CLERK = 0x8Cc9fCb43620DdB9b1573Cf9a94a6E7c167e6125;
+    address public COORDINATOR = 0xA92c94818473F3583aDc69B85767949B2103eff7;
+    address public POOL_ADMIN = 0x9033540ceda3C436C0a62CBAD682f8F4fc75F287;
+
+    address public MEMBER_ADMIN = 0xB7e70B77f6386Ffa5F55DDCb53D87A0Fb5a2f53b;
+    address public LEVEL3_ADMIN1 = 0x7b74bb514A1dEA0Ec3763bBd06084e712c8bce97;
+    address public LEVEL1_ADMIN1 = 0x71d9f8CFdcCEF71B59DD81AB387e523E2834F2b8;
+    address public LEVEL1_ADMIN2 = 0x46a71eEf8DbcFcbAC7A0e8D5d6B634A649e61fb8;
+    address public LEVEL1_ADMIN3 = 0x9eDec77dd2651Ce062ab17e941347018AD4eAEA9;
+    address public LEVEL1_ADMIN4 = 0xEf270f8877Aa1875fc13e78dcA31f3235210368f;
+    address public LEVEL1_ADMIN5 = 0xddEa1De10E93c15037E83b8Ab937A46cc76f7009;
+    address public AO_POOL_ADMIN = 0xB170597E474CC124aE8Fe2b335d0d80E08bC3e37;
+
+    // todo set correct hash
+    string constant public IPFS_HASH = "QmaWk34vLJ6ohAqvTKjJHN93t1SJ8vVPkNMgSvCzNeCSzz";
 
     uint256 constant ONE = 10**27;
     address self;
@@ -96,15 +113,79 @@ contract TinlakeSpell {
        root.relyContract(SENIOR_TRANCHE, self);
        root.relyContract(SENIOR_TOKEN, self);
        root.relyContract(SENIOR_TRANCHE, self);
+       root.relyContract(JUNIOR_TRANCHE, self);
        root.relyContract(SENIOR_MEMBERLIST, self);
+       root.relyContract(JUNIOR_MEMBERLIST, self);
        root.relyContract(POOL_ADMIN, self);
        root.relyContract(ASSESSOR, self);
        root.relyContract(COORDINATOR, self);
+       root.relyContract(COORDINATOR_OLD, self);
        root.relyContract(RESERVE, self);
        root.relyContract(MGR, self);
+       root.relyContract(FEED, self);
        
        migrateClerk();
+       migrateCoordinator();
+       migratePoolAdmin();
      }  
+
+     function migrateCoordinator() internal {
+        // migrate state
+        MigrationLike(COORDINATOR).migrate(COORDINATOR_OLD);
+
+        // migrate dependencies
+        DependLike(COORDINATOR).depend("assessor", ASSESSOR);
+        DependLike(COORDINATOR).depend("juniorTranche", JUNIOR_TRANCHE);
+        DependLike(COORDINATOR).depend("seniorTranche", SENIOR_TRANCHE);
+
+        DependLike(CLERK).depend("coordinator", COORDINATOR);
+
+        DependLike(SENIOR_TRANCHE).depend("coordinator", COORDINATOR);
+        DependLike(JUNIOR_TRANCHE).depend("coordinator", COORDINATOR);
+
+        // migrate permissions
+        AuthLike(ASSESSOR).rely(COORDINATOR); 
+        AuthLike(ASSESSOR).deny(COORDINATOR_OLD);
+        AuthLike(JUNIOR_TRANCHE).rely(COORDINATOR); 
+        AuthLike(JUNIOR_TRANCHE).deny(COORDINATOR_OLD); 
+        AuthLike(SENIOR_TRANCHE).rely(COORDINATOR);
+        AuthLike(SENIOR_TRANCHE).deny(COORDINATOR_OLD);
+     }
+
+     function migratePoolAdmin() internal {
+        // setup dependencies 
+        DependLike(POOL_ADMIN).depend("assessor", ASSESSOR);
+        // DependLike(POOL_ADMIN).depend("lending", CLERK); // set in clerk migration
+        DependLike(POOL_ADMIN).depend("seniorMemberlist", SENIOR_MEMBERLIST);
+        DependLike(POOL_ADMIN).depend("juniorMemberlist", JUNIOR_MEMBERLIST);
+        DependLike(POOL_ADMIN).depend("navFeed", FEED);
+        DependLike(POOL_ADMIN).depend("coordinator", COORDINATOR);
+
+        // setup permissions
+        AuthLike(ASSESSOR).rely(POOL_ADMIN);
+        AuthLike(ASSESSOR).deny(POOL_ADMIN_OLD);
+        // AuthLike(CLERK).rely(POOL_ADMIN); // set in clerk migration
+        // AuthLike(CLERK).deny(POOL_ADMIN_OLD);
+        AuthLike(JUNIOR_MEMBERLIST).rely(POOL_ADMIN);
+        AuthLike(JUNIOR_MEMBERLIST).deny(POOL_ADMIN_OLD);
+        AuthLike(SENIOR_MEMBERLIST).rely(POOL_ADMIN);
+        AuthLike(SENIOR_MEMBERLIST).deny(POOL_ADMIN_OLD);
+        AuthLike(FEED).rely(POOL_ADMIN);
+        AuthLike(FEED).deny(POOL_ADMIN_OLD);
+        AuthLike(COORDINATOR).rely(POOL_ADMIN);
+        AuthLike(COORDINATOR).deny(POOL_ADMIN_OLD);
+
+        // set lvl3 admins
+        AuthLike(POOL_ADMIN).rely(LEVEL3_ADMIN1);
+        // set lvl1 admins
+        PoolAdminLike(POOL_ADMIN).setAdminLevel(LEVEL1_ADMIN1, 1);
+        PoolAdminLike(POOL_ADMIN).setAdminLevel(LEVEL1_ADMIN2, 1);
+        PoolAdminLike(POOL_ADMIN).setAdminLevel(LEVEL1_ADMIN3, 1);
+        PoolAdminLike(POOL_ADMIN).setAdminLevel(LEVEL1_ADMIN4, 1);
+        PoolAdminLike(POOL_ADMIN).setAdminLevel(LEVEL1_ADMIN5, 1);
+        PoolAdminLike(POOL_ADMIN).setAdminLevel(AO_POOL_ADMIN, 1);
+        PoolAdminLike(POOL_ADMIN).setAdminLevel(MEMBER_ADMIN, 1);
+    }
 
      function migrateClerk() internal {
         // migrate state
@@ -122,7 +203,6 @@ contract TinlakeSpell {
         DependLike(CLERK).depend("jug", JUG);
 
         // permissions
-        AuthLike(CLERK).rely(COORDINATOR);
         AuthLike(CLERK).rely(RESERVE);
         AuthLike(CLERK).rely(POOL_ADMIN);
         AuthLike(SENIOR_TRANCHE).rely(CLERK);
@@ -132,7 +212,7 @@ contract TinlakeSpell {
 
         FileLike(MGR).file("owner", CLERK);
 
-        DependLike(ASSESSOR).depend("clerk", CLERK); 
+        DependLike(ASSESSOR).depend("lending", CLERK);
         DependLike(RESERVE).depend("lending", CLERK);
         DependLike(POOL_ADMIN).depend("lending", CLERK);
        
@@ -145,4 +225,8 @@ contract TinlakeSpell {
         AuthLike(ASSESSOR).deny(CLERK_OLD);
         AuthLike(MGR).deny(CLERK_OLD);
     }
+
+    // function updateRegistry() internal {
+    //     PoolRegistryLike(POOL_REGISTRY).file(ROOT, true, "fortuna-fi-1", IPFS_HASH);
+    // }
 }
