@@ -214,6 +214,7 @@ contract SpellTest is BaseSpellTest {
         assertPoolAdminSwapped();
         assertCoordinatorMigrated();
         assertEpochExecution();
+        assertRegistryUpdated();
     }
 
     function assertClerkMigrated() internal {
@@ -359,6 +360,11 @@ contract SpellTest is BaseSpellTest {
         assertEq(poolAdmin.admin_level(spell.AO_POOL_ADMIN()), 1);
         assertEq(poolAdmin.admin_level(spell.MEMBER_ADMIN()), 1);
     
+    }
+
+    function assertRegistryUpdated() public {
+        (,,string memory data) = PoolRegistryLike(spell.POOL_REGISTRY()).find(spell.ROOT());
+        assertEq(data, spell.IPFS_HASH());
     }
 
     function assertHasPermissions(address con, address ward) public {

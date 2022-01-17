@@ -63,6 +63,7 @@ interface PoolAdminLike {
 
 interface PoolRegistryLike {
     function file(address, bool, string memory, string memory) external;
+    function find(address pool) external view returns (bool live, string memory name, string memory data);
 }
 
 // spell to swap clerk, coordinator & poolAdmin
@@ -105,6 +106,7 @@ contract TinlakeSpell is Addresses {
        TinlakeRootLike root = TinlakeRootLike(address(ROOT));
        self = address(this);
        // permissions 
+       root.relyContract(POOL_REGISTRY, self);
        root.relyContract(CLERK, self); // required to file riskGroups & change discountRate
        root.relyContract(CLERK_OLD, self); // required to change the interestRates for loans according to new riskGroups
        root.relyContract(SENIOR_TRANCHE, self);
@@ -124,6 +126,7 @@ contract TinlakeSpell is Addresses {
        migrateClerk();
        migrateCoordinator();
        migratePoolAdmin();
+       updateRegistry();
      }  
 
      function migrateCoordinator() internal {
@@ -224,6 +227,6 @@ contract TinlakeSpell is Addresses {
     }
 
     function updateRegistry() internal {
-        PoolRegistryLike(POOL_REGISTRY).file(ROOT, true, "fortuna-fi-1", IPFS_HASH);
+        PoolRegistryLike(POOL_REGISTRY).file(ROOT, true, "fortunafi-1", IPFS_HASH);
     }
 }
