@@ -183,8 +183,8 @@ contract TinlakeSpell is Addresses {
         PoolAdminLike(POOL_ADMIN).setAdminLevel(LEVEL1_ADMIN4, 1);
         PoolAdminLike(POOL_ADMIN).setAdminLevel(LEVEL1_ADMIN5, 1);
         PoolAdminLike(POOL_ADMIN).setAdminLevel(AO_POOL_ADMIN, 1);
-        if (MEMBER_ADMIN != address(0)) AuthLike(JUNIOR_MEMBERLIST).rely(MEMBER_ADMIN);
-        if (MEMBER_ADMIN != address(0)) AuthLike(SENIOR_MEMBERLIST).rely(MEMBER_ADMIN);
+        AuthLike(JUNIOR_MEMBERLIST).rely(MEMBER_ADMIN);
+        AuthLike(SENIOR_MEMBERLIST).rely(MEMBER_ADMIN);
     }
 
      function migrateClerk() internal {
@@ -209,6 +209,9 @@ contract TinlakeSpell is Addresses {
         AuthLike(RESERVE).rely(CLERK);
         AuthLike(ASSESSOR).rely(CLERK);
         AuthLike(MGR).rely(CLERK);
+
+        // adjust autohealing tolerance to unblock epoch exec
+        FileLike(CLERK).file("autoHealMax", 2300 ether);
 
         FileLike(MGR).file("owner", CLERK);
 

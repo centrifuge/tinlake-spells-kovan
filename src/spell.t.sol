@@ -98,6 +98,7 @@ interface IClerk {
     function jug() external returns(address);
     function creditline() external returns(uint);
     function matBuffer() external returns(uint);
+    function autoHealMax() external returns(uint);
     function collateralTolerance() external returns(uint);
     function wipeThreshold() external returns(uint);
     function collatDeficit() external view returns (uint);
@@ -229,6 +230,7 @@ contract SpellTest is BaseSpellTest {
         assertEq(clerk.collateralTolerance(), clerkOld.collateralTolerance());
         assertEq(clerk.wipeThreshold(), clerkOld.wipeThreshold());
         assertEq(clerk.collatDeficit(), clerkOld.collatDeficit());
+        assertEq(clerk.autoHealMax(), 2300 ether);
 
         // check clerk dependencies
         assertEq(clerk.assessor(), assessor_);
@@ -268,6 +270,7 @@ contract SpellTest is BaseSpellTest {
 
     function assertEpochExecution() internal {
         coordinator.executeEpoch();
+        assertEq(clerk.collatDeficit(), 0);
         assert(coordinator.submissionPeriod() == false);
     }
 
@@ -363,8 +366,8 @@ contract SpellTest is BaseSpellTest {
         assertEq(poolAdmin.admin_level(spell.LEVEL1_ADMIN4()), 1);
         assertEq(poolAdmin.admin_level(spell.LEVEL1_ADMIN5()), 1);
         assertEq(poolAdmin.admin_level(spell.AO_POOL_ADMIN()), 1);
-        assertEq(poolAdmin.admin_level(spell.MEMBER_ADMIN()), 1);
-    
+        assertHasPermissions(seniorMemberList_, spell.MEMBER_ADMIN());
+        assertHasPermissions(juniorMemberList_, spell.MEMBER_ADMIN());
     }
 
     function assertRegistryUpdated() public {
