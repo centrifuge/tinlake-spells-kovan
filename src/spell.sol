@@ -106,7 +106,6 @@ contract TinlakeSpell is Addresses {
        TinlakeRootLike root = TinlakeRootLike(address(ROOT));
        self = address(this);
        // permissions 
-       root.relyContract(POOL_REGISTRY, self);
        root.relyContract(CLERK, self); // required to file riskGroups & change discountRate
        root.relyContract(CLERK_OLD, self); // required to change the interestRates for loans according to new riskGroups
        root.relyContract(SENIOR_TRANCHE, self);
@@ -184,7 +183,8 @@ contract TinlakeSpell is Addresses {
         PoolAdminLike(POOL_ADMIN).setAdminLevel(LEVEL1_ADMIN4, 1);
         PoolAdminLike(POOL_ADMIN).setAdminLevel(LEVEL1_ADMIN5, 1);
         PoolAdminLike(POOL_ADMIN).setAdminLevel(AO_POOL_ADMIN, 1);
-        PoolAdminLike(POOL_ADMIN).setAdminLevel(MEMBER_ADMIN, 1);
+        if (MEMBER_ADMIN != address(0)) AuthLike(JUNIOR_MEMBERLIST).rely(MEMBER_ADMIN);
+        if (MEMBER_ADMIN != address(0)) AuthLike(SENIOR_MEMBERLIST).rely(MEMBER_ADMIN);
     }
 
      function migrateClerk() internal {

@@ -145,6 +145,7 @@ contract BaseSpellTest is DSTest {
     address spotter_;
     address vat_;
     address jug_;
+    address registry_;
 
     uint256 constant RAD = 10 ** 27;
     function initSpell() public {
@@ -171,8 +172,9 @@ contract BaseSpellTest is DSTest {
         vat_ = spell.VAT();
         jug_ = spell.JUG();
         root_ = address(spell.ROOT());  
-        mgr = IMgr(mgr_);
+        registry_ = spell.POOL_REGISTRY();
 
+        mgr = IMgr(mgr_);
         clerk = IClerk(clerk_);
         clerkOld = IClerk(clerkOld_);
         seniorToken = IRestrictedToken(seniorToken_);
@@ -186,11 +188,13 @@ contract BaseSpellTest is DSTest {
         hevm = IHevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
         hevm.store(root_, keccak256(abi.encode(address(this), uint(0))), bytes32(uint(1)));
+        hevm.store(registry_, keccak256(abi.encode(address(this), uint(0))), bytes32(uint(1)));
     }
 
     function castSpell() public {
         // give spell permissions on root contract
         AuthLike(root_).rely(spell_);
+        AuthLike(registry_).rely(spell_);
         spell.cast();
     }
 }
@@ -209,6 +213,7 @@ contract SpellTest is BaseSpellTest {
     } 
 
     function testCast() public {
+        AuthLike(registry_).rely(spell_);
         castSpell();
         assertClerkMigrated();
         assertPoolAdminSwapped();
@@ -363,6 +368,7 @@ contract SpellTest is BaseSpellTest {
     }
 
     function assertRegistryUpdated() public {
+        assertEq(AuthLike(spell.POOL_REGISTRY()).wards(address(this)), 1);
         (,,string memory data) = PoolRegistryLike(spell.POOL_REGISTRY()).find(spell.ROOT());
         assertEq(data, spell.IPFS_HASH());
     }
