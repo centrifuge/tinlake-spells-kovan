@@ -1,6 +1,9 @@
 pragma solidity >=0.6.12;
 
-import "./addresses_ff1.sol";
+import "./addresses_cf4.sol";
+import "./clerk.sol";
+import "./coordinator.sol";
+import "../tinlake/src/lender/admin/pool.sol";
 
 ////// src/spell.sol
 /**
@@ -76,9 +79,9 @@ contract TinlakeSpell is Addresses {
     // The contracts in this list should correspond to a tinlake deployment
     // https://github.com/centrifuge/tinlake-pool-config/blob/master/mainnet-production.json
 
-    address public CLERK = 0x8Cc9fCb43620DdB9b1573Cf9a94a6E7c167e6125;
-    address public COORDINATOR = 0xA92c94818473F3583aDc69B85767949B2103eff7;
-    address public POOL_ADMIN = 0x9033540ceda3C436C0a62CBAD682f8F4fc75F287;
+    address public CLERK = address(new MigratedClerk(TINLAKE_CURRENCY, SENIOR_TOKEN));
+    address public COORDINATOR = address(new MigratedCoordinator(1800));
+    address public POOL_ADMIN = address(new PoolAdmin());
 
     address public MEMBER_ADMIN = 0xB7e70B77f6386Ffa5F55DDCb53D87A0Fb5a2f53b;
     address public LEVEL3_ADMIN1 = 0x7b74bb514A1dEA0Ec3763bBd06084e712c8bce97;
@@ -106,7 +109,7 @@ contract TinlakeSpell is Addresses {
        TinlakeRootLike root = TinlakeRootLike(address(ROOT));
        self = address(this);
        // permissions 
-       root.relyContract(CLERK, self); // required to file riskGroups & change discountRate
+    //    root.relyContract(CLERK, self); // required to file riskGroups & change discountRate
        root.relyContract(CLERK_OLD, self); // required to change the interestRates for loans according to new riskGroups
        root.relyContract(SENIOR_TRANCHE, self);
        root.relyContract(SENIOR_TOKEN, self);
@@ -114,9 +117,9 @@ contract TinlakeSpell is Addresses {
        root.relyContract(JUNIOR_TRANCHE, self);
        root.relyContract(SENIOR_MEMBERLIST, self);
        root.relyContract(JUNIOR_MEMBERLIST, self);
-       root.relyContract(POOL_ADMIN, self);
+    //    root.relyContract(POOL_ADMIN, self);
        root.relyContract(ASSESSOR, self);
-       root.relyContract(COORDINATOR, self);
+    //    root.relyContract(COORDINATOR, self);
        root.relyContract(COORDINATOR_OLD, self);
        root.relyContract(RESERVE, self);
        root.relyContract(MGR, self);
@@ -209,9 +212,6 @@ contract TinlakeSpell is Addresses {
         AuthLike(RESERVE).rely(CLERK);
         AuthLike(ASSESSOR).rely(CLERK);
         AuthLike(MGR).rely(CLERK);
-
-        // adjust autohealing tolerance to unblock epoch exec
-        FileLike(CLERK).file("autoHealMax", 2300 ether);
 
         FileLike(MGR).file("owner", CLERK);
 
