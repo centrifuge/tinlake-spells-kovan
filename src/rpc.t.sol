@@ -33,8 +33,6 @@ contract SpellRPCTest is TinlakeRPCTests {
     }
 
     function testFullCycle() public {
-        // special case: pool in epoch execution, so epoch has to be executed first, before runnin
-        coordinator.executeEpoch();
         // make sure epoch can be closed
         t_hevm.warp(block.timestamp + 1 days);
         runLoanCycleWithMaker();

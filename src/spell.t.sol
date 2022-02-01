@@ -219,8 +219,8 @@ contract SpellTest is BaseSpellTest {
         assertClerkMigrated();
         assertPoolAdminSwapped();
         assertCoordinatorMigrated();
-        assertEpochExecution();
-        assertRegistryUpdated();
+        // assertEpochExecution(); not required for this pool
+        // assertRegistryUpdated();
     }
 
     function assertClerkMigrated() internal {
@@ -230,7 +230,7 @@ contract SpellTest is BaseSpellTest {
         assertEq(clerk.collateralTolerance(), clerkOld.collateralTolerance());
         assertEq(clerk.wipeThreshold(), clerkOld.wipeThreshold());
         assertEq(clerk.collatDeficit(), clerkOld.collatDeficit());
-        assertEq(clerk.autoHealMax(), 2300 ether);
+        assertEq(clerk.autoHealMax(), 3000 ether);
 
         // check clerk dependencies
         assertEq(clerk.assessor(), assessor_);

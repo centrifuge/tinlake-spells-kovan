@@ -1,19 +1,7 @@
 pragma solidity >=0.6.12;
 
-import "./addresses_ff1.sol";
+import "./addresses_htc2.sol";
 
-////// src/spell.sol
-/**
- *Submitted for verification at Etherscan.io on 2021-09-24
-*/
-
-// Verified using https://dapp.tools
-
-// hevm: flattened sources of src/spell.sol
-
-/* pragma solidity >=0.6.12; */
-
-////// src/spell.sol
 // Copyright (C) 2020 Centrifuge
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -27,7 +15,6 @@ import "./addresses_ff1.sol";
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-/* pragma solidity >=0.6.12; */
 
 interface AuthLike {
     function rely(address) external;
@@ -76,9 +63,9 @@ contract TinlakeSpell is Addresses {
     // The contracts in this list should correspond to a tinlake deployment
     // https://github.com/centrifuge/tinlake-pool-config/blob/master/mainnet-production.json
 
-    address public CLERK = 0x8Cc9fCb43620DdB9b1573Cf9a94a6E7c167e6125;
-    address public COORDINATOR = 0xA92c94818473F3583aDc69B85767949B2103eff7;
-    address public POOL_ADMIN = 0x9033540ceda3C436C0a62CBAD682f8F4fc75F287;
+    address public CLERK = 0xb082569c4A1414D3F44EfB60300E87B8a15ec455;
+    address public COORDINATOR = 0x7bD6fe3AC16AAE89D639b4C85a02907339c10CC1;
+    address public POOL_ADMIN = 0xAa7B2eB291E4Bf01B2457C4ee52428C814ad7Dc3;
 
     address public MEMBER_ADMIN = 0xB7e70B77f6386Ffa5F55DDCb53D87A0Fb5a2f53b;
     address public LEVEL3_ADMIN1 = 0x7b74bb514A1dEA0Ec3763bBd06084e712c8bce97;
@@ -87,7 +74,7 @@ contract TinlakeSpell is Addresses {
     address public LEVEL1_ADMIN3 = 0x9eDec77dd2651Ce062ab17e941347018AD4eAEA9;
     address public LEVEL1_ADMIN4 = 0xEf270f8877Aa1875fc13e78dcA31f3235210368f;
     address public LEVEL1_ADMIN5 = 0xddEa1De10E93c15037E83b8Ab937A46cc76f7009;
-    address public AO_POOL_ADMIN = 0xB170597E474CC124aE8Fe2b335d0d80E08bC3e37;
+    address public AO_POOL_ADMIN = 0xbAc249271918db4261fF60354cc97Bb4cE9A08A1;
 
     address public POOL_REGISTRY = 0xddf1C516Cf87126c6c610B52FD8d609E67Fb6033;
 
@@ -128,7 +115,7 @@ contract TinlakeSpell is Addresses {
        updateRegistry();
      }  
 
-     function migrateCoordinator() internal {
+    function migrateCoordinator() internal {
         // migrate state
         MigrationLike(COORDINATOR).migrate(COORDINATOR_OLD);
 
@@ -151,7 +138,7 @@ contract TinlakeSpell is Addresses {
         AuthLike(SENIOR_TRANCHE).deny(COORDINATOR_OLD);
      }
 
-     function migratePoolAdmin() internal {
+    function migratePoolAdmin() internal {
         // setup dependencies 
         DependLike(POOL_ADMIN).depend("assessor", ASSESSOR);
         // DependLike(POOL_ADMIN).depend("lending", CLERK); // set in clerk migration
@@ -187,7 +174,7 @@ contract TinlakeSpell is Addresses {
         AuthLike(SENIOR_MEMBERLIST).rely(MEMBER_ADMIN);
     }
 
-     function migrateClerk() internal {
+    function migrateClerk() internal {
         // migrate state
         MigrationLike(CLERK).migrate(CLERK_OLD);
     
@@ -211,7 +198,7 @@ contract TinlakeSpell is Addresses {
         AuthLike(MGR).rely(CLERK);
 
         // adjust autohealing tolerance to unblock epoch exec
-        FileLike(CLERK).file("autoHealMax", 2300 ether);
+        FileLike(CLERK).file("autoHealMax", 3000 ether);
 
         FileLike(MGR).file("owner", CLERK);
 
@@ -230,6 +217,7 @@ contract TinlakeSpell is Addresses {
     }
 
     function updateRegistry() internal {
-        PoolRegistryLike(POOL_REGISTRY).file(ROOT, true, "fortunafi-1", IPFS_HASH);
+        // @Adam please add correct hash & name
+        // PoolRegistryLike(POOL_REGISTRY).file(ROOT, true, "fortunafi-1", IPFS_HASH);
     }
 }

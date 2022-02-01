@@ -34,9 +34,6 @@ contract MigratedClerk is Clerk {
         matBuffer = clone.matBuffer();
         collateralTolerance = clone.collateralTolerance();
         wipeThreshold = clone.wipeThreshold();
-
-        // collateral tolerance
-        autoHealMax= 2000 ether;
     }
 }
    
