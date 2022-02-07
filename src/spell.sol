@@ -78,7 +78,7 @@ contract TinlakeSpell is Addresses {
 
     address public POOL_REGISTRY = 0xddf1C516Cf87126c6c610B52FD8d609E67Fb6033;
 
-    string constant public IPFS_HASH = "Qmbb8UAtouEHUkZXwUWH1GLJnDPBqxccF43rjrWpjiTkRo";
+    string constant public IPFS_HASH = "QmfKFYT8nFPiFdtqPzKVraLcQJqzgcZaPXZS1kY4htXecs";
 
     uint256 constant ONE = 10**27;
     address self;
@@ -218,6 +218,6 @@ contract TinlakeSpell is Addresses {
 
     function updateRegistry() internal {
         // @Adam please add correct hash & name
-        // PoolRegistryLike(POOL_REGISTRY).file(ROOT, true, "fortunafi-1", IPFS_HASH);
+        PoolRegistryLike(POOL_REGISTRY).file(ROOT, true, "harbor-trade-2", IPFS_HASH);
     }
 }
