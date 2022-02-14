@@ -220,7 +220,7 @@ contract SpellTest is BaseSpellTest {
         assertPoolAdminSwapped();
         assertCoordinatorMigrated();
         // assertEpochExecution(); not required for this pool
-        assertRegistryUpdated();
+        // assertRegistryUpdated();
     }
 
     function assertClerkMigrated() internal {
