@@ -1,6 +1,6 @@
 pragma solidity >=0.6.12;
 
-import "./addresses_htc2.sol";
+import "./addresses_cf4.sol";
 
 // Copyright (C) 2020 Centrifuge
 // This program is free software: you can redistribute it and/or modify
@@ -57,15 +57,15 @@ interface PoolRegistryLike {
 contract TinlakeSpell is Addresses {
 
     bool public done;
-    string constant public description = "Tinlake GigPool spell";
+    string constant public description = "Tinlake CF4 spell";
 
     // MAINNET ADDRESSES
     // The contracts in this list should correspond to a tinlake deployment
     // https://github.com/centrifuge/tinlake-pool-config/blob/master/mainnet-production.json
 
-    address public CLERK = 0xb082569c4A1414D3F44EfB60300E87B8a15ec455;
-    address public COORDINATOR = 0x7bD6fe3AC16AAE89D639b4C85a02907339c10CC1;
-    address public POOL_ADMIN = 0xAa7B2eB291E4Bf01B2457C4ee52428C814ad7Dc3;
+    address public CLERK = 0x3f18128FECeFFB959092dC643AD230D3f4706eC2;
+    address public COORDINATOR = 0xB5F8921B5Ac74d0cCD28427a6304bdBfeb211d72;
+    address public POOL_ADMIN = 0xa0768C6Dbf011A731AB3Fa425b1EBbE695dCD364;
 
     address public MEMBER_ADMIN = 0xB7e70B77f6386Ffa5F55DDCb53D87A0Fb5a2f53b;
     address public LEVEL3_ADMIN1 = 0x7b74bb514A1dEA0Ec3763bBd06084e712c8bce97;
@@ -74,10 +74,11 @@ contract TinlakeSpell is Addresses {
     address public LEVEL1_ADMIN3 = 0x9eDec77dd2651Ce062ab17e941347018AD4eAEA9;
     address public LEVEL1_ADMIN4 = 0xEf270f8877Aa1875fc13e78dcA31f3235210368f;
     address public LEVEL1_ADMIN5 = 0xddEa1De10E93c15037E83b8Ab937A46cc76f7009;
-    address public AO_POOL_ADMIN = 0xbAc249271918db4261fF60354cc97Bb4cE9A08A1;
+    address public AO_POOL_ADMIN = 0x8CE8fC2e297F1688385Fc115A3cB104393FE3659;
 
     address public POOL_REGISTRY = 0xddf1C516Cf87126c6c610B52FD8d609E67Fb6033;
 
+    // Adam add new Hash
     string constant public IPFS_HASH = "QmfKFYT8nFPiFdtqPzKVraLcQJqzgcZaPXZS1kY4htXecs";
 
     uint256 constant ONE = 10**27;
@@ -197,9 +198,6 @@ contract TinlakeSpell is Addresses {
         AuthLike(ASSESSOR).rely(CLERK);
         AuthLike(MGR).rely(CLERK);
 
-        // adjust autohealing tolerance to unblock epoch exec
-        FileLike(CLERK).file("autoHealMax", 3000 ether);
-
         FileLike(MGR).file("owner", CLERK);
 
         DependLike(ASSESSOR).depend("lending", CLERK);
@@ -217,7 +215,7 @@ contract TinlakeSpell is Addresses {
     }
 
     function updateRegistry() internal {
-        // @Adam please add correct hash & name
-        PoolRegistryLike(POOL_REGISTRY).file(ROOT, true, "harbor-trade-2", IPFS_HASH);
+        // Adam add new Hash
+        // PoolRegistryLike(POOL_REGISTRY).file(ROOT, true, "harbor-trade-2", IPFS_HASH);
     }
 }
