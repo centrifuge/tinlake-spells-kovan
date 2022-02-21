@@ -158,20 +158,14 @@ contract BaseSpellTest is DSTest {
         poolAdminOld_ = spell.POOL_ADMIN_OLD();
         reserve_ = spell.RESERVE();
         coordinator_ = spell.COORDINATOR();
-        coordinatorOld_ = spell.COORDINATOR_OLD();
         seniorTranche_ = spell.SENIOR_TRANCHE();
         navFeed_ = spell.FEED();
-        mgr_ = spell.MGR();
         seniorToken_ = spell.SENIOR_TOKEN();
         seniorMemberList_ = spell.SENIOR_MEMBERLIST();
         juniorMemberList_ = spell.JUNIOR_MEMBERLIST();
         seniorTranche_ = spell.SENIOR_TRANCHE();
         juniorTranche_ = spell.JUNIOR_TRANCHE();
         clerk_ = spell.CLERK();
-        clerkOld_ = spell.CLERK_OLD();
-        spotter_ = spell.SPOTTER();
-        vat_ = spell.VAT();
-        jug_ = spell.JUG();
         root_ = address(spell.ROOT());  
         registry_ = spell.POOL_REGISTRY();
 
@@ -216,122 +210,16 @@ contract SpellTest is BaseSpellTest {
     function testCast() public {
         AuthLike(registry_).rely(spell_);
         castSpell();
-        assertClerkMigrated();
         assertPoolAdminSwapped();
-        assertCoordinatorMigrated();
         // assertEpochExecution(); not required for this pool
         // assertRegistryUpdated();
     }
 
-    function assertClerkMigrated() internal {
-        // assert state migrated correctly
-        assertEq(clerk.creditline(), clerkOld.creditline());
-        assertEq(clerk.matBuffer(), clerkOld.matBuffer());
-        assertEq(clerk.collateralTolerance(), clerkOld.collateralTolerance());
-        assertEq(clerk.wipeThreshold(), clerkOld.wipeThreshold());
-        assertEq(clerk.collatDeficit(), clerkOld.collatDeficit());
-
-        // check clerk dependencies
-        assertEq(clerk.assessor(), assessor_);
-        assertEq(clerk.mgr(), mgr_);
-        assertEq(clerk.coordinator(), coordinator_);
-        assertEq(clerk.reserve(), reserve_); 
-        assertEq(clerk.tranche(), seniorTranche_);
-        assertEq(clerk.collateral(), seniorToken_);
-        assertEq(clerk.spotter(), spotter_);
-        assertEq(clerk.vat(), vat_);
-        assertEq(clerk.jug(), jug_);
-
-        assertEq(reserve.lending(), clerk_);
-        assertEq(assessor.lending(), clerk_);
-        assertEq(poolAdmin.lending(), clerk_);
-
-        // check permissions
-        assertHasPermissions(clerk_, reserve_);
-        assertHasPermissions(clerk_, poolAdmin_);
-        assertHasPermissions(reserve_, clerk_);
-        assertHasPermissions(seniorTranche_, clerk_);
-        assertHasPermissions(assessor_, clerk_);
-        assertHasPermissions(mgr_, clerk_);
-        
-        // check clerk is owner of the mgr
-        assertEq(mgr.owner(), clerk_);
-
-        // assert clerk whitelisted to hold DROP
-        assert(seniorToken.hasMember(clerk_));
-
-        // assert old clerk was removed from contracts
-        assertHasNoPermissions(reserve_, clerkOld_);
-        assertHasNoPermissions(seniorTranche_, clerkOld_);
-        assertHasNoPermissions(assessor_, clerkOld_);
-        assertHasNoPermissions(mgr_, clerkOld_);
-    }
 
     function assertEpochExecution() internal {
         coordinator.executeEpoch();
         assertEq(clerk.collatDeficit(), 0);
         assert(coordinator.submissionPeriod() == false);
-    }
-
-    function  assertCoordinatorMigrated() public {
-        ICoordinator coordinatorOld = ICoordinator(coordinatorOld_);
-    
-        // check dependencies
-        assertEq(coordinator.assessor(), assessor_);
-        assertEq(coordinator.juniorTranche(), juniorTranche_);
-        assertEq(coordinator.seniorTranche(), seniorTranche_);
-        assertEq(juniorTranche.coordinator(), coordinator_);
-        assertEq(seniorTranche.coordinator(), coordinator_);
-
-        // check permissions
-        assertHasPermissions(juniorTranche_, coordinator_);
-        assertHasPermissions(assessor_, coordinator_);
-        assertHasPermissions(seniorTranche_, coordinator_);
-        assertHasNoPermissions(assessor_, coordinatorOld_);
-        assertHasNoPermissions(juniorTranche_, coordinatorOld_);
-        assertHasNoPermissions(seniorTranche_, coordinatorOld_);
-
-        // check state
-        assertEq(coordinator.lastEpochClosed(), coordinatorOld.lastEpochClosed());
-        assertEq(coordinator.minimumEpochTime(), coordinatorOld.minimumEpochTime());
-        assertEq(coordinator.lastEpochExecuted(), coordinatorOld.lastEpochExecuted());
-        assertEq(coordinator.currentEpoch(), coordinatorOld.currentEpoch());
-        assertEq(coordinator.bestSubScore(), coordinatorOld.bestSubScore());
-        assert(coordinator.gotFullValidSolution() == coordinatorOld.gotFullValidSolution());
-
-        assertEq(coordinator.epochSeniorTokenPrice(), coordinatorOld.epochSeniorTokenPrice());
-        assertEq(coordinator.epochJuniorTokenPrice(), coordinatorOld.epochJuniorTokenPrice());
-        assertEq(coordinator.epochNAV(), coordinatorOld.epochNAV());
-        assertEq(coordinator.epochSeniorAsset(), coordinatorOld.epochSeniorAsset());
-        assertEq(coordinator.epochReserve(), coordinatorOld.epochReserve());
-        
-        assert(coordinator.submissionPeriod() == coordinatorOld.submissionPeriod());
-        assertEq(coordinator.weightSeniorRedeem(), coordinatorOld.weightSeniorRedeem());
-        assertEq(coordinator.weightJuniorRedeem(), coordinatorOld.weightJuniorRedeem());
-        assertEq(coordinator.weightJuniorSupply(), coordinatorOld.weightJuniorSupply());
-        assertEq(coordinator.weightSeniorSupply(), coordinatorOld.weightSeniorSupply());
-        assertEq(coordinator.minChallengePeriodEnd (), coordinatorOld.minChallengePeriodEnd());
-        assertEq(coordinator.challengeTime(), coordinatorOld.challengeTime());
-        assertEq(coordinator.bestRatioImprovement(), coordinatorOld.bestRatioImprovement());
-        assertEq(coordinator.bestReserveImprovement(), coordinatorOld.bestReserveImprovement());
-        assert(coordinator.poolClosing() == false);
-        assertOrdersMigrated(); 
-    }
-
-    function assertOrdersMigrated() public {
-        (uint seniorRedeemSubmission, uint juniorRedeemSubmission, uint juniorSupplySubmission, uint seniorSupplySubmission) = coordinator.bestSubmission();
-        (uint seniorRedeemSubmissionOld, uint juniorRedeemSubmissionOld, uint juniorSupplySubmissionOld, uint seniorSupplySubmissionOld) = ICoordinator(spell.COORDINATOR_OLD()).bestSubmission();
-        assertEq(seniorRedeemSubmission, seniorRedeemSubmissionOld);
-        assertEq(juniorRedeemSubmission, juniorRedeemSubmissionOld);
-        assertEq(juniorSupplySubmission, juniorSupplySubmissionOld);
-        assertEq(seniorSupplySubmission, seniorSupplySubmissionOld);
-
-        (uint seniorRedeemOrder, uint juniorRedeemOrder, uint juniorSupplyOrder, uint seniorSupplyOrder) = coordinator.order();
-        (uint seniorRedeemOrderOld, uint juniorRedeemOrderOld, uint juniorSupplyOrderOld, uint seniorSupplyOrderOld) = ICoordinator(spell.COORDINATOR_OLD()).order();
-        assertEq(seniorRedeemOrder, seniorRedeemOrderOld);
-        assertEq(juniorRedeemOrder, juniorRedeemOrderOld);
-        assertEq(juniorSupplyOrder, juniorSupplyOrderOld);
-        assertEq(seniorSupplyOrder, seniorSupplyOrderOld);
     }
 
     function assertPoolAdminSwapped() public {
@@ -366,13 +254,15 @@ contract SpellTest is BaseSpellTest {
         assertEq(poolAdmin.admin_level(spell.LEVEL1_ADMIN5()), 1);
         assertEq(poolAdmin.admin_level(spell.AO_POOL_ADMIN()), 1);
         assertHasPermissions(seniorMemberList_, spell.MEMBER_ADMIN());
+        emit log_named_address("junior", juniorMemberList_);
+        emit log_named_address("member admin", spell.MEMBER_ADMIN());
         assertHasPermissions(juniorMemberList_, spell.MEMBER_ADMIN());
     }
 
     function assertRegistryUpdated() public {
         assertEq(AuthLike(spell.POOL_REGISTRY()).wards(address(this)), 1);
         (,,string memory data) = PoolRegistryLike(spell.POOL_REGISTRY()).find(spell.ROOT());
-        assertEq(data, spell.IPFS_HASH());
+        // assertEq(data, spell.IPFS_HASH());
     }
 
     function assertHasPermissions(address con, address ward) public {

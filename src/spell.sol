@@ -1,6 +1,6 @@
 pragma solidity >=0.6.12;
 
-import "./addresses_cf4.sol";
+import "./addresses_ns2.sol";
 
 // Copyright (C) 2020 Centrifuge
 // This program is free software: you can redistribute it and/or modify
@@ -57,15 +57,13 @@ interface PoolRegistryLike {
 contract TinlakeSpell is Addresses {
 
     bool public done;
-    string constant public description = "Tinlake CF4 spell";
+    string constant public description = "Tinlake NS2 spell";
 
     // MAINNET ADDRESSES
     // The contracts in this list should correspond to a tinlake deployment
     // https://github.com/centrifuge/tinlake-pool-config/blob/master/mainnet-production.json
 
-    address public CLERK = 0x3f18128FECeFFB959092dC643AD230D3f4706eC2;
-    address public COORDINATOR = 0xB5F8921B5Ac74d0cCD28427a6304bdBfeb211d72;
-    address public POOL_ADMIN = 0xa0768C6Dbf011A731AB3Fa425b1EBbE695dCD364;
+    address public POOL_ADMIN = 0xeaC0214e319D827565e81801DAbcA04CCc6E8986;
 
     address public MEMBER_ADMIN = 0xB7e70B77f6386Ffa5F55DDCb53D87A0Fb5a2f53b;
     address public LEVEL3_ADMIN1 = 0x7b74bb514A1dEA0Ec3763bBd06084e712c8bce97;
@@ -74,12 +72,11 @@ contract TinlakeSpell is Addresses {
     address public LEVEL1_ADMIN3 = 0x9eDec77dd2651Ce062ab17e941347018AD4eAEA9;
     address public LEVEL1_ADMIN4 = 0xEf270f8877Aa1875fc13e78dcA31f3235210368f;
     address public LEVEL1_ADMIN5 = 0xddEa1De10E93c15037E83b8Ab937A46cc76f7009;
-    address public AO_POOL_ADMIN = 0x8CE8fC2e297F1688385Fc115A3cB104393FE3659;
+    address public AO_POOL_ADMIN = 0x7Cae9bD865610750a48575aF15CAFe1e460c96a8;
 
     address public POOL_REGISTRY = 0xddf1C516Cf87126c6c610B52FD8d609E67Fb6033;
 
-    // Adam add new Hash
-    string constant public IPFS_HASH = "QmS3D3EAySc9b2CVrNnPV2ueo6tBvTFi49kewttQq4vQLw";
+    // string constant public IPFS_HASH = "QmS3D3EAySc9b2CVrNnPV2ueo6tBvTFi49kewttQq4vQLw";
 
     uint256 constant ONE = 10**27;
     address self;
@@ -95,7 +92,6 @@ contract TinlakeSpell is Addresses {
        self = address(this);
        // permissions 
        root.relyContract(CLERK, self); // required to file riskGroups & change discountRate
-       root.relyContract(CLERK_OLD, self); // required to change the interestRates for loans according to new riskGroups
        root.relyContract(SENIOR_TRANCHE, self);
        root.relyContract(SENIOR_TOKEN, self);
        root.relyContract(SENIOR_TRANCHE, self);
@@ -105,39 +101,13 @@ contract TinlakeSpell is Addresses {
        root.relyContract(POOL_ADMIN, self);
        root.relyContract(ASSESSOR, self);
        root.relyContract(COORDINATOR, self);
-       root.relyContract(COORDINATOR_OLD, self);
        root.relyContract(RESERVE, self);
-       root.relyContract(MGR, self);
        root.relyContract(FEED, self);
        
-       migrateClerk();
-       migrateCoordinator();
        migratePoolAdmin();
        updateRegistry();
      }  
 
-    function migrateCoordinator() internal {
-        // migrate state
-        MigrationLike(COORDINATOR).migrate(COORDINATOR_OLD);
-
-        // migrate dependencies
-        DependLike(COORDINATOR).depend("assessor", ASSESSOR);
-        DependLike(COORDINATOR).depend("juniorTranche", JUNIOR_TRANCHE);
-        DependLike(COORDINATOR).depend("seniorTranche", SENIOR_TRANCHE);
-
-        DependLike(CLERK).depend("coordinator", COORDINATOR);
-
-        DependLike(SENIOR_TRANCHE).depend("coordinator", COORDINATOR);
-        DependLike(JUNIOR_TRANCHE).depend("coordinator", COORDINATOR);
-
-        // migrate permissions
-        AuthLike(ASSESSOR).rely(COORDINATOR); 
-        AuthLike(ASSESSOR).deny(COORDINATOR_OLD);
-        AuthLike(JUNIOR_TRANCHE).rely(COORDINATOR); 
-        AuthLike(JUNIOR_TRANCHE).deny(COORDINATOR_OLD); 
-        AuthLike(SENIOR_TRANCHE).rely(COORDINATOR);
-        AuthLike(SENIOR_TRANCHE).deny(COORDINATOR_OLD);
-     }
 
     function migratePoolAdmin() internal {
         // setup dependencies 
@@ -147,12 +117,13 @@ contract TinlakeSpell is Addresses {
         DependLike(POOL_ADMIN).depend("juniorMemberlist", JUNIOR_MEMBERLIST);
         DependLike(POOL_ADMIN).depend("navFeed", FEED);
         DependLike(POOL_ADMIN).depend("coordinator", COORDINATOR);
+        DependLike(POOL_ADMIN).depend("lending", CLERK);
 
         // setup permissions
         AuthLike(ASSESSOR).rely(POOL_ADMIN);
         AuthLike(ASSESSOR).deny(POOL_ADMIN_OLD);
-        // AuthLike(CLERK).rely(POOL_ADMIN); // set in clerk migration
-        // AuthLike(CLERK).deny(POOL_ADMIN_OLD);
+        AuthLike(CLERK).rely(POOL_ADMIN); // set in clerk migration
+        AuthLike(CLERK).deny(POOL_ADMIN_OLD);
         AuthLike(JUNIOR_MEMBERLIST).rely(POOL_ADMIN);
         AuthLike(JUNIOR_MEMBERLIST).deny(POOL_ADMIN_OLD);
         AuthLike(SENIOR_MEMBERLIST).rely(POOL_ADMIN);
@@ -175,46 +146,7 @@ contract TinlakeSpell is Addresses {
         AuthLike(SENIOR_MEMBERLIST).rely(MEMBER_ADMIN);
     }
 
-    function migrateClerk() internal {
-        // migrate state
-        MigrationLike(CLERK).migrate(CLERK_OLD);
-    
-        // dependencies
-        DependLike(CLERK).depend("assessor", ASSESSOR);
-        DependLike(CLERK).depend("mgr", MGR);
-        DependLike(CLERK).depend("coordinator", COORDINATOR);
-        DependLike(CLERK).depend("reserve", RESERVE); 
-        DependLike(CLERK).depend("tranche", SENIOR_TRANCHE);
-        DependLike(CLERK).depend("collateral", SENIOR_TOKEN);
-        DependLike(CLERK).depend("spotter", SPOTTER);
-        DependLike(CLERK).depend("vat", VAT);
-        DependLike(CLERK).depend("jug", JUG);
-
-        // permissions
-        AuthLike(CLERK).rely(RESERVE);
-        AuthLike(CLERK).rely(POOL_ADMIN);
-        AuthLike(SENIOR_TRANCHE).rely(CLERK);
-        AuthLike(RESERVE).rely(CLERK);
-        AuthLike(ASSESSOR).rely(CLERK);
-        AuthLike(MGR).rely(CLERK);
-
-        FileLike(MGR).file("owner", CLERK);
-
-        DependLike(ASSESSOR).depend("lending", CLERK);
-        DependLike(RESERVE).depend("lending", CLERK);
-        DependLike(POOL_ADMIN).depend("lending", CLERK);
-       
-        // restricted token setup
-        SpellMemberlistLike(SENIOR_MEMBERLIST).updateMember(CLERK, uint(-1));
-
-        // remove old clerk
-        AuthLike(SENIOR_TRANCHE).deny(CLERK_OLD);
-        AuthLike(RESERVE).deny(CLERK_OLD);
-        AuthLike(ASSESSOR).deny(CLERK_OLD);
-        AuthLike(MGR).deny(CLERK_OLD);
-    }
-
     function updateRegistry() internal {
-        PoolRegistryLike(POOL_REGISTRY).file(ROOT, true, "consolfreight-4", IPFS_HASH);
+        // PoolRegistryLike(POOL_REGISTRY).file(ROOT, true, "consolfreight-4", IPFS_HASH);
     }
 }
