@@ -76,7 +76,8 @@ contract TinlakeSpell is Addresses {
 
     address public POOL_REGISTRY = 0xddf1C516Cf87126c6c610B52FD8d609E67Fb6033;
 
-    // string constant public IPFS_HASH = "QmS3D3EAySc9b2CVrNnPV2ueo6tBvTFi49kewttQq4vQLw";
+    // Adam to add correct IPFS hash
+    string constant public IPFS_HASH = "QmS3D3EAySc9b2CVrNnPV2ueo6tBvTFi49kewttQq4vQLw";
 
     uint256 constant ONE = 10**27;
     address self;
@@ -147,6 +148,7 @@ contract TinlakeSpell is Addresses {
     }
 
     function updateRegistry() internal {
+        // Adam to add correct IPFS hash
         // PoolRegistryLike(POOL_REGISTRY).file(ROOT, true, "consolfreight-4", IPFS_HASH);
     }
 }
