@@ -76,7 +76,7 @@ contract TinlakeSpell is Addresses {
 
     address public POOL_REGISTRY = 0xddf1C516Cf87126c6c610B52FD8d609E67Fb6033;
 
-    string constant public IPFS_HASH = "QmcVoEqdRjNxwaQmooWjDguBr4FjQ214ZUZwhwTKjJrtoK";
+    string constant public IPFS_HASH = "QmYfAJzwQyp2FtFRiL56RMNrmF6cm38BPTFJADG9MxJtgj";
 
     uint256 constant ONE = 10**27;
     address self;
