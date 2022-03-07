@@ -4,6 +4,11 @@ pragma experimental ABIEncoderV2;
 
 import "./addresses.sol";
 
+interface PoolRegistryLike {
+    function file(address, bool, string memory, string memory) external;
+    function find(address pool) external view returns (bool live, string memory name, string memory data);
+}
+
 interface SpellTinlakeRootLike {
     function relyContract(address, address) external;
 }
@@ -45,9 +50,6 @@ contract TinlakeSpell is Addresses {
     }
 
     function execute() internal {
-        SpellTinlakeRootLike root = SpellTinlakeRootLike(ROOT);
-
-
         updateRegistry();
     }
 
