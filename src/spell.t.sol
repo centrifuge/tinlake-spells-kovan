@@ -52,47 +52,31 @@ contract BaseSpellTest is DSTest {
 
     IHevm public t_hevm;
     TinlakeSpell spell;
-
-    IShelf t_shelf;
-    ICollector t_collector;
-    IAssessor t_assessor;
-    IReserve t_reserve;
-    ICoordinator t_coordinator;
-    ITranche t_seniorTranche;
-    ITranche t_juniorTranche;
-    IClerk t_clerk;
-    SpellERC20Like t_currency;
    
     address spell_;
     address t_root_;
-    address t_shelf_;
-    address t_reserve_;
-    address t_reserveOld_;
-    address t_assessor_;
-    address t_clerk_;
-    address t_coordinator_;
-    address t_juniorTranche_;
-    address t_seniorTranche_;
-    address t_currency_;
-    address t_pot_;
-
+    address t_registry_;
+    
     uint poolReserveDAI;
 
     function initSpell() public {
         spell = new TinlakeSpell();
         spell_ = address(spell);
 
+        t_registry_ = address(spell.POOL_REGISTRY());
         t_root_ = address(spell.ROOT());  
         t_hevm = IHevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
         // cheat: give testContract permissions on root contract by overriding storage 
         // storage slot for permissions => keccak256(key, mapslot) (mapslot = 0)
         t_hevm.store(t_root_, keccak256(abi.encode(address(this), uint(0))), bytes32(uint(1)));
+        t_hevm.store(t_registry_, keccak256(abi.encode(address(this), uint(0))), bytes32(uint(1)));
     }
 
     function castSpell() public {
         // give spell permissions on root contract
         AuthLike(t_root_).rely(spell_);
+        AuthLike(t_registry_).rely(spell_);
         spell.cast();
     }
 }
@@ -106,6 +90,7 @@ contract SpellTest is BaseSpellTest {
     function testCast() public {
         // give spell permissions on root contract
         AuthLike(t_root_).rely(spell_);
+        AuthLike(t_registry_).rely(spell_);
         spell.cast();
             
         assertRegistryUpdated();
@@ -119,6 +104,7 @@ contract SpellTest is BaseSpellTest {
     function testFailCastTwice() public {
         // give spell permissions on root contract
         AuthLike(t_root_).rely(spell_);
+        AuthLike(t_registry_).rely(spell_);
         spell.cast();
         spell.cast();
     }
