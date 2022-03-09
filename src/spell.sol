@@ -1,6 +1,6 @@
 pragma solidity >=0.6.12;
 
-import "./addresses_ns2.sol";
+import "./addresses_gig.sol";
 
 // Copyright (C) 2020 Centrifuge
 // This program is free software: you can redistribute it and/or modify
@@ -57,13 +57,13 @@ interface PoolRegistryLike {
 contract TinlakeSpell is Addresses {
 
     bool public done;
-    string constant public description = "Tinlake NS2 spell";
+    string constant public description = "Tinlake GigPool spell";
 
     // MAINNET ADDRESSES
     // The contracts in this list should correspond to a tinlake deployment
     // https://github.com/centrifuge/tinlake-pool-config/blob/master/mainnet-production.json
 
-    address public POOL_ADMIN = 0xeaC0214e319D827565e81801DAbcA04CCc6E8986;
+    address public POOL_ADMIN = 0xb84447f0d1aC8F6c5A99FD41814b966A2BBCD922;
 
     address public MEMBER_ADMIN = 0xB7e70B77f6386Ffa5F55DDCb53D87A0Fb5a2f53b;
     address public LEVEL3_ADMIN1 = 0x7b74bb514A1dEA0Ec3763bBd06084e712c8bce97;
@@ -72,7 +72,7 @@ contract TinlakeSpell is Addresses {
     address public LEVEL1_ADMIN3 = 0x9eDec77dd2651Ce062ab17e941347018AD4eAEA9;
     address public LEVEL1_ADMIN4 = 0xEf270f8877Aa1875fc13e78dcA31f3235210368f;
     address public LEVEL1_ADMIN5 = 0xddEa1De10E93c15037E83b8Ab937A46cc76f7009;
-    address public AO_POOL_ADMIN = 0x7Cae9bD865610750a48575aF15CAFe1e460c96a8;
+    address public AO_POOL_ADMIN = 0x7122139DA943Aba4423c0C22Ed68d7bD54CcD8f6;
 
     address public POOL_REGISTRY = 0xddf1C516Cf87126c6c610B52FD8d609E67Fb6033;
 
@@ -112,7 +112,6 @@ contract TinlakeSpell is Addresses {
     function migratePoolAdmin() internal {
         // setup dependencies 
         DependLike(POOL_ADMIN).depend("assessor", ASSESSOR);
-        // DependLike(POOL_ADMIN).depend("lending", CLERK); // set in clerk migration
         DependLike(POOL_ADMIN).depend("seniorMemberlist", SENIOR_MEMBERLIST);
         DependLike(POOL_ADMIN).depend("juniorMemberlist", JUNIOR_MEMBERLIST);
         DependLike(POOL_ADMIN).depend("navFeed", FEED);
@@ -147,6 +146,6 @@ contract TinlakeSpell is Addresses {
     }
 
     function updateRegistry() internal {
-        PoolRegistryLike(POOL_REGISTRY).file(ROOT, true, "new-silver-2", IPFS_HASH);
+        // PoolRegistryLike(POOL_REGISTRY).file(ROOT, true, "new-silver-2", IPFS_HASH);
     }
 }
