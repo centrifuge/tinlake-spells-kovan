@@ -212,7 +212,7 @@ contract SpellTest is BaseSpellTest {
         castSpell();
         assertPoolAdminSwapped();
         // assertEpochExecution(); not required for this pool
-        // assertRegistryUpdated();
+        assertRegistryUpdated();
     }
 
 
