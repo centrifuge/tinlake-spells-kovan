@@ -64,11 +64,6 @@ contract MigratedNAVFeed is NAVFeed {
 
 
         // No WriteOff Group migration required
-
-        // call reCalcNAV() to set the current NAV values:
-        //  latestNAV;
-        //  latestDiscount;
-        //  lastNAVUpdate;
         reCalcNAV();
 
     }
