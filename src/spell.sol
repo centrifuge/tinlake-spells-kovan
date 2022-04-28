@@ -1,6 +1,7 @@
 pragma solidity >=0.6.12;
-
-import "./addresses_gig.sol";
+import "ds-test/test.sol";
+import "./addresses_ff1.sol";
+import "./nav.sol";
 
 // Copyright (C) 2020 Centrifuge
 // This program is free software: you can redistribute it and/or modify
@@ -37,7 +38,7 @@ interface DependLike {
 }
 
 interface MigrationLike {
-        function migrate(address) external;
+        function migrate(address, uint, address, uint) external;
 }
 
 interface SpellMemberlistLike {
@@ -48,13 +49,21 @@ interface PoolAdminLike {
     function setAdminLevel(address usr, uint level) external;
 }
 
+interface SpellTitleLike {
+    function count() external returns(uint);
+}
+
 interface PoolRegistryLike {
     function file(address, bool, string memory, string memory) external;
     function find(address pool) external view returns (bool live, string memory name, string memory data);
 }
 
+interface SpellCoordinatorLike {
+     function closeEpoch() external returns (bool);
+}
+
 // spell to swap clerk, coordinator & poolAdmin
-contract TinlakeSpell is Addresses {
+contract TinlakeSpell is Addresses, DSTest {
 
     bool public done;
     string constant public description = "Tinlake GigPool spell";
@@ -63,20 +72,11 @@ contract TinlakeSpell is Addresses {
     // The contracts in this list should correspond to a tinlake deployment
     // https://github.com/centrifuge/tinlake-pool-config/blob/master/mainnet-production.json
 
-    address public POOL_ADMIN = 0xb84447f0d1aC8F6c5A99FD41814b966A2BBCD922;
-
-    address public MEMBER_ADMIN = 0xB7e70B77f6386Ffa5F55DDCb53D87A0Fb5a2f53b;
-    address public LEVEL3_ADMIN1 = 0x7b74bb514A1dEA0Ec3763bBd06084e712c8bce97;
-    address public LEVEL1_ADMIN1 = 0x71d9f8CFdcCEF71B59DD81AB387e523E2834F2b8;
-    address public LEVEL1_ADMIN2 = 0x46a71eEf8DbcFcbAC7A0e8D5d6B634A649e61fb8;
-    address public LEVEL1_ADMIN3 = 0x9eDec77dd2651Ce062ab17e941347018AD4eAEA9;
-    address public LEVEL1_ADMIN4 = 0xEf270f8877Aa1875fc13e78dcA31f3235210368f;
-    address public LEVEL1_ADMIN5 = 0xddEa1De10E93c15037E83b8Ab937A46cc76f7009;
-    address public AO_POOL_ADMIN = 0x7122139DA943Aba4423c0C22Ed68d7bD54CcD8f6;
-
     address public POOL_REGISTRY = 0xddf1C516Cf87126c6c610B52FD8d609E67Fb6033;
-
     string constant public IPFS_HASH = "QmR4NMhUEDoHBe5XP3w8kszpRtEHfugoKDDvgFMNNcV2Cm";
+
+    MigratedNAVFeed nav = new MigratedNAVFeed();
+    address public NAV = address(nav);
 
     uint256 constant ONE = 10**27;
     address self;
@@ -90,62 +90,51 @@ contract TinlakeSpell is Addresses {
     function execute() internal {
        TinlakeRootLike root = TinlakeRootLike(address(ROOT));
        self = address(this);
-       // permissions 
-       root.relyContract(CLERK, self); // required to file riskGroups & change discountRate
-       root.relyContract(SENIOR_TRANCHE, self);
-       root.relyContract(SENIOR_TOKEN, self);
-       root.relyContract(SENIOR_TRANCHE, self);
-       root.relyContract(JUNIOR_TRANCHE, self);
-       root.relyContract(SENIOR_MEMBERLIST, self);
-       root.relyContract(JUNIOR_MEMBERLIST, self);
-       root.relyContract(POOL_ADMIN, self);
+
+       // helper for tests, as long as the contract is not deployed
+       nav.rely(address(ROOT));
+
+       // set spell as ward on the core contract to be able to wire the new contracts correctly
+       root.relyContract(SHELF, self);
+       root.relyContract(PILE, self);
        root.relyContract(ASSESSOR, self);
-       root.relyContract(COORDINATOR, self);
-       root.relyContract(RESERVE, self);
-       root.relyContract(FEED, self);
+       root.relyContract(NAV, self);
        
-       migratePoolAdmin();
-       updateRegistry();
+
+        // contract migration --> assumption: root contract is already ward on the new contracts
+        migrateNav();
+        updateRegistry();
      }  
 
 
-    function migratePoolAdmin() internal {
-        // setup dependencies 
-        DependLike(POOL_ADMIN).depend("assessor", ASSESSOR);
-        DependLike(POOL_ADMIN).depend("seniorMemberlist", SENIOR_MEMBERLIST);
-        DependLike(POOL_ADMIN).depend("juniorMemberlist", JUNIOR_MEMBERLIST);
-        DependLike(POOL_ADMIN).depend("navFeed", FEED);
-        DependLike(POOL_ADMIN).depend("coordinator", COORDINATOR);
-        DependLike(POOL_ADMIN).depend("lending", CLERK);
+    function migrateNav() internal {
 
-        // setup permissions
-        AuthLike(ASSESSOR).rely(POOL_ADMIN);
-        AuthLike(ASSESSOR).deny(POOL_ADMIN_OLD);
-        AuthLike(CLERK).rely(POOL_ADMIN); // set in clerk migration
-        AuthLike(CLERK).deny(POOL_ADMIN_OLD);
-        AuthLike(JUNIOR_MEMBERLIST).rely(POOL_ADMIN);
-        AuthLike(JUNIOR_MEMBERLIST).deny(POOL_ADMIN_OLD);
-        AuthLike(SENIOR_MEMBERLIST).rely(POOL_ADMIN);
-        AuthLike(SENIOR_MEMBERLIST).deny(POOL_ADMIN_OLD);
-        AuthLike(FEED).rely(POOL_ADMIN);
-        AuthLike(FEED).deny(POOL_ADMIN_OLD);
-        AuthLike(COORDINATOR).rely(POOL_ADMIN);
-        AuthLike(COORDINATOR).deny(POOL_ADMIN_OLD);
+        // only migrate NAV after successful epoch execution
+        bool executed = SpellCoordinatorLike(COORDINATOR).closeEpoch();
+        require(executed == true , "epoch execution failed");
 
-        // set lvl3 admins
-        AuthLike(POOL_ADMIN).rely(LEVEL3_ADMIN1);
-        // set lvl1 admins
-        PoolAdminLike(POOL_ADMIN).setAdminLevel(LEVEL1_ADMIN1, 1);
-        PoolAdminLike(POOL_ADMIN).setAdminLevel(LEVEL1_ADMIN2, 1);
-        PoolAdminLike(POOL_ADMIN).setAdminLevel(LEVEL1_ADMIN3, 1);
-        PoolAdminLike(POOL_ADMIN).setAdminLevel(LEVEL1_ADMIN4, 1);
-        PoolAdminLike(POOL_ADMIN).setAdminLevel(LEVEL1_ADMIN5, 1);
-        PoolAdminLike(POOL_ADMIN).setAdminLevel(AO_POOL_ADMIN, 1);
-        AuthLike(JUNIOR_MEMBERLIST).rely(MEMBER_ADMIN);
-        AuthLike(SENIOR_MEMBERLIST).rely(MEMBER_ADMIN);
+
+        uint riskGroupCount = 1;
+        address ORACLE = 0x1c3C2E90B7D7Ac525f933597Eb228F8c74A28Cd2;
+        uint loanCount = SpellTitleLike(TITLE).count();
+
+        // set dependenciesfirst, so that migration works
+        DependLike(NAV).depend("shelf", SHELF);
+        DependLike(NAV).depend("pile", PILE);
+        DependLike(NAV).depend("title", TITLE);
+        DependLike(SHELF).depend("ceiling", NAV); // set new nav as ceiling contract on shelf
+        DependLike(SHELF).depend("subscriber", NAV); 
+        DependLike(ASSESSOR).depend("navFeed", NAV);
+
+        MigrationLike(NAV).migrate(NAV_OLD, riskGroupCount, ORACLE, loanCount);
+    
+        // permissions
+        AuthLike(NAV).rely(SHELF);  // add shelf as ward on new nav
+        AuthLike(PILE).deny(NAV_OLD);   // remove old nav as ward on pile
+        AuthLike(PILE).rely(NAV);   // add new nav as ward on pile
     }
 
     function updateRegistry() internal {
-        PoolRegistryLike(POOL_REGISTRY).file(ROOT, true, "gig-pool", IPFS_HASH);
+       //PoolRegistryLike(POOL_REGISTRY).file(ROOT, true, "gig-pool", IPFS_HASH);
     }
 }

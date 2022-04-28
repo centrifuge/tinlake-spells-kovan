@@ -23,19 +23,18 @@ contract SpellRPCTest is TinlakeRPCTests {
         AuthLike(address(spell.POOL_REGISTRY())).rely(spell_);
         spell.cast();
 
-        // add new contract addresses here that should override the old contracts
-        CLERK = spell.CLERK();
-        COORDINATOR = spell.COORDINATOR();
-        POOL_ADMIN = spell.POOL_ADMIN();
+        // // add new contract addresses here that should override the old contracts
+        // POOL_ADMIN = spell.POOL_ADMIN();
        
-        initRPC();
+        // initRPC();
 
     }
 
-    function testFullCycle() public {
-        // make sure epoch can be closed
-        t_hevm.warp(block.timestamp + 1 days);
-        runLoanCycleWithMaker();
-    }
+    // function testFullCycle() public {
+    //     // make sure epoch can be closed
+    //     t_hevm.warp(block.timestamp + 1 days);
+    //     // runLoanCycleWithMaker();
+    //     runLoanCycleWithoutMaker();
+    // }
 
 }

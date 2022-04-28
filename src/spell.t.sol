@@ -11,10 +11,6 @@ interface IFile {
     function file(bytes32, address) external;
 }
 
-interface ITranche {
-    function coordinator() external returns(address);
-}
-
 interface IAuth {
     function wards(address) external returns(uint);
 }
@@ -24,20 +20,8 @@ interface IHevm {
     function store(address, bytes32, bytes32) external;
 }
 
-interface IMgr {
-    function owner() external returns(address);
-}
-
-interface IReserve {
-    function lending() external returns(address);
-    function currencyAvailable() external returns(uint);
-}
-
 interface IAssessor {
-    function lending() external returns(address);
-    function calcJuniorRatio() external returns(uint);
-    function maxSeniorRatio() external returns(uint);
-    function seniorRatio() external returns(uint);
+    function nav() external returns(address);
 }
 
 interface ICoordinator {
@@ -72,80 +56,54 @@ interface ICoordinator {
     function poolClosing() external returns(bool);
 }
 
+interface NavLike {
+    function discountRate() external returns(uint);
+    function approximatedNAV() external returns(uint);
+    function currentNav() external returns(uint);
+    function pile() external returns(address);
+    function nftID(address, uint) external returns(bytes32);
+    function futureValue(bytes32) external returns(uint);
+    function nftValues(bytes32) external returns(uint);
+    function risk(bytes32) external returns(uint);
+    function maturityDate(bytes32) external returns(uint);
+    function ceiling(uint) external returns(uint);
+    function currentCeiling(uint) external returns(uint);
+    function threshold(uint) external returns(uint);
+    function borrowed(uint) external returns(uint);
+}
+
+// interface NAVNewLikeOld {
+    
+// } 
+
 interface IRoot {
     function relyContract(address, address) external;
 }
 
 interface IPoolAdmin {
-    function lending() external returns(address);
-    function seniorMemberlist() external returns(address);
-    function juniorMemberlist() external returns(address);
     function navFeed() external returns(address);
-    function coordinator() external returns(address);
-    function assessor() external returns(address);
-    function admin_level(address) external returns(uint);
-}
-
-interface IClerk {
-    function assessor() external returns(address);
-    function mgr() external returns(address);
-    function coordinator() external returns(address);
-    function reserve() external returns(address); 
-    function tranche() external returns(address);
-    function collateral() external returns(address);
-    function spotter() external returns(address);
-    function vat() external returns(address);
-    function jug() external returns(address);
-    function creditline() external returns(uint);
-    function matBuffer() external returns(uint);
-    function autoHealMax() external returns(uint);
-    function collateralTolerance() external returns(uint);
-    function wipeThreshold() external returns(uint);
-    function collatDeficit() external view returns (uint);
-    function sink(uint amountDAI) external;
-}
-
-interface IRestrictedToken {
-    function hasMember(address member) external returns(bool);
 }
 
 contract BaseSpellTest is DSTest {
 
     IHevm public hevm;
     TinlakeSpell spell;
-    IClerk clerk;
-    IClerk clerkOld;
-    IMgr mgr;
-    IRestrictedToken seniorToken;
     IAssessor assessor;
-    IReserve reserve;
     IPoolAdmin poolAdmin;
     ICoordinator coordinator;
+    NavLike nav;
+    NavLike navOld;
     IRoot root;
-    ITranche seniorTranche;
-    ITranche juniorTranche;
+   
    
     address spell_;
     address root_;
-    address clerk_;
-    address clerkOld_;
-    address reserve_;
     address assessor_;
     address poolAdmin_;
-    address poolAdminOld_;
-    address seniorMemberList_;
-    address juniorMemberList_;
     address coordinator_;
-    address coordinatorOld_;
-    address seniorTranche_;
-    address juniorTranche_;
     address currency_;
-    address mgr_;
-    address navFeed_;
-    address seniorToken_;
-    address spotter_;
-    address vat_;
-    address jug_;
+    address nav_;
+    address navOld_;
     address registry_;
 
     uint256 constant RAD = 10 ** 27;
@@ -155,27 +113,14 @@ contract BaseSpellTest is DSTest {
 
         assessor_ = spell.ASSESSOR();
         poolAdmin_ = spell.POOL_ADMIN();
-        poolAdminOld_ = spell.POOL_ADMIN_OLD();
-        reserve_ = spell.RESERVE();
         coordinator_ = spell.COORDINATOR();
-        seniorTranche_ = spell.SENIOR_TRANCHE();
-        navFeed_ = spell.FEED();
-        seniorToken_ = spell.SENIOR_TOKEN();
-        seniorMemberList_ = spell.SENIOR_MEMBERLIST();
-        juniorMemberList_ = spell.JUNIOR_MEMBERLIST();
-        seniorTranche_ = spell.SENIOR_TRANCHE();
-        juniorTranche_ = spell.JUNIOR_TRANCHE();
-        clerk_ = spell.CLERK();
+        nav_ = spell.NAV();
+        navOld_ = spell.NAV_OLD();
         root_ = address(spell.ROOT());  
         registry_ = spell.POOL_REGISTRY();
 
-        mgr = IMgr(mgr_);
-        clerk = IClerk(clerk_);
-        clerkOld = IClerk(clerkOld_);
-        seniorToken = IRestrictedToken(seniorToken_);
-        seniorTranche = ITranche(seniorTranche_);
-        juniorTranche = ITranche(juniorTranche_);
-        reserve = IReserve(reserve_);
+        nav = NavLike(nav_);
+        navOld = NavLike(navOld_);
         assessor = IAssessor(assessor_);
         coordinator = ICoordinator(coordinator_);
         poolAdmin = IPoolAdmin(poolAdmin_);
@@ -210,54 +155,89 @@ contract SpellTest is BaseSpellTest {
     function testCast() public {
         AuthLike(registry_).rely(spell_);
         castSpell();
-        assertPoolAdminSwapped();
+        assertNavMigrated();
+
         // assertEpochExecution(); not required for this pool
-        assertRegistryUpdated();
+        // assertRegistryUpdated();
+    }
+
+    function assertNavMigrated() public {
+        uint navValue = nav.approximatedNAV();
+        uint navValueOld = navOld.approximatedNAV();
+        emit log_named_uint("value new", navValue);
+        emit log_named_uint("value old", navValueOld);
+        assertEq(navValue,  navValueOld);
     }
 
 
-    function assertEpochExecution() internal {
-        coordinator.executeEpoch();
-        assertEq(clerk.collatDeficit(), 0);
-        assert(coordinator.submissionPeriod() == false);
-    }
+    // function assertEpochExecution() internal {
+    //     coordinator.executeEpoch();
+    //     assertEq(clerk.collatDeficit(), 0);
+    //     assert(coordinator.submissionPeriod() == false);
+    // }
 
-    function assertPoolAdminSwapped() public {
+        
 
-        // setup dependencies 
-        assertEq(poolAdmin.assessor(), assessor_);
-        assertEq(poolAdmin.lending(), clerk_);
-        assertEq(poolAdmin.seniorMemberlist(), seniorMemberList_);
-        assertEq(poolAdmin.juniorMemberlist(), juniorMemberList_);
-        assertEq(poolAdmin.navFeed(), navFeed_);
-        assertEq(poolAdmin.coordinator(), coordinator_);
+    // function assertMigrationNAV() public {
 
-        assertHasPermissions(assessor_, poolAdmin_);
-        assertHasPermissions(clerk_, poolAdmin_);
-        assertHasPermissions(seniorMemberList_, poolAdmin_);
-        assertHasPermissions(juniorMemberList_, poolAdmin_);
-        assertHasPermissions(navFeed_, poolAdmin_);
-        assertHasPermissions(coordinator_, poolAdmin_);
+    //     // assert dependencies
+    //     assertEq(navNew.pile(), address(pile));
+    //     asserEq(navNew.shelf(), address(shelf));
+    //     assertEq(shelf.ceiling, navNew_);
+    //     assertEq(shelf.subscriber, navNew_);
 
-        assertHasNoPermissions(assessor_, poolAdminOld_);
-        assertHasNoPermissions(clerk_, poolAdminOld_);
-        assertHasNoPermissions(seniorMemberList_, poolAdminOld_);
-        assertHasNoPermissions(juniorMemberList_, poolAdminOld_);
-        assertHasNoPermissions(coordinator_, poolAdminOld_);
-        assertHasNoPermissions(navFeed_, poolAdminOld_);
+    //     // assert wards
+    //     assertHasPermissions(navNew_, address(shelf));
+    //     assertHasPermissions(navNew_, spell.ORACLE);
+    //     assertHasPermissions(address(pile), navNew_);
+    //     assertHasNoPermissions(address(pile), navOld_);
 
-        assertEq(poolAdmin.admin_level(spell.LEVEL3_ADMIN1()), 3);
-        assertEq(poolAdmin.admin_level(spell.LEVEL1_ADMIN1()), 1);
-        assertEq(poolAdmin.admin_level(spell.LEVEL1_ADMIN2()), 1);
-        assertEq(poolAdmin.admin_level(spell.LEVEL1_ADMIN3()), 1);
-        assertEq(poolAdmin.admin_level(spell.LEVEL1_ADMIN4()), 1);
-        assertEq(poolAdmin.admin_level(spell.LEVEL1_ADMIN5()), 1);
-        assertEq(poolAdmin.admin_level(spell.AO_POOL_ADMIN()), 1);
-        assertHasPermissions(seniorMemberList_, spell.MEMBER_ADMIN());
-        emit log_named_address("junior", juniorMemberList_);
-        emit log_named_address("member admin", spell.MEMBER_ADMIN());
-        assertHasPermissions(juniorMemberList_, spell.MEMBER_ADMIN());
-    }
+    //     // assert discountRate
+    //     assertEq(navNew.discountRate(), navOld.discountRate());
+
+    //     // assert writeoffs 
+    //     // for (uint i = 1000; i <= 1003; i++) {
+    //     //     (uint rateGroupNew, uint percentageNew) = navNew.writeOffs(i);
+    //     //     (uint rateGroupOld, uint percentageOld) = navOld.writeOffs(i);
+    //     //     assertEq(rateGroupNew, rateGroupOld);
+    //     //     assertEq(percentageNew, percentageOld);
+    //     // }
+
+    //     // assert riskgroups
+    //     for (uint i = 0; i <= 40; i++) {
+    //         assertEq(navNew.thresholdRatio(i), navOld.thresholdRatio(i));
+    //         assertEq(navNew.ceilingRatio(i), navOld.ceilingRatio(i));
+    //         assertEq(navNew.recoveryRatePD(i), navOld.recoveryRatePD(i));
+    //         (, , uint interestRateNew, ,) = PileLike(navNew.pile()).rates(i);
+    //         (, , uint interestRateOld, ,) = PileLike(navOld.pile()).rates(i);
+    //         assertEq(interestRateNew, interestRateOld);
+    //     }
+        
+    //     // assert loan migration & assert nft migration
+    //     for (uint loanID = 1; loanID < shelf.loanCount(); loanID++) {
+    //         bytes32 nftID = clone.nftID(loanID);
+    //         assertLoanMigration(loanID)
+    //         assertNFTMigration(nftID);
+    //     }
+
+    //     // assert nav calculation
+    //      assertEq(navOld.currentNAV(), NAVNewLike(navNew_.)latestNAV());
+    //     }
+
+    // function assertNFTMigration(bytes32 nftID) public { 
+    //     assertEq(navNew.futureValue(nftID), navOld.futureValue(nftID));
+    //     assertEq(navNew.nftValues(nftID), navOld.nftValues(nftID));
+    //     assertEq(navNew.risk(nftID), navOld.risk(nftID));
+    //     assertEq(navNew.maturityDate(nftID), navOld.maturityDate(nftID));
+    // }
+
+    // function assertLoanMigration(uint loanId) public { 
+    //     assertEq(navNew.ceiling(loanId), navOld.ceiling(loanId));
+    //     assertEq(navNew.currentCeiling(loanId), navOld.currentCeiling(loanId));
+    //     assertEq(navNew.threshold(loanId), navOld.threshold(loanId));
+    //     assertEq(navNew.borrowed(loanId), navOld.borrowed(loanId));
+    
+    // }
 
     function assertRegistryUpdated() public {
         assertEq(AuthLike(spell.POOL_REGISTRY()).wards(address(this)), 1);
