@@ -63,7 +63,7 @@ contract TinlakeSpell is Auth {
 
     constructor() public {
         wards[ADMIN] = 1; // rely ADMIN
-        wards[msg.sender]= 0;
+        wards[msg.sender]= 0; // deny deployer
         active = true;
     }
 
@@ -82,7 +82,7 @@ contract TinlakeSpell is Auth {
        self = address(this);
 
        // permissions 
-       TinlakeRootLike(address(NS2_ROOT)).relyContract(NS2_MGR, self); // required to file riskGroups & change discountRate
+       TinlakeRootLike(address(NS2_ROOT)).relyContract(NS2_MGR, self);
        TinlakeRootLike(address(HTC2_ROOT)).relyContract(HTC2_MGR, self);
        TinlakeRootLike(address(CF4_ROOT)).relyContract(CF4_MGR, self);
        TinlakeRootLike(address(FF1_ROOT)).relyContract(FF1_MGR, self);
