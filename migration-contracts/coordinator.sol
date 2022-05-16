@@ -15,7 +15,7 @@
 pragma solidity >=0.6.12;
 pragma experimental ABIEncoderV2;
 
-import "./../../../../tinlake-internal/src/lender/coordinator.sol";
+import "./../tinlake/src/lender/coordinator.sol";
 
 contract MigratedCoordinator is EpochCoordinator {
     
@@ -46,9 +46,6 @@ contract MigratedCoordinator is EpochCoordinator {
         order.juniorRedeem = juniorRedeemOrder;
         order.seniorSupply = seniorSupplyOrder;
         order.juniorSupply = juniorSupplyOrder;
-
-        // bestSubmission = OrderSummary(clone.bestSubmission());
-        // order = OrderSummary(clone.order());
 
         bestSubScore = clone.bestSubScore();
         gotFullValidSolution = clone.gotFullValidSolution();

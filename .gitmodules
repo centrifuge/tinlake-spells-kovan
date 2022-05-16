@@ -1,3 +1,6 @@
 [submodule "lib/tinlake-rpc-tests"]
 	path = lib/tinlake-rpc-tests
 	url = git@github.com:centrifuge/tinlake-rpc-tests.git
+[submodule "tinlake"]
+	path = tinlake
+	url = git@github.com:centrifuge/tinlake.git
