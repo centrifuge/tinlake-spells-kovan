@@ -1,7 +1,5 @@
 pragma solidity >=0.6.12;
-
-import "./addresses_gig.sol";
-
+import "tinlake-auth/auth.sol";
 // Copyright (C) 2020 Centrifuge
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
@@ -32,120 +30,68 @@ interface FileLike {
     function file(bytes32, address) external;
 }
 
-interface DependLike {
-    function depend(bytes32, address) external;
+interface LogLike {
+    function getAddress(bytes32) external returns(address);
 }
 
-interface MigrationLike {
-        function migrate(address) external;
-}
+// spell to keep the mkr end contract updated
+contract TinlakeSpell is Auth {
 
-interface SpellMemberlistLike {
-    function updateMember(address, uint) external;
-}
-
-interface PoolAdminLike {
-    function setAdminLevel(address usr, uint level) external;
-}
-
-interface PoolRegistryLike {
-    function file(address, bool, string memory, string memory) external;
-    function find(address pool) external view returns (bool live, string memory name, string memory data);
-}
-
-// spell to swap clerk, coordinator & poolAdmin
-contract TinlakeSpell is Addresses {
-
-    bool public done;
-    string constant public description = "Tinlake GigPool spell";
+    // spell can be executed anytime as long as it is active
+    bool public active;
+    string constant public description = "Tinlake MGR spell";
 
     // MAINNET ADDRESSES
     // The contracts in this list should correspond to a tinlake deployment
     // https://github.com/centrifuge/tinlake-pool-config/blob/master/mainnet-production.json
 
-    address public POOL_ADMIN = 0xb84447f0d1aC8F6c5A99FD41814b966A2BBCD922;
+    address public NS2_MGR = 0x2474F297214E5d96Ba4C81986A9F0e5C260f445D;
+    address public HTC2_MGR = 0xe1ed3F588A98bF8a3744f4BF74Fd8540e81AdE3f;
+    address public CF4_MGR = 0x2A9798c6F165B6D60Cfb923Fe5BFD6f338695D9B;
+    address public FF1_MGR = 0x5b702e1fEF3F556cbe219eE697D7f170A236cc66;
 
-    address public MEMBER_ADMIN = 0xB7e70B77f6386Ffa5F55DDCb53D87A0Fb5a2f53b;
-    address public LEVEL3_ADMIN1 = 0x7b74bb514A1dEA0Ec3763bBd06084e712c8bce97;
-    address public LEVEL1_ADMIN1 = 0x71d9f8CFdcCEF71B59DD81AB387e523E2834F2b8;
-    address public LEVEL1_ADMIN2 = 0x46a71eEf8DbcFcbAC7A0e8D5d6B634A649e61fb8;
-    address public LEVEL1_ADMIN3 = 0x9eDec77dd2651Ce062ab17e941347018AD4eAEA9;
-    address public LEVEL1_ADMIN4 = 0xEf270f8877Aa1875fc13e78dcA31f3235210368f;
-    address public LEVEL1_ADMIN5 = 0xddEa1De10E93c15037E83b8Ab937A46cc76f7009;
-    address public AO_POOL_ADMIN = 0x7122139DA943Aba4423c0C22Ed68d7bD54CcD8f6;
+    address public NS2_ROOT = 0x53b2d22d07E069a3b132BfeaaD275b10273d381E;
+    address public HTC2_ROOT = 0x4cA805cE8EcE2E63FfC1F9f8F2731D3F48DF89Df;
+    address public CF4_ROOT = 0xdB3bC9fB1893222d266762e9fF857EB74D75c7D6;
+    address public FF1_ROOT = 0x4B6CA198d257D755A5275648D471FE09931b764A;
 
-    address public POOL_REGISTRY = 0xddf1C516Cf87126c6c610B52FD8d609E67Fb6033;
-
-    string constant public IPFS_HASH = "QmR4NMhUEDoHBe5XP3w8kszpRtEHfugoKDDvgFMNNcV2Cm";
-
-    uint256 constant ONE = 10**27;
+    address public ADMIN = 0xf3BceA7494D8f3ac21585CA4b0E52aa175c24C25; // multisig 
+    address public CHAINLOG = 0xdA0Ab1e0017DEbCd72Be8599041a2aa3bA7e740F;
+    
     address self;
     
+
+    constructor() public {
+        wards[ADMIN] = 1; // rely ADMIN
+        wards[msg.sender]= 0;
+        active = true;
+    }
+
+     function file(bytes32 name, bool value) public auth {
+        if (name == "active") {
+            active = value;
+        } else { revert("unknown-name"); }
+     }
+
     function cast() public {
-        require(!done, "spell-already-cast");
-        done = true;
+        require(active, "spell-not-active");
         execute();
     }
 
     function execute() internal {
-       TinlakeRootLike root = TinlakeRootLike(address(ROOT));
        self = address(this);
+
        // permissions 
-       root.relyContract(CLERK, self); // required to file riskGroups & change discountRate
-       root.relyContract(SENIOR_TRANCHE, self);
-       root.relyContract(SENIOR_TOKEN, self);
-       root.relyContract(SENIOR_TRANCHE, self);
-       root.relyContract(JUNIOR_TRANCHE, self);
-       root.relyContract(SENIOR_MEMBERLIST, self);
-       root.relyContract(JUNIOR_MEMBERLIST, self);
-       root.relyContract(POOL_ADMIN, self);
-       root.relyContract(ASSESSOR, self);
-       root.relyContract(COORDINATOR, self);
-       root.relyContract(RESERVE, self);
-       root.relyContract(FEED, self);
-       
-       migratePoolAdmin();
-       updateRegistry();
-     }  
-
-
-    function migratePoolAdmin() internal {
-        // setup dependencies 
-        DependLike(POOL_ADMIN).depend("assessor", ASSESSOR);
-        DependLike(POOL_ADMIN).depend("seniorMemberlist", SENIOR_MEMBERLIST);
-        DependLike(POOL_ADMIN).depend("juniorMemberlist", JUNIOR_MEMBERLIST);
-        DependLike(POOL_ADMIN).depend("navFeed", FEED);
-        DependLike(POOL_ADMIN).depend("coordinator", COORDINATOR);
-        DependLike(POOL_ADMIN).depend("lending", CLERK);
-
-        // setup permissions
-        AuthLike(ASSESSOR).rely(POOL_ADMIN);
-        AuthLike(ASSESSOR).deny(POOL_ADMIN_OLD);
-        AuthLike(CLERK).rely(POOL_ADMIN); // set in clerk migration
-        AuthLike(CLERK).deny(POOL_ADMIN_OLD);
-        AuthLike(JUNIOR_MEMBERLIST).rely(POOL_ADMIN);
-        AuthLike(JUNIOR_MEMBERLIST).deny(POOL_ADMIN_OLD);
-        AuthLike(SENIOR_MEMBERLIST).rely(POOL_ADMIN);
-        AuthLike(SENIOR_MEMBERLIST).deny(POOL_ADMIN_OLD);
-        AuthLike(FEED).rely(POOL_ADMIN);
-        AuthLike(FEED).deny(POOL_ADMIN_OLD);
-        AuthLike(COORDINATOR).rely(POOL_ADMIN);
-        AuthLike(COORDINATOR).deny(POOL_ADMIN_OLD);
-
-        // set lvl3 admins
-        AuthLike(POOL_ADMIN).rely(LEVEL3_ADMIN1);
-        // set lvl1 admins
-        PoolAdminLike(POOL_ADMIN).setAdminLevel(LEVEL1_ADMIN1, 1);
-        PoolAdminLike(POOL_ADMIN).setAdminLevel(LEVEL1_ADMIN2, 1);
-        PoolAdminLike(POOL_ADMIN).setAdminLevel(LEVEL1_ADMIN3, 1);
-        PoolAdminLike(POOL_ADMIN).setAdminLevel(LEVEL1_ADMIN4, 1);
-        PoolAdminLike(POOL_ADMIN).setAdminLevel(LEVEL1_ADMIN5, 1);
-        PoolAdminLike(POOL_ADMIN).setAdminLevel(AO_POOL_ADMIN, 1);
-        AuthLike(JUNIOR_MEMBERLIST).rely(MEMBER_ADMIN);
-        AuthLike(SENIOR_MEMBERLIST).rely(MEMBER_ADMIN);
-    }
-
-    function updateRegistry() internal {
-        PoolRegistryLike(POOL_REGISTRY).file(ROOT, true, "gig-pool", IPFS_HASH);
-    }
+       TinlakeRootLike(address(NS2_ROOT)).relyContract(NS2_MGR, self); // required to file riskGroups & change discountRate
+       TinlakeRootLike(address(HTC2_ROOT)).relyContract(HTC2_MGR, self);
+       TinlakeRootLike(address(CF4_ROOT)).relyContract(CF4_MGR, self);
+       TinlakeRootLike(address(FF1_ROOT)).relyContract(FF1_MGR, self);
+    
+       address END = LogLike(CHAINLOG).getAddress("MCD_END");
+    
+       FileLike(NS2_MGR).file("end", END);
+       FileLike(HTC2_MGR).file("end", END);
+       FileLike(CF4_MGR).file("end", END);
+       FileLike(FF1_MGR).file("end", END);
+     } 
 }
