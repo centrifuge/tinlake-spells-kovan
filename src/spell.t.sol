@@ -212,7 +212,7 @@ contract SpellTest is BaseSpellTest {
         castSpell();
         assertPoolAdminSwapped();
         // assertEpochExecution(); not required for this pool
-        // assertRegistryUpdated();
+        assertRegistryUpdated();
     }
 
 
@@ -262,7 +262,7 @@ contract SpellTest is BaseSpellTest {
     function assertRegistryUpdated() public {
         assertEq(AuthLike(spell.POOL_REGISTRY()).wards(address(this)), 1);
         (,,string memory data) = PoolRegistryLike(spell.POOL_REGISTRY()).find(spell.ROOT());
-        // assertEq(data, spell.IPFS_HASH());
+        assertEq(data, spell.IPFS_HASH());
     }
 
     function assertHasPermissions(address con, address ward) public {
