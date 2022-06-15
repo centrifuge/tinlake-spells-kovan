@@ -23,10 +23,10 @@ contract SpellRPCTest is TinlakeRPCTests {
         AuthLike(address(spell.POOL_REGISTRY())).rely(spell_);
         spell.cast();
 
-        // // add new contract addresses here that should override the old contracts
-        // POOL_ADMIN = spell.POOL_ADMIN();
+        // add new contract addresses here that should override the old contracts
+        // FEED = spell.NAV();
        
-        // initRPC();
+        initRPC();
 
     }
 

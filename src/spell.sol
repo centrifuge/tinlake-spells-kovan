@@ -1,5 +1,4 @@
 pragma solidity >=0.6.12;
-import "ds-test/test.sol";
 import "./addresses_ff1.sol";
 import "./nav.sol";
 
@@ -63,7 +62,7 @@ interface SpellCoordinatorLike {
 }
 
 // spell to swap clerk, coordinator & poolAdmin
-contract TinlakeSpell is Addresses, DSTest {
+contract TinlakeSpell is Addresses {
 
     bool public done;
     string constant public description = "Tinlake GigPool spell";
