@@ -11,10 +11,6 @@ interface IFile {
     function file(bytes32, address) external;
 }
 
-interface ITranche {
-    function coordinator() external returns(address);
-}
-
 interface IAuth {
     function wards(address) external returns(uint);
 }
@@ -24,20 +20,13 @@ interface IHevm {
     function store(address, bytes32, bytes32) external;
 }
 
-interface IMgr {
-    function owner() external returns(address);
-}
-
-interface IReserve {
-    function lending() external returns(address);
-    function currencyAvailable() external returns(uint);
-}
-
 interface IAssessor {
-    function lending() external returns(address);
-    function calcJuniorRatio() external returns(uint);
-    function maxSeniorRatio() external returns(uint);
-    function seniorRatio() external returns(uint);
+    function navFeed() external returns(address);
+}
+
+interface IShelf {
+    function ceiling() external returns(address);
+    function subscriber() external returns(address);
 }
 
 interface ICoordinator {
@@ -72,81 +61,61 @@ interface ICoordinator {
     function poolClosing() external returns(bool);
 }
 
+interface NavLike {
+    function discountRate() external returns(uint);
+    function approximatedNAV() external returns(uint);
+    function currentNav() external returns(uint);
+    function pile() external returns(address);
+    function shelf() external returns(address);
+    function title() external returns(address);
+    function nftID(uint) external returns (bytes32);
+    function futureValue(bytes32) external returns(uint);
+    function nftValues(bytes32) external returns(uint);
+    function risk(bytes32) external returns(uint);
+    function maturityDate(bytes32) external returns(uint);
+    function ceiling(uint) external returns(uint);
+    function currentCeiling(uint) external returns(uint);
+    function threshold(uint) external returns(uint);
+    function borrowed(uint) external returns(uint);
+    function thresholdRatio(uint) external returns(uint);
+    function ceilingRatio(uint) external returns(uint);
+    function recoveryRatePD(uint) external returns(uint);
+    function buckets(uint) external returns(uint); 
+}
+ 
 interface IRoot {
     function relyContract(address, address) external;
 }
 
 interface IPoolAdmin {
-    function lending() external returns(address);
-    function seniorMemberlist() external returns(address);
-    function juniorMemberlist() external returns(address);
     function navFeed() external returns(address);
-    function coordinator() external returns(address);
-    function assessor() external returns(address);
-    function admin_level(address) external returns(uint);
-}
-
-interface IClerk {
-    function assessor() external returns(address);
-    function mgr() external returns(address);
-    function coordinator() external returns(address);
-    function reserve() external returns(address); 
-    function tranche() external returns(address);
-    function collateral() external returns(address);
-    function spotter() external returns(address);
-    function vat() external returns(address);
-    function jug() external returns(address);
-    function creditline() external returns(uint);
-    function matBuffer() external returns(uint);
-    function autoHealMax() external returns(uint);
-    function collateralTolerance() external returns(uint);
-    function wipeThreshold() external returns(uint);
-    function collatDeficit() external view returns (uint);
-    function sink(uint amountDAI) external;
-}
-
-interface IRestrictedToken {
-    function hasMember(address member) external returns(bool);
 }
 
 contract BaseSpellTest is DSTest {
 
     IHevm public hevm;
     TinlakeSpell spell;
-    IClerk clerk;
-    IClerk clerkOld;
-    IMgr mgr;
-    IRestrictedToken seniorToken;
     IAssessor assessor;
-    IReserve reserve;
     IPoolAdmin poolAdmin;
     ICoordinator coordinator;
+    NavLike nav;
+    NavLike navOld;
     IRoot root;
-    ITranche seniorTranche;
-    ITranche juniorTranche;
+    IShelf shelf;
    
     address spell_;
     address root_;
-    address clerk_;
-    address clerkOld_;
-    address reserve_;
     address assessor_;
     address poolAdmin_;
-    address poolAdminOld_;
-    address seniorMemberList_;
-    address juniorMemberList_;
     address coordinator_;
-    address coordinatorOld_;
-    address seniorTranche_;
-    address juniorTranche_;
     address currency_;
-    address mgr_;
-    address navFeed_;
-    address seniorToken_;
-    address spotter_;
-    address vat_;
-    address jug_;
+    address nav_;
+    address navOld_;
     address registry_;
+    address pile_;
+    address shelf_;
+    address title_;
+    
 
     uint256 constant RAD = 10 ** 27;
     function initSpell() public {
@@ -155,27 +124,18 @@ contract BaseSpellTest is DSTest {
 
         assessor_ = spell.ASSESSOR();
         poolAdmin_ = spell.POOL_ADMIN();
-        poolAdminOld_ = spell.POOL_ADMIN_OLD();
-        reserve_ = spell.RESERVE();
         coordinator_ = spell.COORDINATOR();
-        seniorTranche_ = spell.SENIOR_TRANCHE();
-        navFeed_ = spell.FEED();
-        seniorToken_ = spell.SENIOR_TOKEN();
-        seniorMemberList_ = spell.SENIOR_MEMBERLIST();
-        juniorMemberList_ = spell.JUNIOR_MEMBERLIST();
-        seniorTranche_ = spell.SENIOR_TRANCHE();
-        juniorTranche_ = spell.JUNIOR_TRANCHE();
-        clerk_ = spell.CLERK();
+        nav_ = spell.NAV();
+        navOld_ = spell.NAV_OLD();
         root_ = address(spell.ROOT());  
         registry_ = spell.POOL_REGISTRY();
+        pile_ = spell.PILE();
+        shelf_ = spell.SHELF();
+        title_ = spell.TITLE();
 
-        mgr = IMgr(mgr_);
-        clerk = IClerk(clerk_);
-        clerkOld = IClerk(clerkOld_);
-        seniorToken = IRestrictedToken(seniorToken_);
-        seniorTranche = ITranche(seniorTranche_);
-        juniorTranche = ITranche(juniorTranche_);
-        reserve = IReserve(reserve_);
+        shelf = IShelf(shelf_);
+        nav = NavLike(nav_);
+        navOld = NavLike(navOld_);
         assessor = IAssessor(assessor_);
         coordinator = ICoordinator(coordinator_);
         poolAdmin = IPoolAdmin(poolAdmin_);
@@ -210,53 +170,62 @@ contract SpellTest is BaseSpellTest {
     function testCast() public {
         AuthLike(registry_).rely(spell_);
         castSpell();
-        assertPoolAdminSwapped();
-        // assertEpochExecution(); not required for this pool
-        assertRegistryUpdated();
+        assertNavMigrated();
+        // assertRegistryUpdated();
     }
 
+    function assertNavMigrated() public {
+        // assert NAV value correct
+        uint navValue = nav.approximatedNAV();
+        uint navValueOld = navOld.approximatedNAV();
+        assertEq(navValue,  navValueOld);
 
-    function assertEpochExecution() internal {
-        coordinator.executeEpoch();
-        assertEq(clerk.collatDeficit(), 0);
-        assert(coordinator.submissionPeriod() == false);
+        // assert params correct
+        assertEq(nav.discountRate(), navOld.discountRate());
+
+        // assert dependencies
+        assertEq(nav.pile(), pile_);
+        assertEq(nav.shelf(), shelf_);
+        assertEq(nav.title(), title_);
+        assertEq(shelf.ceiling(), nav_);
+        assertEq(shelf.subscriber(), nav_);
+        assertEq(assessor.navFeed(), nav_);
+
+        // assert wards
+        assertHasPermissions(nav_, shelf_);
+        assertHasPermissions(nav_, spell.ORACLE());
+        assertHasPermissions(pile_, nav_);
+        // revoke permissions from old nav
+        assertHasNoPermissions(pile_, navOld_);
+
+        // assert risk group migration
+        for (uint i = 0; i <= spell.riskGroupCount(); i++) {
+            assertEq(nav.thresholdRatio(i), navOld.thresholdRatio(i));
+            assertEq(nav.ceilingRatio(i), navOld.ceilingRatio(i));
+            assertEq(nav.recoveryRatePD(i), navOld.recoveryRatePD(i));
+        }
+
+        // assert loans & nft migrations
+        for (uint loanID = 1; loanID < spell.loanCount(); loanID++) {
+            bytes32 nftID = nav.nftID(loanID);
+            assertLoanMigration(loanID);
+            assertNFTMigration(nftID);
+        }
+    }       
+
+    function assertNFTMigration(bytes32 nftID) public { 
+        uint maturityDate = nav.maturityDate(nftID);
+        assertEq(nav.futureValue(nftID), navOld.futureValue(nftID));
+        assertEq(nav.nftValues(nftID), navOld.nftValues(nftID));
+        assertEq(nav.risk(nftID), navOld.risk(nftID));
+        assertEq(nav.maturityDate(nftID), navOld.maturityDate(nftID));
+        assertEq(nav.buckets(maturityDate), navOld.buckets(maturityDate));
     }
 
-    function assertPoolAdminSwapped() public {
-
-        // setup dependencies 
-        assertEq(poolAdmin.assessor(), assessor_);
-        assertEq(poolAdmin.lending(), clerk_);
-        assertEq(poolAdmin.seniorMemberlist(), seniorMemberList_);
-        assertEq(poolAdmin.juniorMemberlist(), juniorMemberList_);
-        assertEq(poolAdmin.navFeed(), navFeed_);
-        assertEq(poolAdmin.coordinator(), coordinator_);
-
-        assertHasPermissions(assessor_, poolAdmin_);
-        assertHasPermissions(clerk_, poolAdmin_);
-        assertHasPermissions(seniorMemberList_, poolAdmin_);
-        assertHasPermissions(juniorMemberList_, poolAdmin_);
-        assertHasPermissions(navFeed_, poolAdmin_);
-        assertHasPermissions(coordinator_, poolAdmin_);
-
-        assertHasNoPermissions(assessor_, poolAdminOld_);
-        assertHasNoPermissions(clerk_, poolAdminOld_);
-        assertHasNoPermissions(seniorMemberList_, poolAdminOld_);
-        assertHasNoPermissions(juniorMemberList_, poolAdminOld_);
-        assertHasNoPermissions(coordinator_, poolAdminOld_);
-        assertHasNoPermissions(navFeed_, poolAdminOld_);
-
-        assertEq(poolAdmin.admin_level(spell.LEVEL3_ADMIN1()), 3);
-        assertEq(poolAdmin.admin_level(spell.LEVEL1_ADMIN1()), 1);
-        assertEq(poolAdmin.admin_level(spell.LEVEL1_ADMIN2()), 1);
-        assertEq(poolAdmin.admin_level(spell.LEVEL1_ADMIN3()), 1);
-        assertEq(poolAdmin.admin_level(spell.LEVEL1_ADMIN4()), 1);
-        assertEq(poolAdmin.admin_level(spell.LEVEL1_ADMIN5()), 1);
-        assertEq(poolAdmin.admin_level(spell.AO_POOL_ADMIN()), 1);
-        assertHasPermissions(seniorMemberList_, spell.MEMBER_ADMIN());
-        emit log_named_address("junior", juniorMemberList_);
-        emit log_named_address("member admin", spell.MEMBER_ADMIN());
-        assertHasPermissions(juniorMemberList_, spell.MEMBER_ADMIN());
+    function assertLoanMigration(uint loanId) public {
+        assertEq(nav.ceiling(loanId), navOld.ceiling(loanId));
+        assertEq(nav.threshold(loanId), navOld.threshold(loanId));
+        assertEq(nav.borrowed(loanId), navOld.borrowed(loanId));
     }
 
     function assertRegistryUpdated() public {

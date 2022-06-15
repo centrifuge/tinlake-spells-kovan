@@ -24,18 +24,17 @@ contract SpellRPCTest is TinlakeRPCTests {
         spell.cast();
 
         // add new contract addresses here that should override the old contracts
-        CLERK = spell.CLERK();
-        COORDINATOR = spell.COORDINATOR();
-        POOL_ADMIN = spell.POOL_ADMIN();
+        // FEED = spell.NAV();
        
         initRPC();
 
     }
 
-    function testFullCycle() public {
-        // make sure epoch can be closed
-        t_hevm.warp(block.timestamp + 1 days);
-        runLoanCycleWithMaker();
-    }
+    // function testFullCycle() public {
+    //     // make sure epoch can be closed
+    //     t_hevm.warp(block.timestamp + 1 days);
+    //     // runLoanCycleWithMaker();
+    //     runLoanCycleWithoutMaker();
+    // }
 
 }
