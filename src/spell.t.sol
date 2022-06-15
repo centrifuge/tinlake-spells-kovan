@@ -21,7 +21,12 @@ interface IHevm {
 }
 
 interface IAssessor {
-    function nav() external returns(address);
+    function navFeed() external returns(address);
+}
+
+interface IShelf {
+    function ceiling() external returns(address);
+    function subscriber() external returns(address);
 }
 
 interface ICoordinator {
@@ -61,7 +66,9 @@ interface NavLike {
     function approximatedNAV() external returns(uint);
     function currentNav() external returns(uint);
     function pile() external returns(address);
-    function nftID(address, uint) external returns(bytes32);
+    function shelf() external returns(address);
+    function title() external returns(address);
+    function nftID(uint) external returns (bytes32);
     function futureValue(bytes32) external returns(uint);
     function nftValues(bytes32) external returns(uint);
     function risk(bytes32) external returns(uint);
@@ -70,12 +77,12 @@ interface NavLike {
     function currentCeiling(uint) external returns(uint);
     function threshold(uint) external returns(uint);
     function borrowed(uint) external returns(uint);
+    function thresholdRatio(uint) external returns(uint);
+    function ceilingRatio(uint) external returns(uint);
+    function recoveryRatePD(uint) external returns(uint);
+    function buckets(uint) external returns(uint); 
 }
-
-// interface NAVNewLikeOld {
-    
-// } 
-
+ 
 interface IRoot {
     function relyContract(address, address) external;
 }
@@ -94,7 +101,7 @@ contract BaseSpellTest is DSTest {
     NavLike nav;
     NavLike navOld;
     IRoot root;
-   
+    IShelf shelf;
    
     address spell_;
     address root_;
@@ -105,6 +112,10 @@ contract BaseSpellTest is DSTest {
     address nav_;
     address navOld_;
     address registry_;
+    address pile_;
+    address shelf_;
+    address title_;
+    
 
     uint256 constant RAD = 10 ** 27;
     function initSpell() public {
@@ -118,7 +129,11 @@ contract BaseSpellTest is DSTest {
         navOld_ = spell.NAV_OLD();
         root_ = address(spell.ROOT());  
         registry_ = spell.POOL_REGISTRY();
+        pile_ = spell.PILE();
+        shelf_ = spell.SHELF();
+        title_ = spell.TITLE();
 
+        shelf = IShelf(shelf_);
         nav = NavLike(nav_);
         navOld = NavLike(navOld_);
         assessor = IAssessor(assessor_);
@@ -156,88 +171,62 @@ contract SpellTest is BaseSpellTest {
         AuthLike(registry_).rely(spell_);
         castSpell();
         assertNavMigrated();
-
-        // assertEpochExecution(); not required for this pool
         // assertRegistryUpdated();
     }
 
     function assertNavMigrated() public {
+        // assert NAV value correct
         uint navValue = nav.approximatedNAV();
         uint navValueOld = navOld.approximatedNAV();
-        emit log_named_uint("value new", navValue);
-        emit log_named_uint("value old", navValueOld);
         assertEq(navValue,  navValueOld);
+
+        // assert params correct
+        assertEq(nav.discountRate(), navOld.discountRate());
+
+        // assert dependencies
+        assertEq(nav.pile(), pile_);
+        assertEq(nav.shelf(), shelf_);
+        assertEq(nav.title(), title_);
+        assertEq(shelf.ceiling(), nav_);
+        assertEq(shelf.subscriber(), nav_);
+        assertEq(assessor.navFeed(), nav_);
+
+        // assert wards
+        assertHasPermissions(nav_, shelf_);
+        assertHasPermissions(nav_, spell.ORACLE());
+        assertHasPermissions(pile_, nav_);
+        // revoke permissions from old nav
+        assertHasNoPermissions(pile_, navOld_);
+
+        // assert risk group migration
+        for (uint i = 0; i <= spell.riskGroupCount(); i++) {
+            assertEq(nav.thresholdRatio(i), navOld.thresholdRatio(i));
+            assertEq(nav.ceilingRatio(i), navOld.ceilingRatio(i));
+            assertEq(nav.recoveryRatePD(i), navOld.recoveryRatePD(i));
+        }
+
+        // assert loans & nft migrations
+        for (uint loanID = 1; loanID < spell.loanCount(); loanID++) {
+            bytes32 nftID = nav.nftID(loanID);
+            assertLoanMigration(loanID);
+            assertNFTMigration(nftID);
+        }
+    }       
+
+    function assertNFTMigration(bytes32 nftID) public { 
+        uint maturityDate = nav.maturityDate(nftID);
+        assertEq(nav.futureValue(nftID), navOld.futureValue(nftID));
+        assertEq(nav.nftValues(nftID), navOld.nftValues(nftID));
+        assertEq(nav.risk(nftID), navOld.risk(nftID));
+        assertEq(nav.maturityDate(nftID), navOld.maturityDate(nftID));
+        assertEq(nav.buckets(maturityDate), navOld.buckets(maturityDate));
     }
 
-
-    // function assertEpochExecution() internal {
-    //     coordinator.executeEpoch();
-    //     assertEq(clerk.collatDeficit(), 0);
-    //     assert(coordinator.submissionPeriod() == false);
-    // }
-
-        
-
-    // function assertMigrationNAV() public {
-
-    //     // assert dependencies
-    //     assertEq(navNew.pile(), address(pile));
-    //     asserEq(navNew.shelf(), address(shelf));
-    //     assertEq(shelf.ceiling, navNew_);
-    //     assertEq(shelf.subscriber, navNew_);
-
-    //     // assert wards
-    //     assertHasPermissions(navNew_, address(shelf));
-    //     assertHasPermissions(navNew_, spell.ORACLE);
-    //     assertHasPermissions(address(pile), navNew_);
-    //     assertHasNoPermissions(address(pile), navOld_);
-
-    //     // assert discountRate
-    //     assertEq(navNew.discountRate(), navOld.discountRate());
-
-    //     // assert writeoffs 
-    //     // for (uint i = 1000; i <= 1003; i++) {
-    //     //     (uint rateGroupNew, uint percentageNew) = navNew.writeOffs(i);
-    //     //     (uint rateGroupOld, uint percentageOld) = navOld.writeOffs(i);
-    //     //     assertEq(rateGroupNew, rateGroupOld);
-    //     //     assertEq(percentageNew, percentageOld);
-    //     // }
-
-    //     // assert riskgroups
-    //     for (uint i = 0; i <= 40; i++) {
-    //         assertEq(navNew.thresholdRatio(i), navOld.thresholdRatio(i));
-    //         assertEq(navNew.ceilingRatio(i), navOld.ceilingRatio(i));
-    //         assertEq(navNew.recoveryRatePD(i), navOld.recoveryRatePD(i));
-    //         (, , uint interestRateNew, ,) = PileLike(navNew.pile()).rates(i);
-    //         (, , uint interestRateOld, ,) = PileLike(navOld.pile()).rates(i);
-    //         assertEq(interestRateNew, interestRateOld);
-    //     }
-        
-    //     // assert loan migration & assert nft migration
-    //     for (uint loanID = 1; loanID < shelf.loanCount(); loanID++) {
-    //         bytes32 nftID = clone.nftID(loanID);
-    //         assertLoanMigration(loanID)
-    //         assertNFTMigration(nftID);
-    //     }
-
-    //     // assert nav calculation
-    //      assertEq(navOld.currentNAV(), NAVNewLike(navNew_.)latestNAV());
-    //     }
-
-    // function assertNFTMigration(bytes32 nftID) public { 
-    //     assertEq(navNew.futureValue(nftID), navOld.futureValue(nftID));
-    //     assertEq(navNew.nftValues(nftID), navOld.nftValues(nftID));
-    //     assertEq(navNew.risk(nftID), navOld.risk(nftID));
-    //     assertEq(navNew.maturityDate(nftID), navOld.maturityDate(nftID));
-    // }
-
-    // function assertLoanMigration(uint loanId) public { 
-    //     assertEq(navNew.ceiling(loanId), navOld.ceiling(loanId));
-    //     assertEq(navNew.currentCeiling(loanId), navOld.currentCeiling(loanId));
-    //     assertEq(navNew.threshold(loanId), navOld.threshold(loanId));
-    //     assertEq(navNew.borrowed(loanId), navOld.borrowed(loanId));
-    
-    // }
+    function assertLoanMigration(uint loanId) public {
+        assertEq(nav.ceiling(loanId), navOld.ceiling(loanId));
+        assertEq(nav.threshold(loanId), navOld.threshold(loanId));
+        assertEq(nav.borrowed(loanId), navOld.borrowed(loanId));
+    }
 
     function assertRegistryUpdated() public {
         assertEq(AuthLike(spell.POOL_REGISTRY()).wards(address(this)), 1);

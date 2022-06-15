@@ -62,7 +62,6 @@ contract MigratedNAVFeed is NAVFeed {
             }
          }
 
-
         // No WriteOff Group migration required
         reCalcNAV();
 

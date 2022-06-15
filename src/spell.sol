@@ -80,7 +80,12 @@ contract TinlakeSpell is Addresses, DSTest {
 
     uint256 constant ONE = 10**27;
     address self;
-    
+
+    // set for each migration
+    uint public riskGroupCount = 10; 
+    address public ORACLE = 0x1c3C2E90B7D7Ac525f933597Eb228F8c74A28Cd2;
+    uint public loanCount;
+
     function cast() public {
         require(!done, "spell-already-cast");
         done = true;
@@ -100,8 +105,8 @@ contract TinlakeSpell is Addresses, DSTest {
        root.relyContract(ASSESSOR, self);
        root.relyContract(NAV, self);
        
-
         // contract migration --> assumption: root contract is already ward on the new contracts
+        loanCount = SpellTitleLike(TITLE).count();
         migrateNav();
         updateRegistry();
      }  
@@ -113,10 +118,7 @@ contract TinlakeSpell is Addresses, DSTest {
         bool executed = SpellCoordinatorLike(COORDINATOR).closeEpoch();
         require(executed == true , "epoch execution failed");
 
-
-        uint riskGroupCount = 1;
-        address ORACLE = 0x1c3C2E90B7D7Ac525f933597Eb228F8c74A28Cd2;
-        uint loanCount = SpellTitleLike(TITLE).count();
+        
 
         // set dependenciesfirst, so that migration works
         DependLike(NAV).depend("shelf", SHELF);
