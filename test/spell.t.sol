@@ -1,8 +1,8 @@
 pragma solidity >=0.7.0;
 pragma experimental ABIEncoderV2;
 
-import "ds-test/test.sol";
-import "./spell.sol";
+import "forge-std/Test.sol";
+import "src/spell.sol";
 
 
 

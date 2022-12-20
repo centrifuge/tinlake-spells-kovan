@@ -1,8 +1,6 @@
-pragma solidity >=0.5.15 <0.6.0;
+pragma solidity >=0.5.15;
 
-import "ds-test/test.sol";
-import "./../src/cf4.sol";
-
+import "forge-std/Test.sol";
 
 interface AuthLike {
     function wards(address) external returns(uint);

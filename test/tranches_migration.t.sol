@@ -1,9 +1,9 @@
-pragma solidity >=0.5.15 <0.6.0;
+pragma solidity >=0.5.15;
 pragma experimental ABIEncoderV2;
 
-import "ds-test/test.sol";
+import "forge-std/Test.sol";
 import "tinlake-math/math.sol";
-import "./spell.sol";
+import "src/spell.sol";
 
 interface IAuth {
     function wards(address) external returns(uint);

@@ -15,7 +15,7 @@
 pragma solidity >=0.6.12;
 pragma experimental ABIEncoderV2;
 
-import "./../tinlake/src/lender/adapters/mkr/clerk.sol";
+import "tinlake/lender/adapters/mkr/clerk.sol";
 
 contract MigratedClerk is Clerk {
     

@@ -1,9 +1,9 @@
 pragma solidity >=0.6.12;
 pragma experimental ABIEncoderV2;
 
-import "ds-test/test.sol";
-import "./spell.sol";
-import "../lib/tinlake-rpc-tests/src/contracts/rpc-tests.sol";
+import "forge-std/Test.sol";
+import "src/spell.sol";
+import "tinlake-rpc-tests/src/contracts/rpc-tests.sol";
 
 interface IHevm {
     function warp(uint256) external;

@@ -15,7 +15,7 @@
 pragma solidity >=0.6.12;
 pragma experimental ABIEncoderV2;
 
-import "./../../../../tinlake-internal/src/lender/reserve.sol";
+import "tinlake/lender/reserve.sol";
 
 
 contract MigratedReserve is Reserve {
