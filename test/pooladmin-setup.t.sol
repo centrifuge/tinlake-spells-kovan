@@ -1,8 +1,9 @@
-pragma solidity >=0.5.15;
+pragma solidity >=0.6.2;
 pragma experimental ABIEncoderV2;
 
 import "forge-std/Test.sol";
 import "tinlake-math/math.sol";
+import "src/template/pooladmin-setup.sol";
 
 interface IAuth {
     function wards(address) external returns(uint);
@@ -16,9 +17,9 @@ interface IPoolAdminLike {
     function seniorMemberlist() external returns(address);
 }
 
-contract Hevm {
-    function warp(uint256) public;
-    function store(address, bytes32, bytes32) public;
+interface Hevm {
+    function warp(uint256) external;
+    function store(address, bytes32, bytes32) external;
 }
 
 contract TinlakeSpellsTest is DSTest, Math {

@@ -1,9 +1,9 @@
-pragma solidity >=0.5.15;
+pragma solidity >=0.6.2;
 pragma experimental ABIEncoderV2;
 
 import "forge-std/Test.sol";
 import "tinlake-math/math.sol";
-import "src/spell.sol";
+import "src/template/tranches_migration.sol";
 
 interface IAuth {
     function wards(address) external returns(uint);
@@ -40,9 +40,9 @@ interface IMgr {
     function tranche() external returns(address);
 }
 
-contract IHevm {
-    function warp(uint256) public;
-    function store(address, bytes32, bytes32) public;
+interface IHevm {
+    function warp(uint256) external;
+    function store(address, bytes32, bytes32) external;
 }
 
 contract BaseSpellTest is DSTest, Math {

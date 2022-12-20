@@ -1,15 +1,16 @@
-pragma solidity >=0.5.15;
+pragma solidity >=0.6.2;
 
 import "forge-std/Test.sol";
+import "src/template/riskgroup-setup.sol";
 
 interface AuthLike {
     function wards(address) external returns(uint);
     function rely(address) external;
 }
 
-contract Hevm {
-    function warp(uint256) public;
-    function store(address, bytes32, bytes32) public;
+interface Hevm {
+    function warp(uint256) external;
+    function store(address, bytes32, bytes32) external;
 }
 
 interface PileLike {
