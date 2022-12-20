@@ -1,6 +1,4 @@
-pragma solidity >=0.6.12;
-
-import "./addresses_gig.sol";
+pragma solidity >=0.7.0;
 
 // Copyright (C) 2020 Centrifuge
 // This program is free software: you can redistribute it and/or modify
@@ -25,61 +23,33 @@ interface AuthLike {
 interface TinlakeRootLike {
     function relyContract(address, address) external;
     function denyContract(address, address) external;
+    function deny(address) external;
 }
 
-interface FileLike {
-    function file(bytes32, uint) external;
-    function file(bytes32, address) external;
+interface FeedLike {
+    function file(bytes32, uint256, uint256, uint256, uint256) external;
 }
 
-interface DependLike {
-    function depend(bytes32, address) external;
-}
-
-interface MigrationLike {
-        function migrate(address) external;
-}
-
-interface SpellMemberlistLike {
-    function updateMember(address, uint) external;
-}
-
-interface PoolAdminLike {
-    function setAdminLevel(address usr, uint level) external;
-}
-
-interface PoolRegistryLike {
-    function file(address, bool, string memory, string memory) external;
-    function find(address pool) external view returns (bool live, string memory name, string memory data);
-}
-
-// spell to swap clerk, coordinator & poolAdmin
-contract TinlakeSpell is Addresses {
+contract TinlakeSpell {
 
     bool public done;
-    string constant public description = "Tinlake GigPool spell";
+    string constant public description = "Tinlake BlockTower spell to rely feed on proxy and file riskgroups";
 
-    // MAINNET ADDRESSES
-    // The contracts in this list should correspond to a tinlake deployment
-    // https://github.com/centrifuge/tinlake-pool-config/blob/master/mainnet-production.json
+    address public BT1_ROOT = 0x4597f91cC06687Bdb74147C80C097A79358Ed29b;
+    address public BT2_ROOT = 0xB5c08534d1E73582FBd79e7C45694CAD6A5C5aB2;
+    address public BT3_ROOT = 0x90040F96aB8f291b6d43A8972806e977631aFFdE;
+    address public BT4_ROOT = 0x55d86d51Ac3bcAB7ab7d2124931FbA106c8b60c7;
 
-    address public POOL_ADMIN = 0xb84447f0d1aC8F6c5A99FD41814b966A2BBCD922;
+    address public BT1_FEED = 0x479506bFF98b18D62E62862a02A55047Ca6583Fa;
+    address public BT2_FEED = 0xeFf42b6d4527A6a2Fb429082386b34f5d4050b2c;
+    address public BT3_FEED = 0xeA5E577Df382889497534A0258345E78BbD4e31d;
+    address public BT4_FEED = 0x60eebA86cE045d54cE625D71A5c2bAebfB2e46E9;
 
-    address public MEMBER_ADMIN = 0xB7e70B77f6386Ffa5F55DDCb53D87A0Fb5a2f53b;
-    address public LEVEL3_ADMIN1 = 0x7b74bb514A1dEA0Ec3763bBd06084e712c8bce97;
-    address public LEVEL1_ADMIN1 = 0x71d9f8CFdcCEF71B59DD81AB387e523E2834F2b8;
-    address public LEVEL1_ADMIN2 = 0x46a71eEf8DbcFcbAC7A0e8D5d6B634A649e61fb8;
-    address public LEVEL1_ADMIN3 = 0x9eDec77dd2651Ce062ab17e941347018AD4eAEA9;
-    address public LEVEL1_ADMIN4 = 0xEf270f8877Aa1875fc13e78dcA31f3235210368f;
-    address public LEVEL1_ADMIN5 = 0xddEa1De10E93c15037E83b8Ab937A46cc76f7009;
-    address public AO_POOL_ADMIN = 0x7122139DA943Aba4423c0C22Ed68d7bD54CcD8f6;
-
-    address public POOL_REGISTRY = 0xddf1C516Cf87126c6c610B52FD8d609E67Fb6033;
-
-    string constant public IPFS_HASH = "QmR4NMhUEDoHBe5XP3w8kszpRtEHfugoKDDvgFMNNcV2Cm";
-
-    uint256 constant ONE = 10**27;
-    address self;
+    // Proxy addresses (random addresses for now)
+    address public BT1_PROXY = 0x0000000000000000000000000000000000000001;
+    address public BT2_PROXY = 0x0000000000000000000000000000000000000002;
+    address public BT3_PROXY = 0x0000000000000000000000000000000000000003;
+    address public BT4_PROXY = 0x0000000000000000000000000000000000000004;
     
     function cast() public {
         require(!done, "spell-already-cast");
@@ -88,64 +58,92 @@ contract TinlakeSpell is Addresses {
     }
 
     function execute() internal {
-       TinlakeRootLike root = TinlakeRootLike(address(ROOT));
-       self = address(this);
-       // permissions 
-       root.relyContract(CLERK, self); // required to file riskGroups & change discountRate
-       root.relyContract(SENIOR_TRANCHE, self);
-       root.relyContract(SENIOR_TOKEN, self);
-       root.relyContract(SENIOR_TRANCHE, self);
-       root.relyContract(JUNIOR_TRANCHE, self);
-       root.relyContract(SENIOR_MEMBERLIST, self);
-       root.relyContract(JUNIOR_MEMBERLIST, self);
-       root.relyContract(POOL_ADMIN, self);
-       root.relyContract(ASSESSOR, self);
-       root.relyContract(COORDINATOR, self);
-       root.relyContract(RESERVE, self);
-       root.relyContract(FEED, self);
-       
-       migratePoolAdmin();
-       updateRegistry();
+        // rely NAVFeed on Proxy
+        TinlakeRootLike(BT1_ROOT).relyContract(BT1_FEED, BT1_PROXY);
+        TinlakeRootLike(BT2_ROOT).relyContract(BT2_FEED, BT2_PROXY);
+        TinlakeRootLike(BT3_ROOT).relyContract(BT3_FEED, BT3_PROXY);
+        TinlakeRootLike(BT4_ROOT).relyContract(BT4_FEED, BT4_PROXY);
+
+
+        TinlakeRootLike(BT1_ROOT).relyContract(BT1_FEED, address(this));
+        TinlakeRootLike(BT2_ROOT).relyContract(BT2_FEED, address(this));
+        TinlakeRootLike(BT3_ROOT).relyContract(BT3_FEED, address(this));
+        TinlakeRootLike(BT4_ROOT).relyContract(BT4_FEED, address(this));
+        // file BT1 riskgroups on NAVFeed where risk is incremental, thresholdRatio is 1, ceiling is 0 and rate is 100%
+        // ceiling_ratio = 100% = 1000000031709791983764586504
+        // rate = 1 + (0.04879016/31536000) * 10^27 = 1000000001547120750887874175
+        FeedLike(BT4_FEED).file("riskGroup", 0, 1000000000000000000000000000, 1000000031709791983764586504, 1000000001547125824454591578);
+        // rate = 1 + (0.05116828/31536000) * 10^27 = 1000000001622590055809233891
+        FeedLike(BT4_FEED).file("riskGroup", 1, 1000000000000000000000000000, 1000000031709791983764586504, 1000000001622535514967021816);
+        // rate = 1 + (0.05354077/31536000) * 10^27 = 1000000001697742262810755961
+        FeedLike(BT4_FEED).file("riskGroup", 2, 1000000000000000000000000000, 1000000031709791983764586504, 1000000001697766679350583460);
+        // rate = 1 + (0.05590763/31536000) * 10^27 = 1000000001772819317605276509
+        FeedLike(BT4_FEED).file("riskGroup", 3, 1000000000000000000000000000, 1000000031709791983764586504, 1000000001772819317605276509);
+        // rate = 1 + (0.05826891/31536000) * 10^27 = 1000000001847695015220700152
+        FeedLike(BT4_FEED).file("riskGroup", 4, 1000000000000000000000000000, 1000000031709791983764586504, 1000000001847695015220700152);
+        // rate = 1 + (0.06062462/31536000) * 10^27 = 1000000001922394089294774226
+        FeedLike(BT4_FEED).file("riskGroup", 5, 1000000000000000000000000000, 1000000031709791983764586504, 1000000001922394089294774226);
+        // rate = 1 + (0.06297480/31536000) * 10^27 = 1000000001996917808219178082
+        FeedLike(BT4_FEED).file("riskGroup", 6, 1000000000000000000000000000, 1000000031709791983764586504, 1000000001996917808219178082);
+        // rate = 1 + (0.06531947/31536000) * 10^27 = 1000000002071266806189751395
+        FeedLike(BT4_FEED).file("riskGroup", 7, 1000000000000000000000000000, 1000000031709791983764586504, 1000000002071266806189751395);
+        // rate = 1 + (0.06765865/31536000) * 10^27 = 1000000002145441717402333841
+        FeedLike(BT4_FEED).file("riskGroup", 8, 1000000000000000000000000000, 1000000031709791983764586504, 1000000002145441717402333841);
+        // rate = 1 + (0.06999237/31536000) * 10^27 = 1000000002219443493150684932
+        FeedLike(BT4_FEED).file("riskGroup", 9, 1000000000000000000000000000, 1000000031709791983764586504, 1000000002219443493150684932);
+        // rate = 1 + (0.07232066/31536000) * 10^27 = 1000000002293273084728564181
+        FeedLike(BT4_FEED).file("riskGroup", 10, 1000000000000000000000000000, 1000000031709791983764586504, 1000000002293273084728564181);
+        // rate = 1 + (0.07464355/31536000) * 10^27 = 1000000002366931443429731101
+        FeedLike(BT4_FEED).file("riskGroup", 11, 1000000000000000000000000000, 1000000031709791983764586504, 1000000002366931443429731101);
+        // rate = 1 + (0.07696104/31536000) * 10^27 = 1000000002440418569254185693
+        FeedLike(BT4_FEED).file("riskGroup", 12, 1000000000000000000000000000, 1000000031709791983764586504, 1000000002440418569254185693);
+        // rate = 1 + (0.07927318/31536000) * 10^27 = 1000000002513736047691527144
+        FeedLike(BT4_FEED).file("riskGroup", 13, 1000000000000000000000000000, 1000000031709791983764586504, 1000000002513736047691527144);
+        // rate = 1 + (0.08157999/31536000) * 10^27 = 1000000002586884512937595129
+        FeedLike(BT4_FEED).file("riskGroup", 14, 1000000000000000000000000000, 1000000031709791983764586504, 1000000002586884512937595129);
+        // rate = 1 + (0.08388148/31536000) * 10^27 = 1000000002659864282090309488
+        FeedLike(BT4_FEED).file("riskGroup", 15, 1000000000000000000000000000, 1000000031709791983764586504, 1000000002659864282090309488);
+        // rate = 1 + (0.08617769/31536000) * 10^27 = 1000000002732676623541349569
+        FeedLike(BT4_FEED).file("riskGroup", 16, 1000000000000000000000000000, 1000000031709791983764586504, 1000000002732676623541349569);
+        // rate = 1 + (0.08846865/31536000) * 10^27 = 1000000002805322488584474886
+        FeedLike(BT4_FEED).file("riskGroup", 17, 1000000000000000000000000000, 1000000031709791983764586504, 1000000002805322488584474886);
+        // rate = 1 + (0.09075436/31536000) * 10^27 = 1000000002877801877219685439
+        FeedLike(BT4_FEED).file("riskGroup", 18, 1000000000000000000000000000, 1000000031709791983764586504, 1000000002877801877219685439);
+        // rate = 1 + (0.09303486/31536000) * 10^27 = 1000000002950116057838660578
+        FeedLike(BT4_FEED).file("riskGroup", 19, 1000000000000000000000000000, 1000000031709791983764586504, 1000000002950116057838660578);
+        // rate = 1 + (0.09531018/31536000) * 10^27 = 1000000003022265981735159817
+        FeedLike(BT4_FEED).file("riskGroup", 20, 1000000000000000000000000000, 1000000031709791983764586504, 1000000003022265981735159817);
+        // rate = 1 + (0.09758033/31536000) * 10^27 = 1000000003094251966007102993
+        FeedLike(BT4_FEED).file("riskGroup", 21, 1000000000000000000000000000, 1000000031709791983764586504, 1000000003094251966007102993);
+        // rate = 1 + (0.09984533/31536000) * 10^27 = 1000000003166074644850329782
+        FeedLike(BT4_FEED).file("riskGroup", 22, 1000000000000000000000000000, 1000000031709791983764586504, 1000000003166074644850329782);
+        // rate = 1 + (0.10210522/31536000) * 10^27 = 1000000003237735286656519533
+        FeedLike(BT4_FEED).file("riskGroup", 23, 1000000000000000000000000000, 1000000031709791983764586504, 1000000003237735286656519533);
+        // rate = 1 + (0.10436002/31536000) * 10^27 = 1000000003309234525621511923
+        FeedLike(BT4_FEED).file("riskGroup", 24, 1000000000000000000000000000, 1000000031709791983764586504, 1000000003309234525621511923);
+        // rate = 1 + (0.10660973/31536000) * 10^27 = 1000000003380572361745306951
+        FeedLike(BT4_FEED).file("riskGroup", 25, 1000000000000000000000000000, 1000000031709791983764586504, 1000000003380572361745306951);
+        // rate = 1 + (0.10885440/31536000) * 10^27 = 1000000003451750380517503805
+        FeedLike(BT4_FEED).file("riskGroup", 26, 1000000000000000000000000000, 1000000031709791983764586504, 1000000003451750380517503805);
+        // rate = 1 + (0.11109405/31536000) * 10^27 = 1000000003522769216133942161
+        FeedLike(BT4_FEED).file("riskGroup", 27, 1000000000000000000000000000, 1000000031709791983764586504, 1000000003522769216133942161);
+        // rate = 1 + (0.11332868/31536000) * 10^27 = 1000000003593628868594622019
+        FeedLike(BT4_FEED).file("riskGroup", 28, 1000000000000000000000000000, 1000000031709791983764586504, 1000000003593628868594622019);
+        // rate = 1 + (0.11555834/31536000) * 10^27 = 1000000003664330923389142567
+        FeedLike(BT4_FEED).file("riskGroup", 29, 1000000000000000000000000000, 1000000031709791983764586504, 1000000003664330923389142567);
+        // rate = 1 + (0.11778303/31536000) * 10^27 = 1000000003734875380517503805
+        FeedLike(BT4_FEED).file("riskGroup", 30, 1000000000000000000000000000, 1000000031709791983764586504, 1000000003734875380517503805);
+
+        TinlakeRootLike(BT1_ROOT).denyContract(BT1_FEED, address(this));
+        TinlakeRootLike(BT2_ROOT).denyContract(BT2_FEED, address(this));
+        TinlakeRootLike(BT3_ROOT).denyContract(BT3_FEED, address(this));
+        TinlakeRootLike(BT4_ROOT).denyContract(BT4_FEED, address(this));
+
+        // Deny spell on root contracts
+        TinlakeRootLike(BT1_ROOT).deny(address(this));
+        TinlakeRootLike(BT2_ROOT).deny(address(this));
+        TinlakeRootLike(BT3_ROOT).deny(address(this));
+        TinlakeRootLike(BT4_ROOT).deny(address(this));
+
      }  
-
-
-    function migratePoolAdmin() internal {
-        // setup dependencies 
-        DependLike(POOL_ADMIN).depend("assessor", ASSESSOR);
-        DependLike(POOL_ADMIN).depend("seniorMemberlist", SENIOR_MEMBERLIST);
-        DependLike(POOL_ADMIN).depend("juniorMemberlist", JUNIOR_MEMBERLIST);
-        DependLike(POOL_ADMIN).depend("navFeed", FEED);
-        DependLike(POOL_ADMIN).depend("coordinator", COORDINATOR);
-        DependLike(POOL_ADMIN).depend("lending", CLERK);
-
-        // setup permissions
-        AuthLike(ASSESSOR).rely(POOL_ADMIN);
-        AuthLike(ASSESSOR).deny(POOL_ADMIN_OLD);
-        AuthLike(CLERK).rely(POOL_ADMIN); // set in clerk migration
-        AuthLike(CLERK).deny(POOL_ADMIN_OLD);
-        AuthLike(JUNIOR_MEMBERLIST).rely(POOL_ADMIN);
-        AuthLike(JUNIOR_MEMBERLIST).deny(POOL_ADMIN_OLD);
-        AuthLike(SENIOR_MEMBERLIST).rely(POOL_ADMIN);
-        AuthLike(SENIOR_MEMBERLIST).deny(POOL_ADMIN_OLD);
-        AuthLike(FEED).rely(POOL_ADMIN);
-        AuthLike(FEED).deny(POOL_ADMIN_OLD);
-        AuthLike(COORDINATOR).rely(POOL_ADMIN);
-        AuthLike(COORDINATOR).deny(POOL_ADMIN_OLD);
-
-        // set lvl3 admins
-        AuthLike(POOL_ADMIN).rely(LEVEL3_ADMIN1);
-        // set lvl1 admins
-        PoolAdminLike(POOL_ADMIN).setAdminLevel(LEVEL1_ADMIN1, 1);
-        PoolAdminLike(POOL_ADMIN).setAdminLevel(LEVEL1_ADMIN2, 1);
-        PoolAdminLike(POOL_ADMIN).setAdminLevel(LEVEL1_ADMIN3, 1);
-        PoolAdminLike(POOL_ADMIN).setAdminLevel(LEVEL1_ADMIN4, 1);
-        PoolAdminLike(POOL_ADMIN).setAdminLevel(LEVEL1_ADMIN5, 1);
-        PoolAdminLike(POOL_ADMIN).setAdminLevel(AO_POOL_ADMIN, 1);
-        AuthLike(JUNIOR_MEMBERLIST).rely(MEMBER_ADMIN);
-        AuthLike(SENIOR_MEMBERLIST).rely(MEMBER_ADMIN);
-    }
-
-    function updateRegistry() internal {
-        PoolRegistryLike(POOL_REGISTRY).file(ROOT, true, "gig-pool", IPFS_HASH);
-    }
 }

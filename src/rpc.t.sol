@@ -16,17 +16,10 @@ contract SpellRPCTest is TinlakeRPCTests {
         t_hevm = IHevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
         TinlakeSpell spell = new TinlakeSpell();
         address spell_ = address(spell);
-        t_hevm.store(spell.ROOT(), keccak256(abi.encode(address(this), uint(0))), bytes32(uint(1)));
-        t_hevm.store(spell.POOL_REGISTRY(), keccak256(abi.encode(address(this), uint(0))), bytes32(uint(1)));
+        t_hevm.store(spell.BT4_ROOT(), keccak256(abi.encode(address(this), uint(0))), bytes32(uint(1)));
         // give spell permissions on root contract
-        AuthLike(address(spell.ROOT())).rely(spell_);
-        AuthLike(address(spell.POOL_REGISTRY())).rely(spell_);
+        AuthLike(address(spell.BT4_ROOT())).rely(spell_);
         spell.cast();
-
-        // add new contract addresses here that should override the old contracts
-        CLERK = spell.CLERK();
-        COORDINATOR = spell.COORDINATOR();
-        POOL_ADMIN = spell.POOL_ADMIN();
        
         initRPC();
 
