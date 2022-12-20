@@ -3,13 +3,15 @@
 ## tests
 
 set env
+
 ```
     ETH_RPC_URL=https://kovan.infura.io/v3/<INFURA_KEY>
-```   
+```
 
 run tests
-```bash 
- ./bin/test.sh      
+
+```
+    forge test --rpc_url=$ETH_RPC_URL
 ```
 
 ## deploy
@@ -28,16 +30,14 @@ set env
 
 run bash commands
 
-```bash 
- dapp create "src/spell.sol:TinlakeSpell"  
- dapp verify-contract --async "src/spell.sol:TinlakeSpell" <SPELL_ADDRESS>
+```bash
+ forge create --rpc-url $RPC_URL --private-key $PRIVATE_KEY src/spell.sol:TinlakeSpell --verify --etherscan-api-key $ETHERSCAN_KEY --legacy
 ```
-
 
 ## archive
 
 store deployed spells in archive using following format
 
-```bash 
-"archive/<root>/spell-<contract-address>.sol"  
+```bash
+"archive/<pool_root>/spell-<contract-address>.sol"
 ```

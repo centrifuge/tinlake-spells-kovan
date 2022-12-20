@@ -4,3 +4,7 @@
 [submodule "tinlake"]
 	path = tinlake
 	url = git@github.com:centrifuge/tinlake.git
+[submodule "lib/forge-std"]
+	path = lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+	branch = v1.2.0
