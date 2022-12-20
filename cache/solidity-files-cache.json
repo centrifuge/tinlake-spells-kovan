@@ -2317,8 +2317,8 @@
       }
     },
     "src/template/pooladmin-setup.sol": {
-      "lastModificationDate": 1671552831536,
-      "contentHash": "d1d18cfa3bee750a5375d7e3fad6fa96",
+      "lastModificationDate": 1671556225408,
+      "contentHash": "7742927bdb0a577b59c705d2a6108859",
       "sourceName": "src/template/pooladmin-setup.sol",
       "solcConfig": {
         "settings": {
@@ -2665,8 +2665,8 @@
       }
     },
     "test/pooladmin-setup.t.sol": {
-      "lastModificationDate": 1671553938757,
-      "contentHash": "ca1120dbca2507d1c74b34470372e2ea",
+      "lastModificationDate": 1671557506575,
+      "contentHash": "fe50290d7bf01db7467d57e18473dcfc",
       "sourceName": "test/pooladmin-setup.t.sol",
       "solcConfig": {
         "settings": {
