@@ -105,7 +105,7 @@ contract TinlakeSpell {
     bool public done;
     string constant public description = "Tinlake HTC2 coordinator migration mainnet Spell";
 
-    address constant public ROOT = 0x4cA805cE8EcE2E63FfC1F9f8F2731D3F48DF89Df;
+    address constant public ROOT = address(0);
     address constant public JUNIOR_TRANCHE = 0x294309E42e1b3863a316BEb52df91B1CcB15eef9;
     address constant public SENIOR_TRANCHE = 0x1940E2A20525B103dCC9884902b0186371227393;
     address constant public ASSESSOR = 0x6e40A9d1eE2c8eF95322b879CBae35BE6Dd2D143;

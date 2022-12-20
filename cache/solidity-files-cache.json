@@ -2174,8 +2174,8 @@
       }
     },
     "src/template/contract-migration.sol": {
-      "lastModificationDate": 1671553194210,
-      "contentHash": "ecb4e5f2995ec7ba8f61460e1ff56bec",
+      "lastModificationDate": 1671555373373,
+      "contentHash": "d274161b001d16a93435774b06ecf30e",
       "sourceName": "src/template/contract-migration.sol",
       "solcConfig": {
         "settings": {
@@ -2247,8 +2247,8 @@
       }
     },
     "src/template/coordinator-migration.sol": {
-      "lastModificationDate": 1671552831536,
-      "contentHash": "de0b7f661b91f24f29d5c484021bff56",
+      "lastModificationDate": 1671555646653,
+      "contentHash": "921cfe74125c7ee01da348e378ba2f8e",
       "sourceName": "src/template/coordinator-migration.sol",
       "solcConfig": {
         "settings": {
@@ -2372,8 +2372,8 @@
       }
     },
     "src/template/riskgroup-setup.sol": {
-      "lastModificationDate": 1671552796793,
-      "contentHash": "72e1afef5fc46dd451c2b8bd04403621",
+      "lastModificationDate": 1671555294870,
+      "contentHash": "6ebb7abb8948c99dbe73bfec0600b656",
       "sourceName": "src/template/riskgroup-setup.sol",
       "solcConfig": {
         "settings": {
@@ -2421,8 +2421,8 @@
       }
     },
     "src/template/tranches_migration.sol": {
-      "lastModificationDate": 1671552831536,
-      "contentHash": "34eddc106ed0958e016e5d5acf13bdc2",
+      "lastModificationDate": 1671555798200,
+      "contentHash": "a2b1d38d2fd397eb3953e716bfea06b0",
       "sourceName": "src/template/tranches_migration.sol",
       "solcConfig": {
         "settings": {
@@ -2494,8 +2494,8 @@
       }
     },
     "test/contract-migration.t.sol": {
-      "lastModificationDate": 1671553150792,
-      "contentHash": "d962f33427327229b12156146b50115f",
+      "lastModificationDate": 1671556157985,
+      "contentHash": "e2848fbd42522d301385840adf3b57e8",
       "sourceName": "test/contract-migration.t.sol",
       "solcConfig": {
         "settings": {
@@ -2590,8 +2590,8 @@
       }
     },
     "test/coordinator-migration.t.sol": {
-      "lastModificationDate": 1671553175791,
-      "contentHash": "0270fcbb722008d0793c24827c693823",
+      "lastModificationDate": 1671556134847,
+      "contentHash": "7b8d5049289f5084a2deaf9376e55a9e",
       "sourceName": "test/coordinator-migration.t.sol",
       "solcConfig": {
         "settings": {
@@ -2665,8 +2665,8 @@
       }
     },
     "test/pooladmin-setup.t.sol": {
-      "lastModificationDate": 1671553169749,
-      "contentHash": "69b9d1d9f7e3c3a73f2854f9bbb2d902",
+      "lastModificationDate": 1671553938757,
+      "contentHash": "ca1120dbca2507d1c74b34470372e2ea",
       "sourceName": "test/pooladmin-setup.t.sol",
       "solcConfig": {
         "settings": {
@@ -2731,8 +2731,8 @@
       }
     },
     "test/riskgroup-setup.t.sol": {
-      "lastModificationDate": 1671553165407,
-      "contentHash": "dee657709822a33a6792ae864b498890",
+      "lastModificationDate": 1671555267105,
+      "contentHash": "dd10d1cc89418f7a76cd6355ab630ca1",
       "sourceName": "test/riskgroup-setup.t.sol",
       "solcConfig": {
         "settings": {
@@ -2879,8 +2879,8 @@
       }
     },
     "test/spell.t.sol": {
-      "lastModificationDate": 1671552288344,
-      "contentHash": "714aa0ae45f7161f7124c683aeaa0517",
+      "lastModificationDate": 1671553942796,
+      "contentHash": "246d1ef2ef903ced3cbbedbe8ccc9a2a",
       "sourceName": "test/spell.t.sol",
       "solcConfig": {
         "settings": {
@@ -2975,8 +2975,8 @@
       }
     },
     "test/tranches_migration.t.sol": {
-      "lastModificationDate": 1671553159746,
-      "contentHash": "dd2e24350870da8716c43e6feb197553",
+      "lastModificationDate": 1671556044152,
+      "contentHash": "3c3d019770ed1fa6f0b3d1c25d1a2aca",
       "sourceName": "test/tranches_migration.t.sol",
       "solcConfig": {
         "settings": {

@@ -21,11 +21,9 @@ interface AssessorLike {
     function seniorInterestRate() external returns (uint);
 }
 
-contract TinlakeSpellsTest is DSTest {
+contract TinlakeSpellsTest is Test {
 
-    Hevm public hevm;
     TinlakeSpell spell;
-    
    
     address root_;
     address spell_;
@@ -35,15 +33,17 @@ contract TinlakeSpellsTest is DSTest {
         spell = new TinlakeSpell();
         spell_ = address(spell);
         root_ = address(spell.ROOT());  
-        hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
         
         // cheat: give testContract permissions on root contract by overriding storage 
         // storage slot for permissions => keccak256(key, mapslot) (mapslot = 0)
-        hevm.store(root_, keccak256(abi.encode(address(this), uint(0))), bytes32(uint(1)));
+        vm.store(root_, keccak256(abi.encode(address(this), uint(0))), bytes32(uint(1)));
     }
 
     function testCast() public {
 
+        if(spell.ROOT() == address(0)) {
+            return;
+        }
         address assessor_ = spell.ASSESSOR();
         address navFeed_ = spell.NAV_FEED();
 

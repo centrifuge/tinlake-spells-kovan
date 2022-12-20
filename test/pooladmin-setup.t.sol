@@ -22,7 +22,7 @@ interface Hevm {
     function store(address, bytes32, bytes32) external;
 }
 
-contract TinlakeSpellsTest is DSTest, Math {
+contract TinlakeSpellsTest is Test, Math {
 
     Hevm public hevm;
     TinlakeSpell spell;

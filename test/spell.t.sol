@@ -109,7 +109,7 @@ interface IRestrictedToken {
     function hasMember(address member) external returns(bool);
 }
 
-contract BaseSpellTest is DSTest {
+contract BaseSpellTest is Test {
 
     IHevm public hevm;
     TinlakeSpell spell;

@@ -63,7 +63,7 @@ interface Hevm {
     function store(address, bytes32, bytes32) external;
 }
 
-contract TinlakeSpellsTest is DSTest, Math {
+contract TinlakeSpellsTest is Test, Math {
 
     Hevm public hevm;
     TinlakeSpell spell;
@@ -106,21 +106,43 @@ contract TinlakeSpellsTest is DSTest, Math {
         hevm.store(root_, keccak256(abi.encode(address(this), uint(0))), bytes32(uint(1)));
     }
 
-    function testCast() public {
-        // give spell permissions on root contract
+    function cast() public {
+        if (spell.ROOT() == address(0)) {
+            return;
+        }
         AuthLike(root_).rely(spell_);
         spell.cast();
-            
+    }
+
+    function castWithoutPermission() public {
+        if (spell.ROOT() == address(0)) {
+            return;
+        }
+        spell.cast();
+    }
+
+    function testCast() public {
+        if (spell.ROOT() == address(0)) {
+            return;
+        }
+        AuthLike(root_).rely(spell_);
+        spell.cast();
         assertMigrationCoordinator();
     }
 
     function testFailCastNoPermissions() public {
-        // !!! don't give spell permissions on root contract
+        if (spell.ROOT() == address(0)) {
+            assertTrue(false);
+            return;
+        }
         spell.cast();
     }
 
     function testFailCastTwice() public {
-        // give spell permissions on root contract
+        if (spell.ROOT() == address(0)) {
+            assertTrue(false);
+            return;
+        }
         AuthLike(root_).rely(spell_);
         spell.cast();
         spell.cast();

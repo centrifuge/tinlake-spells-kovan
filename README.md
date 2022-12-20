@@ -8,10 +8,16 @@ set env
     ETH_RPC_URL=https://kovan.infura.io/v3/<INFURA_KEY>
 ```
 
+or
+
+```
+    ETH_RPC_URL=https://mainnet.infura.io/v3/<INFURA_KEY>
+```
+
 run tests
 
 ```
-    forge test --rpc_url=$ETH_RPC_URL
+    forge test -f $ETH_RPC_URL -vvv
 ```
 
 ## deploy
