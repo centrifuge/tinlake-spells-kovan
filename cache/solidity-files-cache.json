@@ -1886,46 +1886,6 @@
         }
       }
     },
-    "src/addresses_gig.sol": {
-      "lastModificationDate": 1671547002684,
-      "contentHash": "6294c4ff59af91ed519ffd0e415689f1",
-      "sourceName": "src/addresses_gig.sol",
-      "solcConfig": {
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
-          },
-          "outputSelection": {
-            "*": {
-              "": [
-                "ast"
-              ],
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ]
-            }
-          },
-          "evmVersion": "london",
-          "libraries": {}
-        }
-      },
-      "imports": [],
-      "versionRequirement": null,
-      "artifacts": {
-        "Addresses": {
-          "0.7.6+commit.7338295f.Darwin.appleclang": "addresses_gig.sol/Addresses.json"
-        }
-      }
-    },
     "src/migration-contracts/assessor.sol": {
       "lastModificationDate": 1671552398253,
       "contentHash": "9b0b6fbc8d17fde51d02e2bf57c72e40",
@@ -2108,8 +2068,8 @@
       }
     },
     "src/spell.sol": {
-      "lastModificationDate": 1671547002686,
-      "contentHash": "6ed851a4cb75cdab649123f515757b15",
+      "lastModificationDate": 1671560916671,
+      "contentHash": "4dd3888acef8b324ad91ccb85573b611",
       "sourceName": "src/spell.sol",
       "solcConfig": {
         "settings": {
@@ -2139,34 +2099,14 @@
           "libraries": {}
         }
       },
-      "imports": [
-        "src/addresses_gig.sol"
-      ],
+      "imports": [],
       "versionRequirement": ">=0.6.12",
       "artifacts": {
         "AuthLike": {
           "0.7.6+commit.7338295f.Darwin.appleclang": "spell.sol/AuthLike.json"
         },
-        "DependLike": {
-          "0.7.6+commit.7338295f.Darwin.appleclang": "spell.sol/DependLike.json"
-        },
-        "FileLike": {
-          "0.7.6+commit.7338295f.Darwin.appleclang": "spell.sol/FileLike.json"
-        },
-        "MigrationLike": {
-          "0.7.6+commit.7338295f.Darwin.appleclang": "spell.sol/MigrationLike.json"
-        },
-        "PoolAdminLike": {
-          "0.7.6+commit.7338295f.Darwin.appleclang": "spell.sol/PoolAdminLike.json"
-        },
-        "PoolRegistryLike": {
-          "0.7.6+commit.7338295f.Darwin.appleclang": "spell.sol/PoolRegistryLike.json"
-        },
-        "SpellMemberlistLike": {
-          "0.7.6+commit.7338295f.Darwin.appleclang": "spell.sol/SpellMemberlistLike.json"
-        },
-        "TinlakeRootLike": {
-          "0.7.6+commit.7338295f.Darwin.appleclang": "spell.sol/TinlakeRootLike.json"
+        "RootLike": {
+          "0.7.6+commit.7338295f.Darwin.appleclang": "spell.sol/RootLike.json"
         },
         "TinlakeSpell": {
           "0.7.6+commit.7338295f.Darwin.appleclang": "spell.sol/TinlakeSpell.json"
@@ -2799,8 +2739,8 @@
       }
     },
     "test/rpc.t.sol": {
-      "lastModificationDate": 1671552344790,
-      "contentHash": "22a628475e8b1312f7481dd108df0823",
+      "lastModificationDate": 1671561032872,
+      "contentHash": "21ae20e8fbb84e263cf3486b26b5b223",
       "sourceName": "test/rpc.t.sol",
       "solcConfig": {
         "settings": {
@@ -2865,22 +2805,18 @@
         "lib/tinlake-rpc-tests/src/contracts/assertions.sol",
         "lib/tinlake-rpc-tests/src/contracts/interfaces.sol",
         "lib/tinlake-rpc-tests/src/contracts/rpc-tests.sol",
-        "src/addresses_gig.sol",
         "src/spell.sol"
       ],
       "versionRequirement": ">=0.6.12",
       "artifacts": {
-        "IHevm": {
-          "0.7.6+commit.7338295f.Darwin.appleclang": "rpc.t.sol/IHevm.json"
-        },
         "SpellRPCTest": {
           "0.7.6+commit.7338295f.Darwin.appleclang": "rpc.t.sol/SpellRPCTest.json"
         }
       }
     },
     "test/spell.t.sol": {
-      "lastModificationDate": 1671553942796,
-      "contentHash": "246d1ef2ef903ced3cbbedbe8ccc9a2a",
+      "lastModificationDate": 1671560964261,
+      "contentHash": "2241376f0f029274bb797039f4b724da",
       "sourceName": "test/spell.t.sol",
       "solcConfig": {
         "settings": {
@@ -2925,50 +2861,10 @@
         "lib/forge-std/src/console.sol",
         "lib/forge-std/src/console2.sol",
         "lib/tinlake-rpc-tests/lib/ds-test/src/test.sol",
-        "src/addresses_gig.sol",
         "src/spell.sol"
       ],
       "versionRequirement": ">=0.7.0",
       "artifacts": {
-        "BaseSpellTest": {
-          "0.7.6+commit.7338295f.Darwin.appleclang": "spell.t.sol/BaseSpellTest.json"
-        },
-        "IAssessor": {
-          "0.7.6+commit.7338295f.Darwin.appleclang": "spell.t.sol/IAssessor.json"
-        },
-        "IAuth": {
-          "0.7.6+commit.7338295f.Darwin.appleclang": "spell.t.sol/IAuth.json"
-        },
-        "IClerk": {
-          "0.7.6+commit.7338295f.Darwin.appleclang": "spell.t.sol/IClerk.json"
-        },
-        "ICoordinator": {
-          "0.7.6+commit.7338295f.Darwin.appleclang": "spell.t.sol/ICoordinator.json"
-        },
-        "IFile": {
-          "0.7.6+commit.7338295f.Darwin.appleclang": "spell.t.sol/IFile.json"
-        },
-        "IHevm": {
-          "0.7.6+commit.7338295f.Darwin.appleclang": "spell.t.sol/IHevm.json"
-        },
-        "IMgr": {
-          "0.7.6+commit.7338295f.Darwin.appleclang": "spell.t.sol/IMgr.json"
-        },
-        "IPoolAdmin": {
-          "0.7.6+commit.7338295f.Darwin.appleclang": "spell.t.sol/IPoolAdmin.json"
-        },
-        "IReserve": {
-          "0.7.6+commit.7338295f.Darwin.appleclang": "spell.t.sol/IReserve.json"
-        },
-        "IRestrictedToken": {
-          "0.7.6+commit.7338295f.Darwin.appleclang": "spell.t.sol/IRestrictedToken.json"
-        },
-        "IRoot": {
-          "0.7.6+commit.7338295f.Darwin.appleclang": "spell.t.sol/IRoot.json"
-        },
-        "ITranche": {
-          "0.7.6+commit.7338295f.Darwin.appleclang": "spell.t.sol/ITranche.json"
-        },
         "SpellTest": {
           "0.7.6+commit.7338295f.Darwin.appleclang": "spell.t.sol/SpellTest.json"
         }
