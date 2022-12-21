@@ -22,6 +22,7 @@ interface RootLike {
 
 interface PoolAdminLike {
     function setAdminLevel(address, uint) external;
+    function admin_level(address) external view returns (uint256);
 }
 
 interface FeedLike {

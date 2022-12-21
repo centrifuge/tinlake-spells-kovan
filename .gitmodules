@@ -1,9 +1,16 @@
 [submodule "lib/tinlake"]
 	path = lib/tinlake
-	url = git@github.com:centrifuge/tinlake.git
+	url = https://github.com/centrifuge/tinlake
+	branch = f81b3f22cab5d03fb20420b89f321f9a8fc06848
 [submodule "lib/forge-std"]
 	path = lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
-[submodule "lib/tinlake-rpc-tests"]
-	path = lib/tinlake-rpc-tests
-	url = git@github.com:centrifuge/tinlake-rpc-tests.git
+	branch = v1.2.0
+[submodule "lib/tinlake-math"]
+	path = lib/tinlake-math
+	url = https://github.com/centrifuge/tinlake-math
+	branch = f1dd5aeb79bccc9ecba7d8ea0fb834853420f00e
+[submodule "lib/tinlake-title"]
+	path = lib/tinlake-title
+	url = https://github.com/centrifuge/tinlake-title
+	branch = 97f332e3c2f3cd26c50d05c2fd6e812d177506c9

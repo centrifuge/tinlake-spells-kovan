@@ -8,8 +8,10 @@ interface PileLike {
     function rates(uint rate) external view returns (uint, uint, uint ,uint48, uint);
 }
 
-interface PoolAdminLike {
-    function admin_level(address) external view returns (uint256);
+interface AuthLike {
+    function rely(address) external;
+    function deny(address) external;
+    function wards(address) external view returns (uint);
 }
 
 contract SpellTest is Test {
@@ -30,15 +32,19 @@ contract SpellTest is Test {
     function setUp() public {
         spell = new TinlakeSpell();
         spell_ = address(spell);
-        root_ = address(spell.ROOT());  
 
-        root = RootLike(root_);
-
-        vm.store(root_, keccak256(abi.encode(address(this), uint(0))), bytes32(uint(1)));
+        vm.store(spell.BT1_ROOT(), keccak256(abi.encode(address(this), uint(0))), bytes32(uint(1)));
+        vm.store(spell.BT2_ROOT(), keccak256(abi.encode(address(this), uint(0))), bytes32(uint(1)));
+        vm.store(spell.BT3_ROOT(), keccak256(abi.encode(address(this), uint(0))), bytes32(uint(1)));
+        vm.store(spell.BT4_ROOT(), keccak256(abi.encode(address(this), uint(0))), bytes32(uint(1)));
     }
 
     function testFailCastTwice() public {
-        AuthLike(root_).rely(spell_);
+        AuthLike(spell.BT1_ROOT()).rely(spell_);
+        AuthLike(spell.BT2_ROOT()).rely(spell_);
+        AuthLike(spell.BT3_ROOT()).rely(spell_);
+        AuthLike(spell.BT4_ROOT()).rely(spell_);
+
         spell.cast();
         spell.cast();
     } 
@@ -48,33 +54,37 @@ contract SpellTest is Test {
     }
 
     function testCast() public {
-        AuthLike(root_).rely(spell_);
+        AuthLike(spell.BT1_ROOT()).rely(spell_);
+        AuthLike(spell.BT2_ROOT()).rely(spell_);
+        AuthLike(spell.BT3_ROOT()).rely(spell_);
+        AuthLike(spell.BT4_ROOT()).rely(spell_);
+
         spell.cast();
 
-        assertHasPermissions(spell.BT1_FEED, spell.BT1_PROXY);
-        assertHasPermissions(spell.BT2_FEED, spell.BT2_PROXY);
-        assertHasPermissions(spell.BT3_FEED, spell.BT3_PROXY);
-        assertHasPermissions(spell.BT4_FEED, spell.BT4_PROXY);
+        assertHasPermissions(spell.BT1_FEED(), spell.BT1_PROXY());
+        assertHasPermissions(spell.BT2_FEED(), spell.BT2_PROXY());
+        assertHasPermissions(spell.BT3_FEED(), spell.BT3_PROXY());
+        assertHasPermissions(spell.BT4_FEED(), spell.BT4_PROXY());
 
-        assertEq(PoolAdminLike(spell.BT1_POOL_ADMIN).admin_level(spell.BT1_BORROWER), 1);
-        assertEq(PoolAdminLike(spell.BT2_POOL_ADMIN).admin_level(spell.BT2_BORROWER), 1);
-        assertEq(PoolAdminLike(spell.BT3_POOL_ADMIN).admin_level(spell.BT3_BORROWER), 1);
-        assertEq(PoolAdminLike(spell.BT4_POOL_ADMIN).admin_level(spell.BT4_BORROWER), 1);
+        assertEq(PoolAdminLike(spell.BT1_POOL_ADMIN()).admin_level(spell.BT1_BORROWER()), 1);
+        assertEq(PoolAdminLike(spell.BT2_POOL_ADMIN()).admin_level(spell.BT2_BORROWER()), 1);
+        assertEq(PoolAdminLike(spell.BT3_POOL_ADMIN()).admin_level(spell.BT3_BORROWER()), 1);
+        assertEq(PoolAdminLike(spell.BT4_POOL_ADMIN()).admin_level(spell.BT4_BORROWER()), 1);
 
         checkRiskGroups(PileLike(BT1_PILE));
         checkRiskGroups(PileLike(BT2_PILE));
         checkRiskGroups(PileLike(BT3_PILE));
         checkRiskGroups(PileLike(BT4_PILE));
 
-        assertHasNoPermissions(spell.BT1_FEED, address(spell));
-        assertHasNoPermissions(spell.BT2_FEED, address(spell));
-        assertHasNoPermissions(spell.BT3_FEED, address(spell));
-        assertHasNoPermissions(spell.BT4_FEED, address(spell));
+        assertHasNoPermissions(spell.BT1_FEED(), address(spell));
+        assertHasNoPermissions(spell.BT2_FEED(), address(spell));
+        assertHasNoPermissions(spell.BT3_FEED(), address(spell));
+        assertHasNoPermissions(spell.BT4_FEED(), address(spell));
 
-        assertHasNoPermissions(spell.BT1_ROOT, address(spell));
-        assertHasNoPermissions(spell.BT2_ROOT, address(spell));
-        assertHasNoPermissions(spell.BT3_ROOT, address(spell));
-        assertHasNoPermissions(spell.BT4_ROOT, address(spell));
+        assertHasNoPermissions(spell.BT1_ROOT(), address(spell));
+        assertHasNoPermissions(spell.BT2_ROOT(), address(spell));
+        assertHasNoPermissions(spell.BT3_ROOT(), address(spell));
+        assertHasNoPermissions(spell.BT4_ROOT(), address(spell));
 
     }
 
@@ -85,12 +95,12 @@ contract SpellTest is Test {
     
 
     function assertHasPermissions(address con, address ward) public {
-        uint perm = IAuth(con).wards(ward);
+        uint perm = AuthLike(con).wards(ward);
         assertEq(perm, 1);
     }
 
     function assertHasNoPermissions(address con, address ward) public {
-        uint perm = IAuth(con).wards(ward);
+        uint perm = AuthLike(con).wards(ward);
         assertEq(perm, 0);
     }
 }
