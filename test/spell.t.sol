@@ -81,6 +81,11 @@ contract SpellTest is Test {
         assertHasNoPermissions(spell.BT3_FEED(), address(spell));
         assertHasNoPermissions(spell.BT4_FEED(), address(spell));
 
+        assertHasNoPermissions(spell.BT1_POOL_ADMIN(), address(spell));
+        assertHasNoPermissions(spell.BT2_POOL_ADMIN(), address(spell));
+        assertHasNoPermissions(spell.BT3_POOL_ADMIN(), address(spell));
+        assertHasNoPermissions(spell.BT4_POOL_ADMIN(), address(spell));
+
         assertHasNoPermissions(spell.BT1_ROOT(), address(spell));
         assertHasNoPermissions(spell.BT2_ROOT(), address(spell));
         assertHasNoPermissions(spell.BT3_ROOT(), address(spell));

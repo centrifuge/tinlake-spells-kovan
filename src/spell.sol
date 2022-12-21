@@ -76,11 +76,23 @@ contract TinlakeSpell {
         RootLike(BT3_ROOT).relyContract(BT3_FEED, BT3_PROXY);
         RootLike(BT4_ROOT).relyContract(BT4_FEED, BT4_PROXY);
 
+        // Rely spell on pool admins so it can add level 1 admins
+        RootLike(BT1_ROOT).relyContract(BT1_POOL_ADMIN, address(this));
+        RootLike(BT2_ROOT).relyContract(BT2_POOL_ADMIN, address(this));
+        RootLike(BT3_ROOT).relyContract(BT3_POOL_ADMIN, address(this));
+        RootLike(BT4_ROOT).relyContract(BT4_POOL_ADMIN, address(this));
+
         // Rely borrowers as level 1 admins
         PoolAdminLike(BT1_POOL_ADMIN).setAdminLevel(BT1_BORROWER, 1);
         PoolAdminLike(BT2_POOL_ADMIN).setAdminLevel(BT2_BORROWER, 1);
         PoolAdminLike(BT3_POOL_ADMIN).setAdminLevel(BT3_BORROWER, 1);
         PoolAdminLike(BT4_POOL_ADMIN).setAdminLevel(BT4_BORROWER, 1);
+
+        // Deny spell on pool admins
+        RootLike(BT1_ROOT).denyContract(BT1_POOL_ADMIN, address(this));
+        RootLike(BT2_ROOT).denyContract(BT2_POOL_ADMIN, address(this));
+        RootLike(BT3_ROOT).denyContract(BT3_POOL_ADMIN, address(this));
+        RootLike(BT4_ROOT).denyContract(BT4_POOL_ADMIN, address(this));
 
         // Rely spell on feeds so it can file risk groups
         RootLike(BT1_ROOT).relyContract(BT1_FEED, address(this));
