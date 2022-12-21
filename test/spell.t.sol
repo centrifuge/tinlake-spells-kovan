@@ -81,10 +81,10 @@ contract SpellTest is Test {
         assertHasNoPermissions(spell.BT3_FEED(), address(spell));
         assertHasNoPermissions(spell.BT4_FEED(), address(spell));
 
-        assertHasNoPermissions(spell.BT1_POOL_ADMIN(), address(spell));
-        assertHasNoPermissions(spell.BT2_POOL_ADMIN(), address(spell));
-        assertHasNoPermissions(spell.BT3_POOL_ADMIN(), address(spell));
-        assertHasNoPermissions(spell.BT4_POOL_ADMIN(), address(spell));
+        assertEq(PoolAdminLike(spell.BT1_POOL_ADMIN()).admin_level(address(spell)), 0);
+        assertEq(PoolAdminLike(spell.BT2_POOL_ADMIN()).admin_level(address(spell)), 0);
+        assertEq(PoolAdminLike(spell.BT3_POOL_ADMIN()).admin_level(address(spell)), 0);
+        assertEq(PoolAdminLike(spell.BT4_POOL_ADMIN()).admin_level(address(spell)), 0);
 
         assertHasNoPermissions(spell.BT1_ROOT(), address(spell));
         assertHasNoPermissions(spell.BT2_ROOT(), address(spell));
