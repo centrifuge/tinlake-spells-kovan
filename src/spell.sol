@@ -29,6 +29,10 @@ interface FeedLike {
     function file(bytes32, uint256, uint256, uint256, uint256) external;
 }
 
+interface ProxyRegistryLike {
+    function build(address owner, address usr, address target) external returns (address payable proxyAddr);
+}
+
 contract TinlakeSpell {
 
     bool public done;
@@ -49,17 +53,18 @@ contract TinlakeSpell {
     address public BT3_FEED = 0xeA5E577Df382889497534A0258345E78BbD4e31d;
     address public BT4_FEED = 0x60eebA86cE045d54cE625D71A5c2bAebfB2e46E9;
 
-    // Proxy addresses (random addresses for now)
-    address public BT1_PROXY = 0x0000000000000000000000000000000000000001;
-    address public BT2_PROXY = 0x0000000000000000000000000000000000000002;
-    address public BT3_PROXY = 0x0000000000000000000000000000000000000003;
-    address public BT4_PROXY = 0x0000000000000000000000000000000000000004;
-
-    // Borrower addresses
     address public BT1_BORROWER = 0xa9253DBe03e86af3a9CEcEf109cbd7A55952EEEe;
     address public BT2_BORROWER = 0xc2dDf93c0f2f1e3637EDBA956de2ad67C7c6033c;
     address public BT3_BORROWER = 0x09C1D389141013a08dD67D495D168Bd067Bc0817;
     address public BT4_BORROWER = 0xdD218a603Bb217B7597b2BAAEa0A271499e3B877;
+
+    address public BT1_ACTIONS = 0xA65C9779Dae931F3F5238786bF4Ac7f9C01812F1;
+    address public BT2_ACTIONS = 0xbD763497a23b3B11b5cB3752292E05593525917e;
+    address public BT3_ACTIONS = 0xe7A50CD2cb0C34bB73C539478e3Cde7ee525c49B;
+    address public BT4_ACTIONS = 0x5F94D1caCC4d10Db839593473F61A3b03b9C2f3d;
+    address public PROXY_REGISTRY = 0x4dbcF4322833B36e2E49a2d4dDcc7310074FdfEC;
+
+    address public GOVERNANCE = 0xf3BceA7494D8f3ac21585CA4b0E52aa175c24C25;
 
     uint constant ONE = 10**27;
     
@@ -70,11 +75,17 @@ contract TinlakeSpell {
     }
 
     function execute() internal {
+        // Deploy proxies
+        address bt1Proxy = ProxyRegistryLike(PROXY_REGISTRY).build(GOVERNANCE, BT1_BORROWER, BT1_ACTIONS);
+        address bt2Proxy = ProxyRegistryLike(PROXY_REGISTRY).build(GOVERNANCE, BT2_BORROWER, BT2_ACTIONS);
+        address bt3Proxy = ProxyRegistryLike(PROXY_REGISTRY).build(GOVERNANCE, BT3_BORROWER, BT3_ACTIONS);
+        address bt4Proxy = ProxyRegistryLike(PROXY_REGISTRY).build(GOVERNANCE, BT4_BORROWER, BT4_ACTIONS);
+
         // Rely proxies on feeds
-        RootLike(BT1_ROOT).relyContract(BT1_FEED, BT1_PROXY);
-        RootLike(BT2_ROOT).relyContract(BT2_FEED, BT2_PROXY);
-        RootLike(BT3_ROOT).relyContract(BT3_FEED, BT3_PROXY);
-        RootLike(BT4_ROOT).relyContract(BT4_FEED, BT4_PROXY);
+        RootLike(BT1_ROOT).relyContract(BT1_FEED, bt1Proxy);
+        RootLike(BT2_ROOT).relyContract(BT2_FEED, bt2Proxy);
+        RootLike(BT3_ROOT).relyContract(BT3_FEED, bt3Proxy);
+        RootLike(BT4_ROOT).relyContract(BT4_FEED, bt4Proxy);
 
         // Rely spell on pool admins so it can add level 1 admins
         RootLike(BT1_ROOT).relyContract(BT1_POOL_ADMIN, address(this));
