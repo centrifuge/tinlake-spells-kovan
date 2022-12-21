@@ -1,4 +1,4 @@
-    // Copyright (C) 2020 Centrifuge
+   // Copyright (C) 2020 Centrifuge
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -15,25 +15,24 @@
 pragma solidity >=0.6.12;
 pragma experimental ABIEncoderV2;
 
-import "./../tinlake/src/lender/adapters/mkr/clerk.sol";
+import "tinlake/lender/reserve.sol";
 
-contract MigratedClerk is Clerk {
+
+contract MigratedReserve is Reserve {
     
     bool public done;
     address public migratedFrom;
-    
-    constructor(address dai_, address collateral_) Clerk(dai_, collateral_) public {}
+
+    constructor(address currency) Reserve(currency) public {}
 
     function migrate(address clone_) public auth {
         require(!done, "migration already finished");
         done = true;
         migratedFrom = clone_;
 
-        Clerk clone = Clerk(clone_);
-        creditline = clone.creditline();
-        matBuffer = clone.matBuffer();
-        collateralTolerance = clone.collateralTolerance();
-        wipeThreshold = clone.wipeThreshold();
+        Reserve clone = Reserve(clone_);
+        currencyAvailable = clone.currencyAvailable();
+        balance_ = clone.balance_();
     }
 }
    

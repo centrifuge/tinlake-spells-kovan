@@ -11,7 +11,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-pragma solidity >=0.5.15 <0.6.0;
+pragma solidity >=0.6.2;
 pragma experimental ABIEncoderV2;
 
 // TODO: split interfaces between tests and spell. Exclude all the function that afre only used in tests
@@ -70,7 +70,7 @@ contract TinlakeSpell {
     bool public done;
     string constant public description = "Pezesha mainnet Spell";
 
-    address constant public ROOT = 0x235893Bf9695F68a922daC055598401D832b538b;
+    address constant public ROOT = address(0);
     address constant public SENIOR_MEMBERLIST = 0x3e77f47e5e1Ec71fabE473347400A06d9Af13eE3;
     address constant public JUNIOR_MEMBERLIST = 0x364B69aFc0101Af31089C5aE234D8444C355e8a0;
     address constant public POOL_ADMIN = 0x68c19d14937e43ACa58538628ac2F99e167F2C9C;
