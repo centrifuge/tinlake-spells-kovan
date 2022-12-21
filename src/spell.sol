@@ -107,7 +107,6 @@ contract TinlakeSpell {
      } 
 
      function fileRiskGroups(FeedLike feed) internal {
-        // file BT1 riskgroups on NAVFeed where risk is incremental, thresholdRatio is 1, ceiling is 0 and rate is 100%
         // rate = 1 + (0.04879016/31536000) * 10^27 = 1000000001547120750887874175
         feed.file("riskGroup", 0, ONE, ONE, 1000000001547125824454591578);
         // rate = 1 + (0.05116828/31536000) * 10^27 = 1000000001622590055809233891
