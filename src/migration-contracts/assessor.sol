@@ -14,9 +14,9 @@
 pragma solidity >=0.6.12;
 pragma experimental ABIEncoderV2;
 
-import "./../../../../tinlake-internal/src/lender/adapters/mkr/assessor.sol";
+import "tinlake/lender/assessor.sol";
 
-contract MigratedMKRAssessor is MKRAssessor {
+contract MigratedMKRAssessor is Assessor {
     
     bool public done;
     address public migratedFrom;

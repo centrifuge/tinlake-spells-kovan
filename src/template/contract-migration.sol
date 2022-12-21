@@ -11,7 +11,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-pragma solidity >=0.5.15 <0.6.0;
+pragma solidity >=0.6.2;
 pragma experimental ABIEncoderV2;
 
 // TODO: split interfaces between tests and spell. Exclude all the function that afre only used in tests
@@ -99,7 +99,7 @@ contract TinlakeSpell {
     bool public done;
     string constant public description = "Tinlake NS2 migration mainnet Spell";
 
-    address constant public ROOT = 0x53b2d22d07E069a3b132BfeaaD275b10273d381E;
+    address constant public ROOT = address(0);
     address constant public SHELF = 0x7d057A056939bb96D682336683C10EC89b78D7CE;
     address constant public COLLECTOR = 0x62f290512c690a817f47D2a4a544A5d48D1408BE;
     address constant public SENIOR_TOKEN = 0xE4C72b4dE5b0F9ACcEA880Ad0b1F944F85A9dAA0;

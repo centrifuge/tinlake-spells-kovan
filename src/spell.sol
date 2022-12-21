@@ -14,13 +14,7 @@ pragma solidity >=0.7.0;
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-interface AuthLike {
-    function rely(address) external;
-    function deny(address) external;
-    function wards(address) external returns(uint);
-}
-
-interface TinlakeRootLike {
+interface RootLike {
     function relyContract(address, address) external;
     function denyContract(address, address) external;
     function deny(address) external;

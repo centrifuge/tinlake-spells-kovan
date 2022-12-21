@@ -11,8 +11,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-pragma solidity >=0.5.15 <0.6.0;
-
+pragma solidity >=0.6.2;
 interface TinlakeRootLike {
     function relyContract(address, address) external;
     function denyContract(address, address) external;
@@ -41,9 +40,10 @@ contract TinlakeSpell {
     // The contracts in this list should correspond to a tinlake deployment
     // https://github.com/centrifuge/tinlake-pool-config/blob/master/mainnet-production.json
 
-    address constant public ROOT = 0xdB3bC9fB1893222d266762e9fF857EB74D75c7D6;
-    address constant public ASSESSOR = 0x6aaf2EE5b2B62fb9E29E021a1bF3B381454d900a;
-    address constant public NAV_FEED = 0x69504da6B2Cd8320B9a62F3AeD410a298d3E7Ac6;
+    // FILL OUT WITH POOL ADDRESSES
+    address constant public ROOT = address(0);
+    address constant public ASSESSOR = address(0);
+    address constant public NAV_FEED = address(0);
                                                
 
     // change dropAPR to 6%               
@@ -94,5 +94,5 @@ contract TinlakeSpell {
         navFeed.file("riskGroup", 34, ONE, 60*10**25, uint(1000000003012430238457635717), 99.89*10**25);
         // risk group: 35 - DTF3, APR: 10%                                        
         navFeed.file("riskGroup", 35, ONE, 50*10**25, uint(1000000003170979198376458650), 99.88*10**25);
-     }   
+     }
 }
