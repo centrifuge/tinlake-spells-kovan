@@ -61,6 +61,11 @@ contract SpellTest is Test {
 
         spell.cast();
 
+        assertHasPermissions(spell.BT1_FEED(), spell.BT1_PROXY());
+        assertHasPermissions(spell.BT2_FEED(), spell.BT2_PROXY());
+        assertHasPermissions(spell.BT3_FEED(), spell.BT3_PROXY());
+        assertHasPermissions(spell.BT4_FEED(), spell.BT4_PROXY());
+
         assertEq(PoolAdminLike(spell.BT1_POOL_ADMIN()).admin_level(spell.BT1_BORROWER()), 1);
         assertEq(PoolAdminLike(spell.BT2_POOL_ADMIN()).admin_level(spell.BT2_BORROWER()), 1);
         assertEq(PoolAdminLike(spell.BT3_POOL_ADMIN()).admin_level(spell.BT3_BORROWER()), 1);
