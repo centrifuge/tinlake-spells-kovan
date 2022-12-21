@@ -17,12 +17,16 @@ pragma solidity >=0.6.12;
 interface RootLike {
     function relyContract(address, address) external;
     function denyContract(address, address) external;
+    function rely(address) external;
+    function wards(address) external returns(uint);
 }
 
-interface AuthLike {
-    function wards(address) external returns(uint);
+interface PoolAdminLike {
     function rely(address) external;
     function deny(address) external;
+    function admin_level(address) external returns(uint);
+    function depend(bytes32, address) external;
+    function lending() external returns(address);
 }
 
 // spell description
@@ -35,31 +39,21 @@ contract TinlakeSpell {
     // The contracts in this list should correspond to a tinlake deployment
     // https://github.com/centrifuge/tinlake-pool-config/blob/master/mainnet-production.json
 
-	address public ROOT = address(0);
-	address public TINLAKE_CURRENCY = address(0);
-	address public TITLE = address(0);
-	address public PILE = address(0);
-	address public FEED = address(0);
-	address public SHELF = address(0);
-	address public JUNIOR_TRANCHE = address(0);
-	address public JUNIOR_TOKEN = address(0);
-	address public JUNIOR_OPERATOR = address(0);
-	address public JUNIOR_MEMBERLIST = address(0);
-	address public SENIOR_TRANCHE = address(0);
-	address public SENIOR_TOKEN = address(0);
-	address public SENIOR_OPERATOR = address(0);
-	address public SENIOR_MEMBERLIST = address(0);
-	address public RESERVE = address(0);
-	address public ASSESSOR = address(0);
-	address public POOL_ADMIN = address(0);
-	address public COORDINATOR = address(0);
-	address public CLERK = address(0);
-	address public MGR = address(0);
-	address public VAT = address(0);
-	address public JUG = address(0);
+    address public BT1_ROOT = 0x4597f91cC06687Bdb74147C80C097A79358Ed29b;
+    address public BT2_ROOT = 0xB5c08534d1E73582FBd79e7C45694CAD6A5C5aB2;
+    address public BT3_ROOT = 0x90040F96aB8f291b6d43A8972806e977631aFFdE;
+    address public BT4_ROOT = 0x55d86d51Ac3bcAB7ab7d2124931FbA106c8b60c7;
 
-    uint256 constant ONE = 10**27;
-    address self;
+    address public BT1_POOL_ADMIN = 0x242B369dee1B298Bb7103F03d0E54974b37Cc1D0;
+    address public BT2_POOL_ADMIN = 0xc5ffE22a7Fb1610b6Af48F30e0D8978407CD36DD;
+    address public BT3_POOL_ADMIN = 0x9B7932c89a3fe5b310480D5154C94eF1C2E92202;
+    address public BT4_POOL_ADMIN = 0xfB6eBe7599baEd480f44F3F7933F16be5737B4A2;
+
+    address public BT1_CLERK = 0x58C2fdCa82B7C564777E3547eA13bf8113A015cC;
+    address public BT2_CLERK = 0x0411179607F426A001B948C1Be8F25A2522bE9D7;
+    address public BT3_CLERK = 0x17dF3e3722Fc39A6318A0a70127aAceB86b96Da0;
+    address public BT4_CLERK = 0xe015FF153fa731f0399E65f08736ae71B6fD1a9F;
+
     
     function cast() public {
         require(!done, "spell-already-cast");
@@ -68,8 +62,19 @@ contract TinlakeSpell {
     }
 
     function execute() internal {
-       RootLike root = RootLike(address(ROOT));
-       self = address(this);
+        RootLike(BT1_ROOT).relyContract(BT1_POOL_ADMIN, address(this));
+        RootLike(BT2_ROOT).relyContract(BT2_POOL_ADMIN, address(this));
+        RootLike(BT3_ROOT).relyContract(BT3_POOL_ADMIN, address(this));
+        RootLike(BT4_ROOT).relyContract(BT4_POOL_ADMIN, address(this));
 
+        PoolAdminLike(BT1_POOL_ADMIN).depend("lending", BT1_CLERK);
+        PoolAdminLike(BT2_POOL_ADMIN).depend("lending", BT2_CLERK);
+        PoolAdminLike(BT3_POOL_ADMIN).depend("lending", BT3_CLERK);
+        PoolAdminLike(BT4_POOL_ADMIN).depend("lending", BT4_CLERK);
+
+        RootLike(BT1_ROOT).denyContract(BT1_POOL_ADMIN, address(this));
+        RootLike(BT2_ROOT).denyContract(BT2_POOL_ADMIN, address(this));
+        RootLike(BT3_ROOT).denyContract(BT3_POOL_ADMIN, address(this));
+        RootLike(BT4_ROOT).denyContract(BT4_POOL_ADMIN, address(this));
      }  
 }
